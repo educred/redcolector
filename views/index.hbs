@@ -1,0 +1,204 @@
+{{!< landing}}
+{{> nav-landing}}
+
+{{#each scripts}}
+    <script type="text/javascript" charset="utf8" src="{{script}}" charset="utf-8"></script>
+{{/each}}
+
+<input type="hidden" name="_csrf" value="{{this.csrfToken}}">
+
+{{!-- secțiunea landing --}}
+<div class="landing">
+    <div class="home-wrap">
+        <div class="home-inner">
+            {{!-- "Ants" by revolution540 is licensed under CC BY 2.0 --}}
+        </div>
+    </div>
+</div>
+{{!-- secțiune landing final --}}
+
+{{!-- secțiune întâmpinare --}}
+<div class="caption text-center">
+
+    <div class="os-animation" data-animation="bounceInUp" data-delay=".3s">
+        <ul class="nav justify-content-center">
+            <li class="nav-item">
+                <a class="nav-link active" href="#"><img src="img/intrumentestructurale-1.png" alt="Instrumente Structurale logo."></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#"><img src="img/ue-1.png" alt="Uniunea Europeană logo."></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#"><img src="img/guvern-1.png" alt="Uniunea Europeană logo."></a>
+            </li>
+        </ul>
+    </div>
+    <div class="os-animation" data-animation="bounceInUp" data-delay=".4s">
+        <h1>Bine ai venit!</h1>
+    </div>
+
+    <div class="os-animation" data-animation="bounceInUp" data-delay=".5s">
+        <p>Colectorul de Resurse Educaționale Deschise este o aplicație creată în cadrul proiectului <em>CRED-Curriculum relevant, educație deschisă pentru toți</em>– cod SMIS 2014+:118327
+Proiect cofinanțat din Fondul Social European prin Programul Operațional Capital Uman 2014-2020</p>
+    </div>
+            
+    <div class="os-animation" data-animation="bounceInUp" data-delay=".6s">
+        <a class="btn btn-outline-light btn-lg" href="/resursepublice">Zona resurselor deschise public</a>
+    </div>
+
+</div>
+
+{{!-- secțiune întâmpinare final--}}
+<!--- Indicator săgeată -->
+<a class="down-arrow" href="#resurse">
+    <div class="arrow bounce d-none d-md-block">
+        <i class="fas fa-angle-down" aria-hidden="true"></i>
+    </div>
+</a>
+
+{{!-- <div class="container"> --}}
+    {{!-- {{> mainInfo}} --}}
+<div class="offset">
+    <div class="os-animation narrow text-center" data-animation="fadeInUp">
+        <h3 class="heading">
+            Resurse la îndemâna dumneavoastră
+        </h3>
+        <div id="tools">
+
+            <article class="infotoken">
+                <div class="infotoken__head">
+                    <div class="infotoken__head__cover">
+                        <img src="img/CatalogulDeResurseEducationale.png" alt="Ceva info despre imagine logo sau captură">
+                        <p class="infotoken__head__cover--nr">321</p>
+                    </div>
+                    <div class="infotoken__head__title">
+                        <h3>Acesta este un infotoken despre ceva legat de video</h3>
+                    </div>
+                </div>
+                <div class="infotoken__body">
+                    Aceasta va fi o descriere de o dimensiune ceva mai mare a software-ului sau colecției de resurse sau instrumentului de comunicare care va fi descris prin acest infotoken.
+                </div>
+                <div class="infotoken__footer">
+                    <span class="badge badge-pill badge-secondary">biologie</span>
+                    <span class="badge badge-pill badge-secondary">video</span>
+                    <span class="badge badge-pill badge-secondary">colecție</span>
+                </div>
+            </article>
+
+            <article class="infotoken">
+                <div class="infotoken__head">
+                    <div class="infotoken__head__cover">
+                        <img src="img/CatalogulDeResurseEducationale.png" alt="Ceva info despre imagine logo sau captură">
+                        <p class="infotoken__head__cover--nr">23003</p>
+                    </div>
+                    <div class="infotoken__head__title">
+                        <h3>Acesta este un infotoken despre ceva legat de video</h3>
+                    </div>
+                </div>
+                <div class="infotoken__body">
+                    Aceasta va fi o descriere de o dimensiune ceva mai mare a software-ului sau colecției de resurse sau instrumentului de comunicare care va fi descris prin acest infotoken.
+                </div>
+                <div class="infotoken__footer">
+                    <span class="badge badge-pill badge-secondary">biologie</span>
+                    <span class="badge badge-pill badge-secondary">video</span>
+                    <span class="badge badge-pill badge-secondary">colecție</span>
+                </div>
+            </article>
+            <article class="infotoken">
+                <div class="infotoken__head">
+                    <div class="infotoken__head__cover">
+                        <img src="img/CatalogulDeResurseEducationale.png" alt="Ceva info despre imagine logo sau captură">
+                        <p class="infotoken__head__cover--nr">4</p>
+                    </div>
+                    <div class="infotoken__head__title">
+                        <h3>Acesta este un infotoken despre ceva legat de video</h3>
+                    </div>
+                </div>
+                <div class="infotoken__body">
+                    Aceasta va fi o descriere de o dimensiune ceva mai mare a software-ului sau colecției de resurse sau instrumentului de comunicare care va fi descris prin acest infotoken.
+                </div>
+                <div class="infotoken__footer">
+                    <span class="badge badge-pill badge-secondary">biologie</span>
+                    <span class="badge badge-pill badge-secondary">video</span>
+                    <span class="badge badge-pill badge-secondary">colecție</span>
+                </div>
+            </article>
+            <article class="infotoken">
+                <div class="infotoken__head">
+                    <div class="infotoken__head__cover">
+                        <img src="img/CatalogDeInstrumenteEducationaleheader.png" alt="Ceva info despre imagine logo sau captură">
+                        <p class="infotoken__head__cover--nr">15</p>
+                    </div>
+                    <div class="infotoken__head__title">
+                        <h3>Acesta este un infotoken despre ceva legat de video</h3>
+                    </div>
+                </div>
+                <div class="infotoken__body">
+                    Aceasta va fi o descriere de o dimensiune ceva mai mare a software-ului sau colecției de resurse sau instrumentului de comunicare care va fi descris prin acest infotoken.
+                </div>
+                <div class="infotoken__footer">
+                    <span class="badge badge-pill badge-secondary">biologie</span>
+                    <span class="badge badge-pill badge-secondary">video</span>
+                    <span class="badge badge-pill badge-secondary">colecție</span>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <div id="resurse" class="resurse os-animation" data-animation="fadeInUp">
+        <div class="resurse">
+            {{!-- Background video --}}
+            <div class="bg-video">
+                <video class="bg-video__content" autoplay muted loop>
+                    {{!-- https://coverr.co/videos/modem-lights-u4MPlcF4EE --}}
+                    <source src="img/Modem-lights.mp4" type="video/mp4">
+                    <source src="img/Modem-lights.webm" type="video/webm">
+                    Browserul tău nu are support pentru caracteristicile web moderne. Actualizează-l!
+                </video>
+            </div>
+
+            {{!-- Șablon de resursă în landing --}}
+            {{#each resurse}}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <a class="btn btn-dark" href="/resursepublice/{{this._id}}" class="">{{this.title}}</a>
+                        </h5>                                   
+                    </div>
+                    <img class="card-img-top" src="{{this.coperta}}" alt="{{this.title}}">
+                    <div class="card-body">
+
+                        <p class="card-text">{{this.description}}</p>
+                        {{!-- <a href="/resursepublice/{{this.id}}" class="btn btn-primary">Afișează</a>    --}}
+                    </div>
+                    <div class="card-footer text-muted">
+                        {{!-- {{this.date}} --}}
+                        {{this.dataRo}}
+                    </div>
+                </div>
+            {{/each}}
+        </div>
+    </div>
+</div>
+
+<template id="infot">
+    <article class="infotoken">
+        <div class="infotoken__head">
+            <div class="infotoken__head__cover">
+                <img src="img/CatalogulDeResurseEducationale.png" alt="Ceva info despre imagine logo sau captură">
+                <p class="infotoken__head__cover--nr">321</p>
+            </div>
+            <div class="infotoken__head__title">
+                <h3>Acesta este un infotoken despre ceva legat de video</h3>
+            </div>
+        </div>
+        <div class="infotoken__body">
+            Aceasta va fi o descriere de o dimensiune ceva mai mare a software-ului sau colecției de resurse sau instrumentului de comunicare care va fi descris prin acest infotoken.
+        </div>
+        <div class="infotoken__footer">
+            <span class="badge badge-pill badge-secondary">biologie</span>
+            <span class="badge badge-pill badge-secondary">video</span>
+            <span class="badge badge-pill badge-secondary">colecție</span>
+        </div>
+    </article>
+</template>
