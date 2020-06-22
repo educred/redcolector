@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kosson/redcolector.git"
+    "url": "git+https://github.com/educred/redcolector.git"
   },
   "keywords": [
     "resurse educaționale deschise",
@@ -30,9 +30,9 @@
   "author": "Nicolaie Constantinescu",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/kosson/redcolector/issues"
+    "url": "https://github.com/educred/redcolector/issues"
   },
-  "homepage": "https://github.com/kosson/redcolector#readme",
+  "homepage": "https://github.com/educred/redcolector#readme",
   "dependencies": {
     "@elastic/elasticsearch": "^7.7.1",
     "archiver": "^4.0.1",

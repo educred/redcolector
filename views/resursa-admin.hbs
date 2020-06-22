@@ -11,6 +11,9 @@
             {{!-- Dacă există copertă, afișeaz-o --}}
             {{#if resursa.coperta}}
                 <img src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
+                {{else}}
+                <div class="holderjs" data-background-src="?holder.js/300x200"></div>
+                {{!-- <img src="holder.js/300x200" class="coperta card-img-top" alt="{{resursa.title}}"> --}}
             {{/if}}
             
             {{!-- Afișează titlul și descrierea --}}
@@ -60,6 +63,7 @@
                     </button>
                 </div>
             {{/if}}
+            
             {{!-- NIVELURI --}}
             <div id="compdig" class="form-group" hidden>
             <h4>Competențe digitale necesare</h4>
@@ -324,7 +328,8 @@
             </fieldset>
 
             {{!-- BUTON ȘTERGE RESURSA --}}
-            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#delModal">Șterge resursa</button>
+            <button type="button" class="btn btn-danger" onclick="deleteRes()">Șterge resursa</button>
+            {{!-- data-toggle="modal" data-target="#delModal"  --}}
         </div>
     </div>
 </div>
@@ -349,5 +354,5 @@
 </div>
 
 {{#each scripts}}
-    <script src="{{script}}"  charset="utf-8"></script>
+    <script type="application/javascript" src="{{script}}"></script>
 {{/each}}

@@ -5,17 +5,18 @@ const express  = require('express');
 const router   = express.Router();
 const mongoose = require('mongoose');
 const moment   = require('moment');
-const redisClient= require('../redis.config');
+// const redisClient = require('../redis.config');
 // Încarcă mecanismele de verificare ale rolurilor
 let makeSureLoggedIn = require('connect-ensure-login');
-let checkRole = require('./controllers/checkRole.helper');
+let checkRole        = require('./controllers/checkRole.helper');
 // MODELE
-const Resursa = require('../models/resursa-red'); // Adu modelul resursei
+const Resursa    = require('../models/resursa-red'); // Adu modelul resursei
 // CONFIGURARI ACCES SERVICII
-const esClient= require('../elasticsearch.config');
+const esClient   = require('../elasticsearch.config');
 // HELPERI
-const ES7Helper= require('../models/model-helpers/es7-helper');
-let content2html  = require('./controllers/editorJs2HTML');
+const schema     = require('../models/resursa-red-es7');
+const ES7Helper  = require('../models/model-helpers/es7-helper');
+let editorJs2TXT = require('./controllers/editorJs2TXT');
 
 
 /* === PROFILUL PROPRIU === */
@@ -56,14 +57,14 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
                 {script: '/lib/moment/min/moment.min.js'},
                 {script: '/lib/moment/locale/ro.js'},    
                 {script: '/lib/datatables.net/js/jquery.dataTables.min.js'},
-                {script: '/lib/datatables.net/js/dataTables.bootstrap.min.js'},
+                {script: '/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js'},
                 {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
                 {script: '/lib/datatables.net-buttons/js/dataTables.buttons.min.js'},
-                {script: '/lib/datatables.net-buttons/js/buttons.bootstrap.min.js'},
-                {script: '/lib/datatables.net-select/js/select.bootstrap.min.js'},
+                {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
                 {script: '/lib/datatables.net-responsive/js/dataTables.responsive.min.js'},
-                {script: '/lib/datatables.net-responsive-dt/js/dataTables.responsive.min.js'},
-                {script: '/js/res-visuals-user.js'}
+                {script: '/js/res-visuals-user.js'},
+                // HOLDERJS
+                {script: '/lib/holderjs/holder.min.js'},  
             ];
 
             let styles = [
@@ -89,7 +90,7 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
     }
 );
 
-/* === VALIDARE / PUBLICARE /ȘTERGERE /EDITARE @ ->resursa -> resursa-admin [redincredadmin.js / res-shown.js] -> resursa-validator === */
+/* === VALIDARE / PUBLICARE /ȘTERGERE /EDITARE === */
 router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProfResID (req, res, next){
     // Adu înregistrarea resursei cu toate câmpurile referință populate deja
     // const editorJs2html = require('./controllers/editorJs2HTML');
@@ -106,8 +107,12 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         {script: '/lib/editorjs/code.js'},
         {script: '/lib/editorjs/quote.js'},
         {script: '/lib/editorjs/inlinecode.js'},
+        {script: '/lib/editorjs/checklist.js'},
         // UPLOADER
         {script: '/js/uploader.js'},
+        // HELPER DETECT URLS or PATHS
+        {script: '/js/check4url.js'},
+        // REEDIT RES
         {script: '/js/personal-res.js'}
     ];
     let roles = ["user", "cred", "validator"];
@@ -116,9 +121,9 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
     // caută resursa în bază
     const query = Resursa.findById(req.params.idres).populate({path: 'competenteS'});    
     // reformatare obiect resursă și căutarea corespondentului în Elasticsearch cu reindexare, dacă nu există în bază, șterge ghost-ul din ES
-    query.then(resursa => {        
+    query.then(resursa => {   
         /* === Resursa încă există în MongoDB === */
-        if (resursa.id) {
+        if (resursa.id !== null) {
             // transformă obiectul document de Mongoose într-un obiect normal.
             const obi = Object.assign({}, resursa._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
 
@@ -132,8 +137,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
 
             // resursa._doc.content = editorJs2html(resursa.content);
             let localizat = moment(obi.date).locale('ro').format('LLL');
-            // resursa._doc.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
-            obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
+            obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.            
 
             // Array-ul activităților modificat
             let activitatiRehashed = obi.activitati.map((elem) => {
@@ -151,11 +155,11 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 id: req.params.idres
             }).then(resFromIdx => {
                 /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
-                if(resFromIdx.body == false && resFromIdx.statusCode === 404){
+                if(resFromIdx.statusCode === 404){
                     // verifică dacă există conținut
                     var content2txt = '';
-                    if ('content' in newObi) {
-                        content2txt = editorJs2TXT(newObi.content.blocks); // transformă obiectul în text
+                    if ('content' in obi) {
+                        content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
                     }
                     // indexează documentul
                     const data = {
@@ -193,7 +197,21 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                         expertCheck:      obi.expertCheck
                     };
 
-                    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
+                    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS); // https://stackoverflow.com/questions/50609417/elasticsearch-error-cluster-block-exception-forbidden-12-index-read-only-all
+                    //FIXME: EROAREA care apare în consolă 
+                    // {
+                    //     "error": {
+                    //       "root_cause": [
+                    //         {
+                    //           "type": "cluster_block_exception",
+                    //           "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
+                    //         }
+                    //       ],
+                    //       "type": "cluster_block_exception",
+                    //       "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
+                    //     },
+                    //     "status": 429
+                    //   }                    
                 }
                 return resFromIdx;
             }).catch(err => {
@@ -264,7 +282,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csfrToken: req.csrfToken(),
-                resursa:   resursa,
+                resursa,
                 scripts
             });
         /* === ROLURI ÎN CRED === */
@@ -277,7 +295,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csfrToken: req.csrfToken(),
-                resursa:   resursa,
+                resursa,
                 scripts
             });
         /* === NU FACI PARTE DIN CRED === */

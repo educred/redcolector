@@ -15,14 +15,23 @@
     </div>
 
     {{!-- RESURSA --}}
-    <div data-id="{{resursa.id}}" data-contribuitor="{{resursa.idContributor}}" id="{{resursa.id}}" class="resursa">
-        {{!-- Conținut resursă educațională --}}
+    <div data-id="{{resursa._id}}" data-contribuitor="{{resursa.idContributor}}" data-content="{{json resursa}}" data-uuid="{{resursa.uuid}}" id="{{resursa._id}}" class="resursa">
         <div class="container redcontent">
 
             {{!-- Dacă există copertă, afișeaz-o --}}
-            {{#if resursa.coperta}}
-                <img itemprop="image" src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
-            {{/if}}
+            {{!-- {{#if resursa.coperta}}
+                <img src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
+            {{/if}} --}}
+
+            {{!-- Dacă există copertă, afișeaz-o --}}
+            {{#if this.coperta}}
+                <img src="{{this.coperta}}" class="coperta card-img-top" alt="{{this.title}}">
+                {{else}}
+                <div style="position: relative;">
+                    <img src="/img/CREDlogo.jpg" alt="" width="100px" style="position: absolute; top: 5; left: 5">
+                    <img data-src="holder.js/100px100&textmode=exact?auto=yes&text=RED" class="coperta card-img-top" alt="{{resursa.title}}">
+                </div>
+            {{/if}}            
 
             {{!-- Afișează titlul și descrierea --}}
             <div class="card-title jumbotron">
@@ -289,20 +298,12 @@
                 {{/each}}
             </div>
 
-            {{!-- Afișarea conținutului resursei --}}
-            {{#if resursa.content}}
-                <h5>Conținut</h5>
-                <div class="content">
-                    {{!-- AFIȘAREA CONȚINUTULUI este de fapt o transformare în html a obiectului content. Vezi resincredid.ctrl.js --}}
-                    {{{resursa.content}}}
-                </div>
-            {{/if}}
-            {{!-- Integrarea editorului de text --}}
-            {{!-- <div id="codex-editor"></div> --}}
-            {{!-- Încarcă aici scripturile pentru a evita oul înaintea găinii! :D --}}
+            <h5>Conținut</h5>
+            {{!-- EDITOR --}}
+            <div id="edi"></div>
         </div>
     </div>
 </div>
 {{#each scripts}}
-    <script src="{{script}}"></script>
+    <script type="application/javascript" src="{{script}}"></script>
 {{/each}}

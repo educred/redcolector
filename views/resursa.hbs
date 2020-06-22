@@ -1,17 +1,21 @@
 {{!< layout}}
 {{> nav-resurse}}
-{{> messages}}
-
-<input type="hidden" name="_csrf" value="{{this.csrfToken}}">
 
 <div id="resursaincredadm" class="resurse">
-    {{#each resursa}}
-        <div data-id="{{this._id}}" data-contribuitor="{{this.idContributor}}" id="{{this._id}}" class="resursa">
-            <img src="{{this.coperta}}" class="coperta card-img-top" alt="{{this.title}}">
-            <div class="container redcontent">
+    <div data-id="{{resursa._id}}" data-contribuitor="{{resursa.idContributor}}" data-content="{{json resursa}}" data-uuid="{{resursa.uuid}}" id="{{resursa._id}}" class="resursa">
+        <div class="container redcontent resursa">
+            {{!-- Inițiere FORM --}}
+            <form id="form02edit" class="" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
+                
                 {{!-- Dacă există copertă, afișeaz-o --}}
                 {{#if resursa.coperta}}
-                    <img itemprop="image" src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
+                    <img src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
+                    {{else}}
+                    <div style="position: relative;">
+                        <img src="/img/CREDlogo.jpg" alt="" width="100px" style="position: absolute; top: 5; left: 5">
+                        <img data-src="holder.js/100px100&textmode=exact?auto=yes&text=RED" class="coperta card-img-top" alt="{{resursa.title}}">
+                    </div>
                 {{/if}}
 
                 {{!-- Afișează titlul și descrierea --}}
@@ -19,6 +23,7 @@
                     <h1 class="display-4" itemprop="name">{{resursa.title}}</h1>
                     <p itemprop="description" class="lead">{{resursa.description}}</p>
                 </div>
+
                 {{!-- Dacă există titluri alternative, afișează-le --}}
                 {{#if resursa.titleI18n}}
                     <div class="titlaltres">
@@ -77,7 +82,9 @@
                     <div class="comprespub discsrespub">
                         <h5>Discipline</h5>
                         {{#each resursa.discipline}}
-                            <i class="fas fa-book-open"></i>{{this}}
+                            <button type="button" class="btn btn-primary btn-sm">
+                                <i class="fas fa-book-open"></i> {{this}}
+                            </button>
                         {{/each}}
                     </div>
                 {{/if}}
@@ -111,7 +118,7 @@
                         <ul>
                             {{#each resursa.activitati}}
                                 <li>
-                                    {{this}}
+                                    {{{this}}}
                                 </li>
                             {{/each}}
                         </ul>
@@ -275,25 +282,14 @@
                         <a itemprop="keywords" href="/tag/{{this}}" class="badge badge-success">{{this}}</a>
                     {{/each}}
                 </div>
-                
-                {{!-- Afișarea conținutului resursei --}}
-                {{#if resursa.content}}
-                    <h5>Conținut</h5>
-                    <div class="content">
-                        {{!-- AFIȘAREA CONȚINUTULUI este de fapt o transformare în html a obiectului content. Vezi resincredid.ctrl.js --}}
-                        {{{resursa.content}}}
-                    </div>
-                {{/if}}
-                {{!-- Integrarea editorului de text --}}
-                {{!-- <div id="codex-editor"></div> --}}
-                {{!-- Încarcă aici scripturile pentru a evita oul înaintea găinii! :D --}}
-                {{#each scripts}}
-                    <script src="{{script}}"></script>
-                {{/each}}
-            </div>
+
+                <h5>Conținut</h5>
+                {{!-- EDITOR --}}
+                <div id="edi"></div>
+            </form>
         </div>
-    {{/each}}
+    </div>
 </div>
 {{#each scripts}}
-    <script src="{{script}}"  charset="utf-8"></script>
+    <script type="application/javascript" src="{{script}}"></script>
 {{/each}}

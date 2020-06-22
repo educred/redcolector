@@ -53,7 +53,6 @@ module.exports = function uploader (pubComm) {
     
     Multer2Bag.prototype._handleFile = function _handleFile (req, file, cb) {
         this.getDestination(req, file, function clbkGetDest (err, path) {
-
             // console.log('[upload.js] Am să scriu fișierul în calea: ', path);
             
             // Afișează posibile erori
@@ -107,7 +106,7 @@ module.exports = function uploader (pubComm) {
 
     var lastUuid = '';
 
-    /*
+    /**
     * Funcția are rolul de callback pentru rro()
     */
     function clbkOnUUID (token) {
@@ -167,14 +166,16 @@ module.exports = function uploader (pubComm) {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
             "application/vnd.ms-powerpoint": ".ppt",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
-            "application/octet-stream": ".zip",
+            "application/zip": ".zip",
+            "application/x-zip-compressed": ".zip",
+            "multipart/x-zip": ".zip",
             "application/vnd.oasis.opendocument.text": ".odt",
             "application/vnd.oasis.opendocument.presentation": ".odp"
         };
 
         if (fileObj[file.mimetype] == undefined) {
             cb(new Error("Formatul de fișier nu este acceptat"), false); // nu stoca fișierul și trimite eroarea
-            pubComm.emit('message', 'Formatul de fișier nu este acceptat');
+            // pubComm.emit('message', 'Formatul de fișier nu este acceptat');
         } else {
             cb(null, true); // acceptă fișierul pentru a fi stocat
         }

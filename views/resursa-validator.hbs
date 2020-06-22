@@ -3,14 +3,19 @@
 
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
 <div id="resursaincredadm" class="resurse">
-    <div data-id="{{resursa._id}}" data-contribuitor="{{resursa.idContributor}}" data-content="{{json resursa}}" data-uuid="{{resursa.uuid}}" id="{{resursa._id}}" class="resursa"></div>
+    <div data-id="{{resursa._id}}" data-contribuitor="{{resursa.idContributor}}" data-content="{{json resursa}}" data-uuid="{{resursa.uuid}}" id="{{resursa._id}}" class="resursa">
         <div class="container redcontent">
 
             {{!-- Dacă există copertă, afișeaz-o --}}
-            {{#if resursa.coperta}}
-                <img src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
+            {{#if this.coperta}}
+                <img src="{{this.coperta}}" class="coperta card-img-top" alt="{{this.title}}">
+                {{else}}
+                <div style="position: relative;">
+                    <img src="/img/CREDlogo.jpg" alt="" width="100px" style="position: absolute; top: 5; left: 5">
+                    <img data-src="holder.js/100px100&textmode=exact?auto=yes&text=RED" class="coperta card-img-top" alt="{{this.title}}">
+                </div>
             {{/if}}
-
+            
             {{!-- Afișează titlul și descrierea --}}
             <div class="card-title jumbotron">
                 <h1 class="display-4" itemprop="name">{{resursa.title}}</h1>
@@ -296,5 +301,5 @@
     </div>
 </div>
 {{#each scripts}}
-    <script src="{{script}}"  charset="utf-8"></script>
+    <script type="application/javascript" src="{{script}}"></script>
 {{/each}}
