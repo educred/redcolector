@@ -42,8 +42,6 @@ let tools          = require('./routes/tools');
 let help           = require('./routes/help');
 let signupLoco     = require('./routes/signup');
 
-
-
 // stabilirea locației de upload
 // let upload = multer({dest: path.join(__dirname, '/uploads')});
 
