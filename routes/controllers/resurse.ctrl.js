@@ -227,6 +227,10 @@ exports.describeResource = function describeResource (req, res, next) {
         // FIXME: Renunță la acest artificiu pentru conturile locale de îndată ce unifici localele cu profilurile Google.
         let given_name =  "Jane" || user.googleProfile.given_name;
         let family_name = "Doe"  || user.googleProfile.family_name;
+        
+        /* === LIVRESQ CONNECTOR === */
+        let url = new LivresqConnect().prepareProjectRequest(user.email, given_name, family_name);
+        if(!url.startsWith("http")) url = "#";
 
         // Dacă avem un admin, atunci oferă acces neîngrădit
         res.render('adauga-res', {
@@ -247,6 +251,7 @@ exports.describeResource = function describeResource (req, res, next) {
         // FIXME: Introdu în formularul de creare cont câmpurile name și surname pentru a elimina artificul făcut pentru integrarea cu Livresq
         let given_name = 'Jane' || user.googleProfile.given_name;
         let family_name = 'Doe' || user.googleProfile.family_name;
+        /* === LIVRESQ CONNECTOR === */
         let url = new LivresqConnect().prepareProjectRequest(user.email, given_name, family_name);
         if(!url.startsWith("http")) url = "#";
 
