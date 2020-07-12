@@ -285,8 +285,9 @@ function shutdownserver () {
     });
 };
 
-process.on('uncaughtException', (un) => {
-    console.log('[app.js] A apărul un uncaughtException cu detaliile ', un);
+// gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
+process.on('uncaughtException', (err) => {
+    console.log('[app.js] A apărul un uncaughtException cu detaliile ', err.message);
 });
 
 /**
