@@ -103,6 +103,7 @@ nav.navbar-light {
     /* background-image: url("/img/15144968188_c6938eb1a3_b.jpg"); */
     /* background-image: url("/img/black-1072366_1920.jpg"); */
     background-image: url("/img/focus-photo-of-4-wooden-pawn-figurine-209728.jpg");
+    /* Imagine de la https://www.pexels.com/photo/focus-photo-of-4-wooden-pawn-figurine-209728/ */
     
     /* Adaug efect de blur */
     filter: blur(4px);
@@ -115,6 +116,12 @@ nav.navbar-light {
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+}
+
+/* Modelarea textului din landing page */
+#txthead {
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0, 0.4); /* Black w/opacity/see-through */
 }
 
 .caption {
