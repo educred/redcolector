@@ -100,14 +100,29 @@ nav.navbar-light {
 
 /* === LANDING PAGE IMAGE === */
 .home-inner {
-    background-image: url("/img/15144968188_c6938eb1a3_b.jpg");
+    /* background-image: url("/img/15144968188_c6938eb1a3_b.jpg"); */
+    /* background-image: url("/img/black-1072366_1920.jpg"); */
+    background-image: url("/img/focus-photo-of-4-wooden-pawn-figurine-209728.jpg");
+    
+    /* Adaug efect de blur */
+    filter: blur(4px);
+    -webkit-filter: blur(4px);
+
+    /* Full height */
+    height: 100%;
+
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 .caption {
     width: 100%;
     max-width: 100%;
     position: absolute;
-    top: 20%;
+    /* top: 20%; */
+    top: 15%;
     z-index: 1;
 }
 .caption h1 {
