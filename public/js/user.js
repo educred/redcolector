@@ -1,4 +1,4 @@
-// ======== CĂUTAREA UNUI UTILIZATOR
+// === CĂUTAREA UNUI UTILIZATOR ===
 pubComm.emit('personrecord', window.location.pathname.split('/').pop());
 
 var userTmpl = document.querySelector('#usertpl');    // Pas 1 - Fă o referință către template
@@ -133,7 +133,7 @@ pubComm.on('personrecord', function clblPersReds (resurse) {
                 {
                     data: '_id',
                     render: function clbkId (data, type, row) {
-                        return `<a href="${window.location.origin}/profile/resurse/${data}">Deschide</a>`;
+                        return `<a href="${window.location.origin}/profile/${data}">Deschide</a>`;
                     }
                 },
                 {
@@ -184,16 +184,16 @@ function showUserDetails (descriere) {
     var cloneTbl = usrResTblTmpl.content.cloneNode(true); // clonarea template-ului pentru afișare tabelară
 
     // injectează datele primite în elementele template-ului
-    // ===== AVATAR =====
+    // === AVATAR ===
     var userAvatar = cloneContent.querySelector('.admUdesc__avatar'); // Numele utilizatorului
     userAvatar.src = descriere.googleProfile.picture;
     userAvatar.alt = descriere.googleProfile.name;
 
-    // ===== ID =====
+    // === ID ===
     var userID = cloneContent.querySelector('.admUdesc__admUid');
     userID.textContent = descriere._id;
 
-    // ===== ROLES =====
+    // === ROLES ===
     var uRoles = cloneContent.querySelector('.admUsesc__admUroles');
     descriere.roles.rolInCRED.map(function clbkRolesTmpl (rol) {
         let rolTag = document.createElement('span');
@@ -204,7 +204,7 @@ function showUserDetails (descriere) {
         uRoles.appendChild(rolTag);
     });
 
-    // ==== UNITS =====
+    // === UNITS ===
     var uUnits = cloneContent.querySelector('.admUsesc__admUunits');
     descriere.roles.unit.map(function clbkUnitsTmpl (unit) {
         let unitTag = document.createElement('span');
@@ -215,7 +215,7 @@ function showUserDetails (descriere) {
         uUnits.appendChild(unitTag);
     });
 
-    // ===== RESURSE AFIȘARE [CARD-uri Bootstrap 4] =====
+    // === RESURSE AFIȘARE [CARD-uri Bootstrap 4] ===
     var uResurse = cloneContent.querySelector('.resurseUser');
 
     // Extrage ultimele 5 resurse
@@ -233,7 +233,7 @@ function showUserDetails (descriere) {
         let h5CardHeader = document.createElement('h5');
         h5CardHeader.classList.add('card-title');
         let aH5CardHeader = document.createElement('a');
-        aH5CardHeader.href = `/profile/resurse/${resursa._id}`;
+        aH5CardHeader.href = `/profile/${resursa._id}`;
         aH5CardHeader.role = 'button';
         aH5CardHeader.classList.add('btn');
         aH5CardHeader.classList.add('btn-dark');
@@ -256,7 +256,7 @@ function showUserDetails (descriere) {
         uResurse.appendChild(divCard);
     });
 
-    // ===== SET ADMIN =====
+    // === SET ADMIN ===
     var admCheck = cloneContent.querySelector('#adminSet');
     if (descriere.roles.admin) {admCheck.checked = true; }
 

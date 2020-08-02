@@ -201,14 +201,19 @@ exports.describeResource = function describeResource (req, res, next) {
         {script: '/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js'},
         {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
         {script: '/lib/datatables.net-buttons/js/dataTables.buttons.min.js'},
-        {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
         {script: '/lib/datatables.net-responsive/js/dataTables.responsive.min.js'},        
         // UPLOADER
         {script: '/js/uploader.js'},
         // HELPER DETECT URLS or PATHS
         {script: '/js/check4url.js'},
-        // FORM
-        {script: '/js/form01adres.js'}
+
+        // DEPENDIȚELE FORM-ului
+        {script: '/js/custom.js'},
+    ];
+
+    let modules = [
+        {module: '/js/form01adres.mjs'}, // FORM
+        {module: '/js/main.mjs'}
     ];
 
     let styles = [
@@ -241,6 +246,7 @@ exports.describeResource = function describeResource (req, res, next) {
             credlogo:"/img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
             styles,
+            modules,
             scripts,
             livresqProjectRequest: url /* === LIVRESQ CONNECTOR === */
         });
@@ -248,9 +254,10 @@ exports.describeResource = function describeResource (req, res, next) {
     } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere al resursei.
         
         let user = req.session.passport.user;
-        // FIXME: Introdu în formularul de creare cont câmpurile name și surname pentru a elimina artificul făcut pentru integrarea cu Livresq
+        // FIXME: Introdu în formularul de creare cont câmpurile name și surname pentru a elimina artificiul făcut pentru integrarea cu Livresq
         let given_name = 'Jane' || user.googleProfile.given_name;
         let family_name = 'Doe' || user.googleProfile.family_name;
+        
         /* === LIVRESQ CONNECTOR === */
         let url = new LivresqConnect().prepareProjectRequest(user.email, given_name, family_name);
         if(!url.startsWith("http")) url = "#";
@@ -261,8 +268,9 @@ exports.describeResource = function describeResource (req, res, next) {
             style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "/img/rED-logo192.png",
             credlogo:"/img/CREDlogo.jpg",
-            // csrfToken: cookieObj._csrf,
             csrfToken: req.csrfToken(),
+            styles,
+            modules,
             scripts,
             livresqProjectRequest: url /* === LIVRESQ CONNECTOR === */
         });

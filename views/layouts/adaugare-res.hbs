@@ -19,7 +19,7 @@
         <script type="application/javascript" src="/lib/es6-shim/es6-shim.min.js"></script>
 
         {{!-- MAIN --}}
-        <script type="application/javascript" charset="utf8" src="/js/main.js"></script>
+        {{!-- <script type="application/javascript" charset="utf8" src="/js/main.js"></script> --}}
         <link rel="stylesheet" type="text/css" href="/css/main.css">
 
         {{!-- JQUERY --}}
@@ -42,9 +42,18 @@
         <script type="application/javascript" src="/lib/handlebars/handlebars.runtime.min.js"></script> 
         <script type="application/javascript" src="/lib/handlebars/handlebars.min.js"></script>
 
+        {{!-- Preîncărcarea modulelor --}}
+        {{#each modules}}
+            <link rel="modulepreload" href="{{module}}"></script>
+        {{/each}}
+
         <title>{{title}}</title>
     </head>
     <body>
+        {{!-- <script>
+            import {main} from './main.mjs';
+        </script> --}}
+
         {{{body}}}
 
         <footer class="footer">

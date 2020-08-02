@@ -1,13 +1,17 @@
 {{!< landing}}
 {{> nav-landing}}
 
-{{#each scripts}}
-    <script type="application/javascript" src="{{script}}"></script>
+<input type="hidden" name="_csrf" value="{{csrfToken}}">
+
+{{!-- Încărcarea modulelor --}}
+{{#each modules}}
+    <script type="module" src="{{module}}"></script>
 {{/each}}
 
-{{!-- {{#if user}}
-    <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
-{{/if}} --}}
+{{!-- Încărcarea scripturilor --}}
+{{#each scripts}}
+    <script defer type="application/javascript" src="{{script}}"></script>
+{{/each}}
 
 {{!-- secțiunea landing --}}
 <div class="landing">

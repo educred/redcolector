@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const path           = require('path');
 const logger         = require('morgan');
 const compression    = require('compression');
@@ -18,18 +19,11 @@ const RedisStore     = require('connect-redis')(session);
 const hbs            = require('express-hbs');
 const app            = express();
 const http           = require('http').createServer(app);
-const io             = require('socket.io')(http);
 
 const cors           = require('cors');
 const favicon        = require('serve-favicon');
 const { v1: uuidv1 } = require('uuid'); // https://github.com/uuidjs/uuid#deep-requires-now-deprecated
 const i18n           = require('i18n');
-
-let port = process.env.PORT || 8080;
-http.listen(port, '127.0.0.1', function cbConnection () {
-    console.log('RED Colector ', process.env.APP_VER);
-    console.log('Server pornit pe 8080 -> binded pe 127.0.0.1');
-});
 
 /* === ÎNCĂRCAREA RUTELOR === */
 const UserPassport = require('./routes/controllers/user.ctrl')(passport);
@@ -48,9 +42,7 @@ let tags           = require('./routes/tags');
 let tools          = require('./routes/tools');
 let help           = require('./routes/help');
 let signupLoco     = require('./routes/signup');
-
-// stabilirea locației de upload
-// let upload = multer({dest: path.join(__dirname, '/uploads')});
+let apiv1          = require('./routes/apiV1');
 
 // minimal config
 i18n.configure({
@@ -59,18 +51,22 @@ i18n.configure({
     directory: __dirname + "/locales"
 });
 
-// conectare la Mongoose
+// MONGOOSE
 const mongoose = require('./mongoose.config');
 
-// === MIDDLEWARE-UL aplicației===
 // LOGGER
-app.use(logger('combined', {
+app.use(logger('dev', {
     skip: function (req, res) { return res.statusCode < 400 }
-})); // TODO: Dă-i drumu în producție și creează un mecanism de rotire a logurilor. ('combined')
-// app.use(logger('dev'));
+})); // TODO: Creează un mecanism de rotire a logurilor. ('combined')
+// app.use(logger('dev')); // Activează doar atunci când faci dezvoltare...
 
-// STATIC
-app.use(express.static(path.join(__dirname, '/public' )));
+/* === FIȘIERELE statice === */
+app.use(express.static(path.join(__dirname, '/public'), {
+    index: false, 
+    immutable: true, 
+    cacheControl: true,
+    maxAge: "30d"
+}));
 app.use('/repo', express.static(path.join(__dirname, 'repo')));
 // app.use(fileUpload());
 app.use(favicon(path.join(__dirname,  'public', 'favicon.ico')));
@@ -80,7 +76,11 @@ app.use(helmet()); // .js” was blocked due to MIME type (“text/html”) mism
 // https://helmetjs.github.io/docs/dont-sniff-mimetype/
 
 // CORS
-app.use(cors());
+var corsOptions = {
+    origin: 'http://' + process.env.DOMAIN,
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+app.use(cors(corsOptions));
 
 // PROCESAREA CORPULUI CERERII
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -91,7 +91,7 @@ app.use(cookies());// Parse Cookie header and populate req.cookies with an objec
 
 // creează sesiune - https://expressjs.com/en/advanced/best-practice-security.html
 let sessionMiddleware = session({
-    name:   'redcolector',
+    name: 'redcolector',
     secret: process.env.COOKIE_ENCODING,
     genid: function(req) {
         return uuidv1(); // use UUIDs for session IDs
@@ -130,14 +130,6 @@ app.use(function (req, res, next) {
     lookupSession();
 });
 
-// when a socket.io connect connects, get the session and store the id in it (https://stackoverflow.com/questions/42379952/combine-sockets-and-express-when-using-express-middleware)
-io.use(function clbkIOuseSessions(socket, next) {
-    sessionMiddleware(socket.request, socket.request.res, next);
-});
-var pubComm = io.of('/redcol');
-require('./routes/sockets')(pubComm); // injectează socket.io
-require('./routes/upload')(pubComm);
-
 // Instanțiază Passport și restaurează starea sesiunii dacă aceasta există
 app.use(passport.initialize());
 app.use(passport.session());
@@ -147,22 +139,20 @@ app.use(passport.session());
 let upload = require('./routes/upload')(pubComm);
 app.use('/upload', upload);
 // SIGNUP
-app.use('/signup',   signupLoco); // SIGNUP!!!
+app.use('/signup', signupLoco); // SIGNUP!!!
 // LOGIN
 const UserSchema = require('./models/user');
 const { shutdown, server_info } = require('./redis.config');
 const UserDetails = mongoose.model('users', UserSchema);
 
+/* === PASSPORT middleware === */
 passport.use(UserDetails.createStrategy()); // echivalentul lui passport.use(new LocalStrategy(Account.authenticate()));
 passport.serializeUser(UserDetails.serializeUser());
 passport.deserializeUser(UserDetails.deserializeUser());
-// passport.use(new LocalStrategy(UserDetails.authenticate()));
-// passport.serializeUser(UserDetails.serializeUser());
-// passport.deserializeUser(UserDetails.deserializeUser());
 app.use('/login', login);
 
+/* === CSRF - Cross Site Request Forgery === */
 // activarea protecției csurf - expressjs.com/en/resources/middleware/csurf.html
-// const csurfProtection = csurf({cookie: true}); // orig
 const csurfProtection = csurf({
     cookie: {
         key: '_csrf',
@@ -180,7 +170,32 @@ const csurfProtection = csurf({
 //     if (req.url === '/repo') return next();
 //     csurfProtection(req, res, next);
 // })
-app.use(csurfProtection); // activarea protecției la CSURF 
+
+// Introdu în uz middleware-ul CSRF
+app.use(csurfProtection); // activarea protecției la CSRF
+// error handler
+app.use(function (err, req, res, next) {
+    if (err.code !== 'EBADCSRFTOKEN') return next(err);
+    // handle CSRF token errors here
+    res.status(403).send('Sockets.io nu trimite înapoi tokenul!!!');
+});
+
+// UTILIZAREA SOCKETURILOR
+// when a socket.io connect connects, get the session and store the id in it (https://stackoverflow.com/questions/42379952/combine-sockets-and-express-when-using-express-middleware)
+const io = require('socket.io')(http, {
+    // path: '/socket.io', 
+    allowUpgrades: true, 
+    transports: ['polling', 'websocket'], 
+    httpCompression: true,
+    cookieHttpOnly: true
+});
+io.use(function clbkIOuseSessions(socket, next) {
+    sessionMiddleware(socket.request, socket.request.res, next);
+});
+
+var pubComm = io.of('/redcol');
+require('./routes/sockets')(pubComm); // injectează socket.io
+require('./routes/upload')(pubComm);
 
 // TIMP RĂSPUNS ÎN HEADER
 app.use(responseTime());
@@ -208,7 +223,7 @@ app.set('view engine', 'hbs');
 app.set('trust proxy', true);
 app.enable('trust proxy');
 
-// INIȚTALIZARE I18N
+// INIȚIALIZARE I18N
 app.use(i18n.init); // instanțiere modul i18n - este necesar ca înainte de a adăuga acest middleware să fie cerut cookies
 
 // === COMPRESIE ===
@@ -224,10 +239,12 @@ app.use(compression({ filter: shouldCompress }));
 
 // === MIDDLEWARE-ul RUTELOR ===
 // app.use('/',               csurfProtection, index);
-app.use('/',               index);
+
+app.use('/api/v1',         apiv1); // accesul la prima versiune a api-ului
 app.use('/auth',           authG);
 app.use('/callback',       callbackG);
 app.use('/logout',         logout);
+app.use('/',               csurfProtection, index);
 app.use('/resursepublice', csurfProtection, resursepublice);
 app.use('/tertium',        csurfProtection, tertium);
 app.use('/help',           csurfProtection, help);
@@ -316,6 +333,12 @@ const detalii = {
 }
 
 console.log("Memoria RAM alocată la pornire este de: ", detalii.RAM);
+
+let port = process.env.PORT || 8080;
+http.listen(port, '127.0.0.1', function cbConnection () {
+    console.log('RED Colector ', process.env.APP_VER);
+    console.log('Server pornit pe 8080 -> binded pe 127.0.0.1');
+});
 
 // exports.pubComm = pubComm;
 module.exports.io = io;

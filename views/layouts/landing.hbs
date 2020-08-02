@@ -17,6 +17,8 @@
         
         <meta itemprop="name" content="Colector Resurse Educaționale Deschise">
         <meta itemprop="description" content="Aceasta este aplicația care colectează Resurse Educaționale Deschise create în cadrul proiectului EDUCRED.">
+
+        <meta name="csrf-token" content="{{csrfToken}}">
         
         {{!-- SOCKET --}}
         {{!-- <script type="application/javascript" src="/socket.io/socket.io.js"></script> --}}
@@ -36,6 +38,11 @@
 
         <link rel="stylesheet" href="{{style}}" media="screen" title="no title" charset="utf-8">
 
+        {{!-- Preîncărcarea modulelor --}}
+        {{#each modules}}
+            <link rel="modulepreload" href="{{module}}"></script>
+        {{/each}}
+
         <title>{{title}}</title>
     </head>
     <body data-spy="scroll" data-target="#navbarResponsive">
@@ -46,12 +53,13 @@
         <!-- Optional JavaScript -->
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->        
         <script type="application/javascript" src="/lib/jquery/dist/jquery.slim.min.js"></script>
-        <script type="application/javascript" src="/lib/popper.js/dist/popper.min.js"></script>
+        {{!-- <script type="application/javascript" src="/lib/popper.js/src/popper.js"></script> --}}
         <script type="application/javascript" src="/lib/bootstrap/dist/js/bootstrap.min.js"></script>
-        <script type="application/javascript" src="/lib/fontawesome/js/all.js"></script>
+        {{!-- <script type="application/javascript" src="/lib/fontawesome/js/all.js"></script> --}}
+        <script type="application/javascript" src="/lib/fontawesome/index.js"></script>
         
         <script type="application/javascript" src="/lib/waypoints/lib/jquery.waypoints.min.js"></script>
-        <script type="application/javascript" src="/js/main.js"></script>
+        {{!-- <script type="application/javascript" src="/js/main.js"></script> --}}
         <script type="application/javascript" src="/js/custom.js"></script>
     </body>
 </html>

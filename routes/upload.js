@@ -15,6 +15,11 @@ const UserPassport = require('./controllers/user.ctrl')(passport);
 var multer = require('multer');
 
 module.exports = function uploader (pubComm) {
+    const app            = express();
+    const http           = require('http').createServer(app);
+    const io             = require('socket.io')(http);
+    var pubComm = io.of('/redcol');
+    
     /* === FUNCȚII HELPER PENTRU LUCRUL CU SOCKET-URI */
     // EMIT
     function rre (nameEvt, payload) {

@@ -1,21 +1,32 @@
-var socket = io();
-var pubComm = io('/redcol');
-var uuid = '';
+var uuid = '', csrfToken = '';
+
+if(document.getElementsByName('_csrf')[0].value) {
+    csrfToken = document.getElementsByName('_csrf')[0].value;
+}
+
+var pubComm = io('/redcol', {
+    // path: '/socket.io', 
+    allowUpgrades: true, 
+    transports: ['polling', 'websocket'], 
+    httpCompression: true,
+    cookieHttpOnly: true,
+    query: {['_csrf']: csrfToken}
+});
 
 // === MANAGEMENTUL COMUNICĂRII pe socketuri ===
-pubComm.on('mesaje', (mess) => {
-    // TODO: execută funcție care afișează mesajul
+// pubComm.on('mesaje', (mess) => {
+//     // TODO: execută funcție care afișează mesajul
 
-    $.toast({
-        heading: 'Colectorul spune:',
-        text: `${mess}`,
-        position: 'top-center',
-        showHideTransition: 'fade',
-        hideAfter : 7000,
-        icon: 'info'
-    });
-    //https://kamranahmed.info/toast
-});
+//     $.toast({
+//         heading: 'Colectorul spune:',
+//         text: `${mess}`,
+//         position: 'top-center',
+//         showHideTransition: 'fade',
+//         hideAfter : 7000,
+//         icon: 'info'
+//     });
+//     //https://kamranahmed.info/toast
+// });
 
 /**
  * Clasa `createElement` va creea elemente HTML
@@ -101,7 +112,7 @@ function decodeCharEntities (str) {
         return newArr.join('');
     });
     return arrNew.join(' ');
-}
+};
 /**
  * Funcția are rolul de a extrage setul de date atașat unui element prin data-*
  * @param {Object} elem 
@@ -117,4 +128,16 @@ function datasetToObject(elem){
         }
     });
     return data;
-}
+};
+
+export const main = {
+    uuid: uuid,
+    csrfToken: csrfToken,
+    pubComm: pubComm,
+    createElement: createElement,
+    decodeCharEntities: decodeCharEntities,
+    datasetToObject: datasetToObject
+};
+
+// document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
+
