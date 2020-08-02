@@ -11,12 +11,12 @@ const JS = [
     'datatables.net-select-dt/js/select.dataTables.min.js',
     'fontawesome/generate.js',
     'fontawesome/index.js',
-    'boostrap/dist/js/boostrap.bundle.min.js',
-    'boostrap/dist/js/boostrap.bundle.min.js.map',
+    'bootstrap/dist/js/bootstrap.bundle.min.js',
+    'bootstrap/dist/js/bootstrap.bundle.min.js.map',
     'handlebars/dist/handlebars.min.js',
     'holderjs/holder.min.js',
     'jquery/dist/jquery.slim.min.js',
-    'jquery/dist/jquery.slim.min.js.map',
+    'jquery/dist/jquery.slim.min.map',
     'jquery-toast-plugin/dist/jquery.toast.min.js',
     'moment/min/moment-with-locales.min.js',
     'moment/min/moment-with-locales.min.js.map',
@@ -34,8 +34,8 @@ const CSS = [
     'datatables.net-dt/css/jquery.dataTables.min.css',
     'datatables.net-responsive-dt/css/responsive.dataTables.min.css',
     'datatables.net-select-dt/css/select.dataTables.min.css',
-    'boostrap/dist/css/boostrap.min.css',
-    'boostrap/dist/css/boostrap.min.css.map',
+    'bootstrap/dist/css/bootstrap.min.css',
+    'bootstrap/dist/css/bootstrap.min.css.map',
     'jquery-toast-plugin/dist/jquery.toast.min.css'
 ];
 

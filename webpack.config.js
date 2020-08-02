@@ -1,26 +1,31 @@
 const path = require('path');
 const webpack = require('webpack');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 // assets.js
 const Assets = require('./assets');
 
 module.exports = {
+    name: 'browser',
+    devtool: 'eval',
+    mode: 'development',
     entry: {
-        app: "./app.js",
+        app: "./public/js/main.mjs",
     },
     output: {
-        path: __dirname + "/public/js/lib/",
+        path: __dirname + "/public/bundle",
         filename: "[name].bundle.js"
     },
     plugins: [
-        new CopyWebpackPlugin(
-            Assets.map(asset => {
+        new CopyPlugin({
+            patterns: Assets.map(asset => {
                 return {
                     from: path.resolve(__dirname, `./node_modules/${asset}`),
-                    to: path.resolve(__dirname, './public/js/lib')
+                    to: path.resolve(__dirname, './public/lib/npm')
                 };
             })
-        )
-    ]
+        })
+
+    ],
+    devtool: 'source-map'
 };
