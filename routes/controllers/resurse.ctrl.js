@@ -35,10 +35,12 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
 
     // SCRIPTURI
     let scripts = [       
-        {script: '/lib/moment/min/moment.min.js'},
-        {script: '/js/redincredall.js'},
-        // HOLDERJS
-        {script: '/lib/holderjs/holder.min.js'},         
+        // MOMENT.JS
+        {script: '/lib/npm/moment-with-locales.min.js'},
+        // HOLDER.JS
+        {script: '/lib/npm/holder.min.js'},
+        // LOCALE
+        {script: '/js/redincredall.js'}    
     ];
     
     /* === VERIFICAREA CREDENȚIALELOR === */
@@ -54,7 +56,7 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
             });
             res.render('resurse', {
                 title:        "CRED RED-uri",
-                style:        "/lib/fontawesome/css/fontawesome.min.css",
+                // style:        "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:      "img/rED-logo192.png",
                 csfrToken:    req.csrfToken(),
                 user:         req.user,
@@ -81,7 +83,7 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
         
             res.render('resurse', {
                 title:        "Resurse publice",
-                style:        "/lib/fontawesome/css/fontawesome.min.css",
+                // style:        "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:      "img/rED-logo192.png",
                 csfrToken:    req.csrfToken(),
                 user:         req.user,
@@ -140,6 +142,7 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
             return Object.assign({}, resursa._doc);// Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
         }).then(result => {
             let scripts = [
+                // EDITOR.JS
                 {script: '/lib/moment/min/moment.min.js'},
                 {script: '/lib/editorjs/editor.js'},
                 {script: '/lib/editorjs/header.js'},
@@ -152,9 +155,10 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
                 {script: '/lib/editorjs/code.js'},
                 {script: '/lib/editorjs/quote.js'},
                 {script: '/lib/editorjs/inlinecode.js'},
-                {script: '/lib/moment/min/moment.min.js'},
-                // HOLDERJS
-                {script: '/lib/holderjs/holder.min.js'},                
+                // MOMENT
+                {script: '/lib/npm/moment-with-locales.min.js'},
+                // HOLDER.JS
+                {script: '/lib/npm/holder.min.js'},                
                 // UPLOADER
                 {script: '/js/uploader.js'},   
                 {script: '/js/cred-res.js'}      
@@ -162,7 +166,7 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
             res.render('resursa-cred', {
                 user:      req.user,
                 title:     "RED in CRED",
-                style:     "/lib/fontawesome/css/fontawesome.min.css",
+                // style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csfrToken: req.csrfToken(),
@@ -197,11 +201,11 @@ exports.describeResource = function describeResource (req, res, next) {
         {script: '/lib/editorjs/quote.js'},
         {script: '/lib/editorjs/inlinecode.js'},
         // Datatables
-        {script: '/lib/datatables.net/js/jquery.dataTables.min.js'},
-        {script: '/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js'},
-        {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-        {script: '/lib/datatables.net-buttons/js/dataTables.buttons.min.js'},
-        {script: '/lib/datatables.net-responsive/js/dataTables.responsive.min.js'},        
+        {script: '/lib/npm/jquery.dataTables.min.js'},
+        {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+        {script: '/lib/npm/dataTables.select.min.js'},
+        {script: '/lib/npm/dataTables.buttons.min.js'},
+        {script: '/lib/npm/dataTables.responsive.min.js'},        
         // UPLOADER
         {script: '/js/uploader.js'},
         // HELPER DETECT URLS or PATHS
@@ -217,8 +221,8 @@ exports.describeResource = function describeResource (req, res, next) {
     ];
 
     let styles = [
-        {style: '/lib/datatables.net-dt/css/jquery.dataTables.min.css'},
-        {style: '/lib/datatables.net-responsive-dt/css/responsive.dataTables.min.css'}
+        {style: '/lib/npm/jquery.dataTables.min.css'},
+        {style: '/lib/npm/responsive.dataTables.min.css'}
     ];
 
     // roluri pe care un cont le poate avea în proiectul CRED.
@@ -241,7 +245,7 @@ exports.describeResource = function describeResource (req, res, next) {
         res.render('adauga-res', {
             user:    req.user,
             title:   "Adauga",
-            style:   "/lib/fontawesome/css/fontawesome.min.css",
+            // style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "/img/rED-logo192.png",
             credlogo:"/img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
@@ -265,7 +269,7 @@ exports.describeResource = function describeResource (req, res, next) {
         res.render('adauga-res', {
             user:    req.user,
             title:   "Adauga",
-            style:   "/lib/fontawesome/css/fontawesome.min.css",
+            // style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "/img/rED-logo192.png",
             credlogo:"/img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),

@@ -5,7 +5,7 @@ const moment     = require('moment');
 var content2html = require('./controllers/editorJs2HTML');
 const Log        = require('../models/logentry'); // Adu modelul unei înregistrări de jurnal
 
-// ========== VERIFICAREA ROLURILOR ==========
+// === VERIFICAREA ROLURILOR ===
 let checkRole = require('./controllers/checkRole.helper');
 
 router.get('/', function clbkLog (req, res, next) {
@@ -29,13 +29,14 @@ router.get('/', function clbkLog (req, res, next) {
             });
 
             let scripts = [     
-                {script: '/lib/moment/min/moment.min.js'}        
+                // MOMENT.JS
+                {script: '/lib/npm/moment-with-locales.min.js'},         
             ];
             
             res.render('logentry', {
-                user:       req.user,
                 title:      "Noutăți",
-                style:      "/lib/fontawesome/css/fontawesome.min.css",
+                user:       req.user,
+                // style:      "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:    "/img/red-logo-small30.png",
                 credlogo:   "../img/CREDlogo.jpg",
                 csfrToken:  req.csrfToken(),
@@ -53,6 +54,7 @@ router.get('/', function clbkLog (req, res, next) {
 // Jurnalier - introducere articol
 router.get('/new', function (req, res) {
     let scripts = [
+        // EDITOR.JS
         {script: '/lib/editorjs/editor.js'},
         {script: '/lib/editorjs/header.js'},
         {script: '/lib/editorjs/paragraph.js'},
@@ -65,13 +67,13 @@ router.get('/new', function (req, res) {
         {script: '/lib/editorjs/inlinecode.js'}
     ];
 
-    /* ====== VERIFICAREA CREDENȚIALELOR ====== */
+    /* === VERIFICAREA CREDENȚIALELOR === */
     if(req.session.passport.user.roles.admin){
         // Dacă avem un admin, atunci oferă acces neîngrădit
         res.render('logentry-form', {
-            user:      req.user,
             title:     "Adaugă în log",
-            style:     "/lib/fontawesome/css/fontawesome.min.css",
+            user:      req.user,
+            // style:     "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:   "/img/red-logo-small30.png",
             credlogo:  "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),

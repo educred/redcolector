@@ -1,8 +1,9 @@
 require('dotenv').config();
-/* ==== DEPENDINȚE ==== */
+/* === DEPENDINȚE === */
 const express = require('express');
 const router  = express.Router();
 const passport= require('passport');
+const mongoose = require('mongoose');
 const connectEnsureLogin = require('connect-ensure-login');
 const LocalStrategy = require('passport-local').Strategy;
 
@@ -14,13 +15,11 @@ router.get('/', (req, res, next) => {
     // console.log("Din user.ctrl avem din req.body pe /login: ", req.body);
     res.render('login', {
         title:    "login",
-        style:   "/lib/fontawesome/css/fontawesome.min.css",
+        // style:   "/lib/fontawesome/css/fontawesome.min.css",
         logoimg:  "img/rED-logo192.png",
         credlogo: "img/CREDlogo150.jpg"
     });
 });
-
-const mongoose = require('mongoose');
 
 /* === LOGIN [POST] ===*/ // passport.authenticate('local', {failureRedirect: '/login'}),
 router.post('/',  passport.authenticate('local', { failureRedirect: '/login'}), (req, res, next) => {

@@ -25,25 +25,26 @@ router.get('/', function clbkAdmRoot (req, res) {
     // Dacă avem un admin, atunci oferă acces neîngrădit
     if(req.session.passport.user.roles.admin){
         let scripts = [       
-            {script: '/lib/moment/min/moment.min.js'},
-            {script: '/lib/moment/locale/ro.js'},    
-            {script: '/lib/datatables.net/js/jquery.dataTables.min.js'},
-            {script: '/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js'},
-            {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-            {script: '/lib/datatables.net-buttons/js/dataTables.buttons.min.js'},
-            {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-            {script: '/lib/datatables.net-responsive/js/dataTables.responsive.min.js'},
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'},  
+            // DATATABLES
+            {script: '/lib/npm/jquery.dataTables.min.js'},
+            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+            {script: '/lib/npm/dataTables.select.min.js'},
+            {script: '/lib/npm/dataTables.buttons.min.js'},
+            {script: '/lib/npm/dataTables.responsive.min.js'},
+            // LOCALE
             {script: '/js/admin.js'}
         ];
         let styles = [
-            {style: '/lib/datatables.net-dt/css/jquery.dataTables.min.css'},
-            {style: '/lib/datatables.net-responsive-dt/css/responsive.dataTables.min.css'}
+            {style: '/lib/npm/jquery.dataTables.min.css'},
+            {style: '/lib/npm/responsive.dataTables.min.css'}
         ];
         res.render('administrator', {
-            title:   "administrator",
-            user:    req.user,
-            style:   "/lib/fontawesome/css/fontawesome.min.css",
-            logoimg: "/img/red-logo-small30.png",
+            title:    "administrator",
+            user:     req.user,
+            // style:   "/lib/fontawesome/css/fontawesome.min.css",
+            logoimg:  "/img/red-logo-small30.png",
             credlogo: "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),
             scripts,
@@ -52,20 +53,22 @@ router.get('/', function clbkAdmRoot (req, res) {
         });
     // Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public
     } else if (confirmedRoles.includes('validator')) {
-        let scripts = [
-            {script: '/js/validator.js'},       
-            {script: '/lib/moment/min/moment.min.js'},
-            {script: '/lib/timeline3/js/timeline.js'}
+        let scripts = [      
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'},
+            // TIMELINE 3
+            {script: '/lib/timeline3/js/timeline.js'},
+            // LOCALE
+            {script: '/js/validator.js'}
         ];
         res.render('validator', {
-            title:   "validator",
+            title:   "Validator",
             user:    req.user,
-            style:   "/lib/fontawesome/css/fontawesome.min.css",
+            // style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "/img/red-logo-small30.png",
             credlogo: "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),
             scripts,
-            styles,
             activeAdmLnk: true
         });
     } else {
@@ -85,24 +88,25 @@ router.get('/reds', function clbkAdmReds (req, res) {
     // Dacă avem un admin, atunci oferă acces neîngrădit
     if(req.session.passport.user.roles.admin){
         let scripts = [       
-            {script: '/lib/moment/min/moment.min.js'},
-            {script: '/lib/moment/locale/ro.js'},    
-            {script: '/lib/datatables.net/js/jquery.dataTables.min.js'},
-            {script: '/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js'},
-            {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-            {script: '/lib/datatables.net-buttons/js/dataTables.buttons.min.js'},
-            {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-            {script: '/lib/datatables.net-responsive/js/dataTables.responsive.min.js'},
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'},  
+            // DATATABLES
+            {script: '/lib/npm/jquery.dataTables.min.js'},
+            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+            {script: '/lib/npm/dataTables.select.min.js'},
+            {script: '/lib/npm/dataTables.buttons.min.js'},
+            {script: '/lib/npm/dataTables.responsive.min.js'},
+            // LOCALE
             {script: '/js/res-visuals.js'}
         ];
         let styles = [
-            {style: '/lib/datatables.net-dt/css/jquery.dataTables.min.css'},
-            {style: '/lib/datatables.net-responsive-dt/css/responsive.dataTables.min.css'}
+            {style: '/lib/npm/jquery.dataTables.min.css'},
+            {style: '/lib/npm/responsive.dataTables.min.css'}
         ];
         res.render('reds-data-visuals', {
             title:     "REDs data visuals",
             user:      req.user,
-            style:     "/lib/fontawesome/css/fontawesome.min.css",
+            // style:     "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:   "/img/red-logo-small30.png",
             credlogo:  "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),
@@ -258,21 +262,21 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res) {
                 }
 
                 res.render('resursa-admin', {
-                    user:    req.user,
-                    title:   "Administrare RED",
-                    style:   "/lib/fontawesome/css/fontawesome.min.css",
+                    user:     req.user,
+                    title:    "Administrare RED",
+                    // style:   "/lib/fontawesome/css/fontawesome.min.css",
                     scripts,
-                    logoimg: "/img/red-logo-small30.png",
+                    logoimg:  "/img/red-logo-small30.png",
                     credlogo: "../img/CREDlogo.jpg",
                     csfrToken: req.csrfToken(),
                     resursa,
                 });
             } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
                 res.render('resursa', {
-                    user:    req.user,
-                    title:   "Afișare RED",
-                    style:   "/lib/fontawesome/css/fontawesome.min.css",
-                    logoimg: "/img/red-logo-small30.png",
+                    user:     req.user,
+                    title:    "Afișare RED",
+                    // style:    "/lib/fontawesome/css/fontawesome.min.css",
+                    logoimg:  "/img/red-logo-small30.png",
                     credlogo: "../img/CREDlogo.jpg",
                     csfrToken: req.csrfToken(),
                     resursa: resursa,
@@ -337,6 +341,27 @@ router.get('/users', function clbkAdmUsr (req, res) {
 router.get('/users/:id', function clbkAdmRoot (req, res) {
     // ACL
     let roles = ["admin", "validator"];
+
+    // SCRIPTS - comune [DRY]
+    let scripts = [       
+        // FONTAWESOME
+        {script: '/lib/npm/index.js'},
+        // TIMELINE 3
+        {script: '/lib/timeline3/js/timeline.js'},
+        // MOMENT.JS
+        {script: '/lib/npm/moment-with-locales.min.js'},
+        // {script: '/lib/moment/locale/ro.js'}, 
+        // DATATABLES
+        {script: '/lib/npm/jquery.dataTables.min.js'},
+        {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+        {script: '/lib/npm/dataTables.select.min.js'},
+        {script: '/lib/npm/dataTables.buttons.min.js'},
+        {script: '/lib/npm/dataTables.responsive.min.js'}
+    ];
+    let styles = [
+        {style: '/lib/npm/jquery.dataTables.min.css'},
+        {style: '/lib/npm/responsive.dataTables.min.css'}
+    ];
     
     // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
@@ -344,28 +369,14 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
     /* === VERIFICAREA CREDENȚIALELOR === */
     // Dacă avem un admin, atunci oferă acces neîngrădit
     if(req.session.passport.user.roles.admin){
-        let scripts = [       
-            {script: '/lib/fontawesome/js/all.js'},
-            {script: '/lib/timeline3/js/timeline.js'},
-            {script: '/lib/moment/min/moment.min.js'},
-            {script: '/lib/moment/locale/ro.js'},            
-            // DATATABLES
-            {script: '/lib/datatables.net/js/jquery.dataTables.min.js'},
-            {script: '/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js'},
-            {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-            {script: '/lib/datatables.net-buttons/js/dataTables.buttons.min.js'},
-            {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-            {script: '/lib/datatables.net-responsive/js/dataTables.responsive.min.js'},
-            {script: '/js/user.js'}
-        ];
-        let styles = [
-            {style: '/lib/datatables.net-dt/css/jquery.dataTables.min.css'},
-            {style: '/lib/datatables.net-responsive-dt/css/responsive.dataTables.min.css'}
-        ];
+
+        // injectează scripturile caracteristice
+        scripts.push({script: '/js/user.js'});
+                
         res.render('user-admin', {
             title:   "fișa user",
             user:    req.user,
-            style:   "/lib/fontawesome/css/fontawesome.min.css",
+            // style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "/img/red-logo-small30.png",
             credlogo: "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),
@@ -375,28 +386,14 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
         });
     // Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public
     } else if (confirmedRoles.includes('validator')) {
-        let scripts = [
-            {script: '/lib/fontawesome/js/all.js'},
-            {script: '/lib/timeline3/js/timeline.js'},
-            {script: '/lib/moment/min/moment.min.js'},
-            {script: '/lib/moment/locale/ro.js'},            
-            // DATATABLES
-            {script: '/lib/datatables.net/js/jquery.dataTables.min.js'},
-            {script: '/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js'},
-            {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-            {script: '/lib/datatables.net-buttons/js/dataTables.buttons.min.js'},
-            {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-            {script: '/lib/datatables.net-responsive/js/dataTables.responsive.min.js'},
-            {script: '/js/validator.js'},
-        ];
-        let styles = [
-            {style: '/lib/datatables.net-dt/css/jquery.dataTables.min.css'},
-            {style: '/lib/datatables.net-responsive-dt/css/responsive.dataTables.min.css'}
-        ];
+
+        // injectează scripturile caracteristice
+        scripts.push({script: '/js/validator.js'});
+
         res.render('validator', {
             title:   "validator",
             user:    req.user,
-            style:   "/lib/fontawesome/css/fontawesome.min.css",
+            // style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "/img/red-logo-small30.png",
             credlogo: "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),

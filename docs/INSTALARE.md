@@ -253,15 +253,15 @@ git fetch origin
 git checkout master
 ```
 
-### Instalarea resurselor cu Bower
+### Instalarea resurselor cu npm
 
-Imediat după aducerea resurselor de pe Github, este indicată instalarea din consola serverului a dependințelor externe necesare. Toate dependințele necesare specificate în `bower.json` vor fi instalate în directorul specificat de `.bowerrc`. În cazul nostru, în `public/lib`.
+Imediat după aducerea resurselor de pe Github, este indicată instalarea din consola serverului a dependințelor externe necesare. Se va executa `npm install`.
 
-```bash
-bower install
-```
+Toate dependințele necesare specificate în fișierul `assets.js` din rădăcină, vor trebui copiate în `public/lib/npm`. Acest lucru se face prin rularea comenzii `npm run build` din rădăcina proiectului după ce s-au instalat toate pachetele.
 
-#### Dependințe DataTable
+#### Dependințe 
+
+**DataTable**
 
 Aceste dependințe sunt necesare pentru a realiza mediul de prezentare a datelor în format tabelar.
 

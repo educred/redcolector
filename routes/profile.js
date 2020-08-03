@@ -1,5 +1,5 @@
 require('dotenv').config();
-/* ==== DEPENDINȚE ==== */
+/* === DEPENDINȚE === */
 const util     = require('util');
 const express  = require('express');
 const router   = express.Router();
@@ -18,13 +18,12 @@ const schema     = require('../models/resursa-red-es7');
 const ES7Helper  = require('../models/model-helpers/es7-helper');
 let editorJs2TXT = require('./controllers/editorJs2TXT');
 
-
 /* === PROFILUL PROPRIU === */
 router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, res) {
-    res.render('profile', {
-        user:         req.user,
+    res.render('profile', {        
         title:        "Profil",
-        style:        "/lib/fontawesome/css/fontawesome.min.css",
+        user:         req.user,
+        // style:        "/lib/fontawesome/css/fontawesome.min.css",
         logoimg:      "/img/red-logo-small30.png",
         credlogo:     "../img/CREDlogo.jpg",
         csfrToken:    req.csrfToken(),
@@ -54,28 +53,29 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
 
             /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
             let scripts = [       
-                {script: '/lib/moment/min/moment.min.js'},
-                {script: '/lib/moment/locale/ro.js'},    
-                {script: '/lib/datatables.net/js/jquery.dataTables.min.js'},
-                {script: '/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js'},
-                {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-                {script: '/lib/datatables.net-buttons/js/dataTables.buttons.min.js'},
-                {script: '/lib/datatables.net-select/js/dataTables.select.min.js'},
-                {script: '/lib/datatables.net-responsive/js/dataTables.responsive.min.js'},
-                {script: '/js/res-visuals-user.js'},
+                // MOMENT.JS
+                {script: '/lib/npm/moment-with-locales.min.js'},  
+                // DATATABLES
+                {script: '/lib/npm/jquery.dataTables.min.js'},
+                {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+                {script: '/lib/npm/dataTables.select.min.js'},
+                {script: '/lib/npm/dataTables.buttons.min.js'},
+                {script: '/lib/npm/dataTables.responsive.min.js'},
                 // HOLDERJS
-                {script: '/lib/holderjs/holder.min.js'},  
+                {script: '/lib/npm/holder.min.js'},  
+                // LOCALE
+                {script: '/js/res-visuals-user.js'}
             ];
 
             let styles = [
-                {style: '/lib/datatables.net-dt/css/jquery.dataTables.min.css'},
-                {style: '/lib/datatables.net-responsive-dt/css/responsive.dataTables.min.css'}
+                {style: '/lib/npm/jquery.dataTables.min.css'},
+                {style: '/lib/npm/responsive.dataTables.min.css'}
             ];
 
-            res.render('resurse-profil', {
-                user:      req.user,
+            res.render('resurse-profil', {                
                 title:     "Profil",
-                style:     "/lib/fontawesome/css/fontawesome.min.css",
+                user:      req.user,
+                // style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csfrToken: req.csrfToken(),
@@ -95,7 +95,6 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
     // Adu înregistrarea resursei cu toate câmpurile referință populate deja
     // const editorJs2html = require('./controllers/editorJs2HTML');
     let scripts = [
-        {script: '/lib/moment/min/moment.min.js'},
         {script: '/lib/editorjs/editor.js'},
         {script: '/lib/editorjs/header.js'},
         {script: '/lib/editorjs/paragraph.js'},
@@ -108,6 +107,8 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         {script: '/lib/editorjs/quote.js'},
         {script: '/lib/editorjs/inlinecode.js'},
         {script: '/lib/editorjs/checklist.js'},
+        // MOMENT.JS
+        {script: '/lib/npm/moment-with-locales.min.js'},  
         // UPLOADER
         {script: '/js/uploader.js'},
         // HELPER DETECT URLS or PATHS
@@ -115,6 +116,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         // REEDIT RES
         {script: '/js/personal-res.js'}
     ];
+
     let roles = ["user", "cred", "validator"];
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
 
@@ -258,9 +260,9 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 resursa.genPub = `<input type="checkbox" id="public" class="generalPublic">`;
             }
             res.render('resursa-admin', {
-                user:      req.user,
                 title:     "Administrare RED",
-                style:     "/lib/fontawesome/css/fontawesome.min.css",                
+                user:      req.user,
+                // style:     "/lib/fontawesome/css/fontawesome.min.css",                
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csfrToken: req.csrfToken(),
@@ -275,10 +277,10 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             } else {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck">`;
             }
-            res.render('resursa-validator', {
+            res.render('resursa-validator', {            
+                title:     "Validare RED",
                 user:      req.user,
-                title:     "Administrare RED",
-                style:     "/lib/fontawesome/css/fontawesome.min.css",                
+                // style:     "/lib/fontawesome/css/fontawesome.min.css",                
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csfrToken: req.csrfToken(),
@@ -288,10 +290,10 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         /* === ROLURI ÎN CRED === */
         } else if (confirmedRoles.length > 0) { 
             // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
-            res.render('resursa', {
-                user:      req.user,
+            res.render('resursa', {                
                 title:     "Afișare RED",
-                style:     "/lib/fontawesome/css/fontawesome.min.css",
+                user:      req.user,
+                // style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csfrToken: req.csrfToken(),

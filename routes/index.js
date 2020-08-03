@@ -25,19 +25,20 @@ router.get('/', function clbkRootRoute (req, res, next) {
         });
         
         let scripts = [
-            {script: '/lib/moment/min/moment.min.js'},
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'}, 
             // HOLDERJS
-            {script: '/lib/holderjs/holder.min.js'}
+            {script: '/lib/npm/holder.min.js'}
         ];
 
         let modules = [
-            {module: '/lib/popper.js/src/index.js'},
+            {module: '/lib/npm/popper.min.js'},
             {module: '/js/main.mjs'}
         ];
     
         res.render('index', {
             title:     "RED colector",
-            style:     "/lib/fontawesome/css/fontawesome.min.css",
+            // style:     "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:   "img/rED-logo192.png",
             user:      req.user,
             resurse:   newResultArr,

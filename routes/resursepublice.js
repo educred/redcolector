@@ -29,15 +29,16 @@ router.get('/', (req, res) => {
         });
 
         let scripts = [     
-            {script: '/lib/moment/min/moment.min.js'}        
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'},       
         ];
 
         res.render('resursepublice', {
             title:        "Resurse publice",
-            style:        "/lib/fontawesome/css/fontawesome.min.css",
-            logoimg:      "img/rED-logo192.png",
-            csfrToken:    req.csrfToken(),
             user:         req.user,
+            // style:        "/lib/fontawesome/css/fontawesome.min.css",
+            logoimg:      "img/rED-logo192.png",
+            csfrToken:    req.csrfToken(),            
             resurse:      newResultArr,
             activeResLnk: true,
             resIdx:       idxRes,
@@ -52,8 +53,10 @@ router.get('/:id', (req, res) => {
     let query = Resursa.findById(req.params.id).populate({path: 'competenteS'});
     query.then(resursa => {
         let scripts = [      
-            {script: '/js/redincredadmin.js'},       
-            {script: '/lib/moment/min/moment.min.js'}        
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'},  
+            // LOCALE
+            {script: '/js/redincredadmin.js'}    
         ];
         
         if (resursa !== null) {
@@ -72,9 +75,9 @@ router.get('/:id', (req, res) => {
             newObi.editorContent = JSON.stringify(resursa);
             
             // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-            res.render('resursa-publica', {
-                user:      req.user,
+            res.render('resursa-publica', {                
                 title:     "RED public",
+                user:      req.user,
                 style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
