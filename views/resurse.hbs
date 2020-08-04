@@ -57,7 +57,7 @@
         </div>
 
         <div class="fatete">
-            {{!-- <h4>Filtrare</h4>
+            <h4>Filtrare</h4>
             <section id="selector">
                 <form>
 
@@ -1018,13 +1018,13 @@
                             <div id="disciplineselectate"></div>
                             {{!-- Afișarea disciplinelor selectate END --}}
                         </fieldset>
-  
+
                     </div>
                 </form>
             </section>
             <section id="selections">
 
-            </section> --}}
+            </section>
         </div>
 
         <div id="primare" class="resurse">
@@ -1066,7 +1066,12 @@
         </div>
     </div>
 
+    {{!-- Încărcarea modulelor --}}
+    {{#each modules}}
+        <script type="module" src="{{module}}"></script>
+    {{/each}}
+
     {{#each scripts}}
-        <script type="application/javascript" src="{{script}}"></script>
+        <script defer type="application/javascript" src="{{script}}"></script>
     {{/each}}
 

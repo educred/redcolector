@@ -106,7 +106,6 @@ router.get('/reds', function clbkAdmReds (req, res) {
         res.render('reds-data-visuals', {
             title:     "REDs data visuals",
             user:      req.user,
-            // style:     "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:   "/img/red-logo-small30.png",
             credlogo:  "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),
@@ -123,7 +122,9 @@ router.get('/reds', function clbkAdmReds (req, res) {
 router.get('/reds/:id', function clbkAdmOneRes (req, res) {
         // const editorJs2html = require('./controllers/editorJs2HTML');
         let scripts = [
-            {script: '/lib/moment/min/moment.min.js'},
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'},
+            // EDITOR.JS
             {script: '/lib/editorjs/editor.js'},
             {script: '/lib/editorjs/header.js'},
             {script: '/lib/editorjs/paragraph.js'},
@@ -343,9 +344,9 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
     let roles = ["admin", "validator"];
 
     // SCRIPTS - comune [DRY]
-    let scripts = [       
+    let scripts = [
         // FONTAWESOME
-        {script: '/lib/npm/index.js'},
+        {script: '/lib/npm/all.min.js'},
         // TIMELINE 3
         {script: '/lib/timeline3/js/timeline.js'},
         // MOMENT.JS
@@ -360,7 +361,8 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
     ];
     let styles = [
         {style: '/lib/npm/jquery.dataTables.min.css'},
-        {style: '/lib/npm/responsive.dataTables.min.css'}
+        {style: '/lib/npm/responsive.dataTables.min.css'},
+        {style: '/lib/npm/all.min.css'}
     ];
     
     // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
@@ -376,7 +378,6 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
         res.render('user-admin', {
             title:   "fișa user",
             user:    req.user,
-            // style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "/img/red-logo-small30.png",
             credlogo: "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),
@@ -393,7 +394,6 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
         res.render('validator', {
             title:   "validator",
             user:    req.user,
-            // style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "/img/red-logo-small30.png",
             credlogo: "../img/CREDlogo.jpg",
             csfrToken: req.csrfToken(),

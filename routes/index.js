@@ -3,7 +3,7 @@ const router   = express.Router();
 const moment   = require('moment');
 const Resursa  = require('../models/resursa-red'); // Adu modelul resursei
 
-// console.log(result.length);
+/* === LANDING === */
 router.get('/', function clbkRootRoute (req, res, next) {
     // let localizat = moment(result.date).locale('ro').format('LLL');
     // result.dataRo = `${localizat}`; // formatarea datei pentru limba română.
@@ -13,7 +13,9 @@ router.get('/', function clbkRootRoute (req, res, next) {
         // console.log('Numărul resurselor este: ', count);
     });
 
+    // creează Promise
     let resursePublice = Resursa.find({'generalPublic': true}).sort({"date": -1}).limit(8);
+
     resursePublice.exec().then((result) => {
         let newResultArr = [];
 
@@ -27,6 +29,8 @@ router.get('/', function clbkRootRoute (req, res, next) {
         let scripts = [
             // MOMENT.JS
             {script: '/lib/npm/moment-with-locales.min.js'}, 
+            // FONTAWESOME
+            {script: '/lib/npm/all.min.js'},
             // HOLDERJS
             {script: '/lib/npm/holder.min.js'}
         ];
@@ -35,16 +39,20 @@ router.get('/', function clbkRootRoute (req, res, next) {
             {module: '/lib/npm/popper.min.js'},
             {module: '/js/main.mjs'}
         ];
+
+        let styles = [
+            {style: '/lib/npm/all.min.css'}
+        ];
     
         res.render('index', {
             title:     "RED colector",
-            // style:     "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:   "img/rED-logo192.png",
             user:      req.user,
             resurse:   newResultArr,
             csrfToken: req.csrfToken(),
             modules,
-            scripts
+            scripts,
+            styles
         });
     }).catch((err) => {
         if (err) throw err;

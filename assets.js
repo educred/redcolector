@@ -9,8 +9,7 @@ const JS = [
     'datatables.net-responsive-dt/js/responsive.dataTables.min.js',
     'datatables.net-select/js/dataTables.select.min.js',
     'datatables.net-select-dt/js/select.dataTables.min.js',
-    'fontawesome/generate.js',
-    'fontawesome/index.js',
+    '@fortawesome/fontawesome-free/js/all.min.js',
     'bootstrap/dist/js/bootstrap.bundle.min.js',
     'bootstrap/dist/js/bootstrap.bundle.min.js.map',
     'handlebars/dist/handlebars.min.js',
@@ -34,6 +33,7 @@ const CSS = [
     'datatables.net-dt/css/jquery.dataTables.min.css',
     'datatables.net-responsive-dt/css/responsive.dataTables.min.css',
     'datatables.net-select-dt/css/select.dataTables.min.css',
+    '@fortawesome/fontawesome-free/css/all.min.css',
     'bootstrap/dist/css/bootstrap.min.css',
     'bootstrap/dist/css/bootstrap.min.css.map',
     'jquery-toast-plugin/dist/jquery.toast.min.css'
@@ -44,7 +44,10 @@ const IMG = [
     'datatables.net-dt/images/sort_asc_disabled.png',
     'datatables.net-dt/images/sort_both.png',
     'datatables.net-dt/images/sort_desc.png',
-    'datatables.net-dt/images/sort_desc_disabled.png'
+    'datatables.net-dt/images/sort_desc_disabled.png',
+    '@fortawesome/fontawesome-free/sprites/brands.svg',
+    '@fortawesome/fontawesome-free/sprites/regular.svg',
+    '@fortawesome/fontawesome-free/sprites/solid.svg'
 ];
 
 module.exports = [...JS, ...CSS, ...IMG];

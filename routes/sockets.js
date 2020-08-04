@@ -112,19 +112,19 @@ module.exports = function sockets (pubComm) {
     /* === CONSTRUCȚIA BAG-ULUI, INTRODUCEREA ÎNREGISTRĂRII, INTRODUCEREA ÎN ELASTICSEARCH === */
     let lastBag;   // este o referință către un bag deja deschis
     let lastUuid;  // referință către UUID-ul în efect
-    let desiredMode = 0o2775
-    let options = { mode: 0o2775 }
+    let desiredMode = 0o2775;
+    let options = { mode: 0o2775 };
 
     /* === SOCKETURI!!! === */
     pubComm.on('connect', (socket) => {
         // === MESAJE === ::Ascultă mesajele
         socket.on('mesaje', function cbMesaje (mesaj) {
-            console.log(mesaj);
+            console.log('Serverul a primi următorul mesaj: ', mesaj);
         });
 
         // === COMPETENȚELE SPECIFICE ===
         socket.on('csuri', function cbCsuri (data) {
-            // console.log("[sokets.js::<'csuri'>] Array-ul disciplinelor selectate este ", data);// De ex: [ 'arteviz3', 'stanat3' ] `data` sunt codurile disciplinelor selectate
+            console.log("[sokets.js::<'csuri'>] Array-ul disciplinelor selectate de client este ", data);// De ex: [ 'arteviz3', 'stanat3' ] `data` sunt codurile disciplinelor selectate
             
             const CSModel = require('../models/competenta-specifica');
             // Proiecția se constituie pe același câmp, dar pe valorile primite prin socket.
@@ -222,7 +222,7 @@ module.exports = function sockets (pubComm) {
                         socket.emit('resursa', responseObj);
                         // socket.emit('uuid', lastUuid); // actualizează uuid-ul în client
                     });
-                })            
+                });  
             /*
             * === SCRIEREA CELORLALTE FIȘIERE CARE VIN ===
             * dacă este primit un uuid din client, scrie fișierul în acel uuid!!
@@ -328,7 +328,7 @@ module.exports = function sockets (pubComm) {
                                         }).catch(error => {
                                             if (error) throw error;
                                         });
-                                    })
+                                    });
                                 }).catch(error => {
                                     if (error) throw error;
                                 });
@@ -429,7 +429,7 @@ module.exports = function sockets (pubComm) {
                 // transformă în Buffer obiecul `newRes`
                 const data = Buffer.from(JSON.stringify(newRes));
                 let strm = new Readable();
-                strm._read = () => {} // _read este necesar!!!
+                strm._read = () => {}; // _read este necesar!!!
                 strm.push(data);
                 strm.push(null);
 
@@ -453,13 +453,15 @@ module.exports = function sockets (pubComm) {
             }).then(res => {
                 socket.emit('confirm', res._id);
             }).catch(err => {
-                if (err) console.error;
+                if (err) {
+                    console.error(err);
+                }
                 // Dacă e vreo eroare, distruge directorul de pe hard!
                 fs.ensureDir(`${process.env.REPO_REL_PATH}${RED.idContributor}/${RED.uuid}/`, 0o2775).then(async function clbkFsExists () {
                     // TODO: scrie logica de ștergere a directorului în cazul în care a eșuat crearea înregistrării în MongoDB.
                     await fs.remove(`${process.env.REPO_REL_PATH}${RED.idContributor}/${RED.uuid}/`);
                 }).then(() => {
-                    console.log('Am șters directorul în urma operațiunii eșuate de creare a înregistrării în MongoDB.')
+                    console.log('Am șters directorul în urma operațiunii eșuate de creare a înregistrării în MongoDB.');
                 }).catch(error => {
                     console.error(JSON.stringify(error.body, null, 2));
                 });
@@ -575,7 +577,7 @@ module.exports = function sockets (pubComm) {
                         Resursa.findOneAndDelete({_id: resource.id}, (err, doc) => {       
                             if (err) {
                                 console.log(err);
-                            };
+                            }
 
                             if (doc) {
                                 // Șterge înregistrarea din Elasticsearch dacă ștergerea din bază a reușit

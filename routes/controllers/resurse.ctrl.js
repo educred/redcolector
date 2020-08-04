@@ -39,8 +39,11 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
         {script: '/lib/npm/moment-with-locales.min.js'},
         // HOLDER.JS
         {script: '/lib/npm/holder.min.js'},
+    ];
+
+    let modules = [
         // LOCALE
-        {script: '/js/redincredall.js'}    
+        {script: '/js/redincredall.mjs'} 
     ];
     
     /* === VERIFICAREA CREDENȚIALELOR === */
@@ -56,14 +59,14 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
             });
             res.render('resurse', {
                 title:        "CRED RED-uri",
-                // style:        "/lib/fontawesome/css/fontawesome.min.css",
+                user:         req.user,
                 logoimg:      "img/rED-logo192.png",
                 csfrToken:    req.csrfToken(),
-                user:         req.user,
                 resurse:      newResultArr,
                 activeResLnk: true,
                 resIdx:       idxRes,
-                scripts
+                scripts,
+                modules
             });
         }).catch((err) => {
             if (err) {
@@ -187,19 +190,7 @@ exports.describeResource = function describeResource (req, res, next) {
     // console.log("Sesiunea de la /resurse/adaugă arată așa: ", req.session);
     // pentru evitarea dependițelor din CDN-uri, se vor încărca dinamic scripturile necesare generării editorului
     let scripts = [
-        // EDITOR
-        {script: '/lib/editorjs/editor.js'},
-        {script: '/lib/editorjs/header.js'},
-        {script: '/lib/editorjs/paragraph.js'},
-        {script: '/lib/editorjs/list.js'},
-        {script: '/lib/editorjs/image.js'},
-        {script: '/lib/editorjs/table.js'},
-        {script: '/lib/editorjs/ajax.js'},
-        {script: '/lib/editorjs/attaches.js'},
-        {script: '/lib/editorjs/embed.js'},
-        {script: '/lib/editorjs/code.js'},
-        {script: '/lib/editorjs/quote.js'},
-        {script: '/lib/editorjs/inlinecode.js'},
+
         // Datatables
         {script: '/lib/npm/jquery.dataTables.min.js'},
         {script: '/lib/npm/dataTables.bootstrap4.min.js'},
@@ -207,22 +198,60 @@ exports.describeResource = function describeResource (req, res, next) {
         {script: '/lib/npm/dataTables.buttons.min.js'},
         {script: '/lib/npm/dataTables.responsive.min.js'},        
         // UPLOADER
-        {script: '/js/uploader.js'},
+        // {script: '/js/uploader.js'},
         // HELPER DETECT URLS or PATHS
         {script: '/js/check4url.js'},
-
+        // EDITOR.JS
+        // {script: '/lib/editorjs/attaches.js'},
         // DEPENDIȚELE FORM-ului
         {script: '/js/custom.js'},
     ];
 
     let modules = [
-        {module: '/js/form01adres.mjs'}, // FORM
-        {module: '/js/main.mjs'}
+        // MOTORUL FORM-ULUI
+        {module: '/js/form01adres.mjs'},
+        // FORM
+        {module: '/js/main.mjs'},
+        // EDITOR.JS
+        // {module: '/lib/editorjs/editor.js'},
+        // {module: '/lib/editorjs/header.js'},
+        // {module: '/lib/editorjs/paragraph.js'},
+        // {module: '/lib/editorjs/list.js'},
+        // {module: '/lib/editorjs/image.js'},
+        // {module: '/lib/editorjs/table.js'},
+        // {module: '/lib/editorjs/ajax.js'},
+        // {module: '/lib/editorjs/attaches.js'},
+        // {module: '/lib/editorjs/embed.js'},
+        // {module: '/lib/editorjs/code.js'},
+        // {module: '/lib/editorjs/quote.js'},
+        // {module: '/lib/editorjs/inlinecode.js'},   
+        // {module: '/lib/editorjs/table.js'},  
+        // {module: '/lib/editorjs/list.js'},
+        // {module: '/lib/editorjs/attaches.js'},
+
+        // DATATABLES
+        // {module: '/lib/npm/jquery.dataTables.min.js'},
+        // {module: '/lib/npm/dataTables.bootstrap4.min.js'},
+        // {module: '/lib/npm/dataTables.select.min.js'},
+        // {module: '/lib/npm/dataTables.buttons.min.js'},
+        // {module: '/lib/npm/dataTables.responsive.min.js'},         
+        // LOCALS
+        {module: '/js/uploader.js'}
     ];
 
     let styles = [
+        // FONTAWESOME
+        {style: '/lib/npm/all.min.css'},
+        // JQUERY TOAST
+        {style: '/lib/npm/jquery.toast.min.css'},
+        // BOOTSTRAP
+        {style: '/lib/npm/bootstrap.min.css'},
+        // DATATABLES
         {style: '/lib/npm/jquery.dataTables.min.css'},
-        {style: '/lib/npm/responsive.dataTables.min.css'}
+        {style: '/lib/npm/buttons.dataTables.min.css'},
+        {style: '/lib/npm/dataTables.bootstrap4.min.css'},
+        {style: '/lib/npm/responsive.dataTables.min.css'},
+        {style: '/lib/npm/select.dataTables.min.css'}
     ];
 
     // roluri pe care un cont le poate avea în proiectul CRED.

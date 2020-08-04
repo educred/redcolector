@@ -56,7 +56,9 @@ const mongoose = require('./mongoose.config');
 
 // LOGGER
 app.use(logger('dev', {
-    skip: function (req, res) { return res.statusCode < 400 }
+    skip: function (req, res) {
+        return res.statusCode < 400;
+    }
 })); // TODO: Creează un mecanism de rotire a logurilor. ('combined')
 // app.use(logger('dev')); // Activează doar atunci când faci dezvoltare...
 
@@ -79,7 +81,8 @@ app.use(helmet()); // .js” was blocked due to MIME type (“text/html”) mism
 var corsOptions = {
     origin: 'http://' + process.env.DOMAIN,
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-}
+};
+
 app.use(cors(corsOptions));
 
 // PROCESAREA CORPULUI CERERII
@@ -104,7 +107,8 @@ let sessionMiddleware = session({
     logErrors: true,
     cookie: {
         httpOnly: true,
-        maxAge: (1 * 24 * 3600 * 1000)
+        maxAge: (1 * 24 * 3600 * 1000),
+        sameSite: 'lax' // https://www.npmjs.com/package/express-session#cookiesamesite
     }
 });
 
@@ -126,7 +130,7 @@ app.use(function (req, res, next) {
         }
 
         sessionMiddleware(req, res, lookupSession);
-    };
+    }
     lookupSession();
 });
 
@@ -161,7 +165,7 @@ const csurfProtection = csurf({
         secure: false, // dacă folosești HTTPS setează la true
         signed: false, // în caz de signed cookies, setează la true
         sameSite: 'strict', // https://www.owaspsafar.org/index.php/SameSite
-        maxAge: 24 * 60 * 60 * 1000 // 24 ore
+        maxAge: 24 * 60 * 60 * 1000, // 24 ore
     }
     // cookie: true
 });
@@ -281,9 +285,14 @@ app.use(function catchAllMiddleware (err, req, res, next) {
     res.status(500).send('În lanțul de prelucrare a cererii, a apărut o eroare');
 });
 
+// gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
+process.on('uncaughtException', (err) => {
+    console.log('[app.js] A apărul un uncaughtException cu detaliile ', err.message);
+});
+
 // GESTIONAREA SEMNALELOR
-process.on('SIGINIT', function onSiginit () {
-    console.info('Am prins un SIGINIT (ctr+c). Închid procesul gracefull', new Date().toISOString());
+process.on('SIGINT', function onSiginit () {
+    console.info('Am prins un SIGINT (ctr+c). Închid procesul gracefull', new Date().toISOString());
     shutdownserver();
 });
 
@@ -300,12 +309,7 @@ function shutdownserver () {
         }
         process.exit(1);
     });
-};
-
-// gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
-process.on('uncaughtException', (err) => {
-    console.log('[app.js] A apărul un uncaughtException cu detaliile ', err.message);
-});
+}
 
 /**
  * Funcția are rolul de a transforma numărul de bytes într-o valoare human readable
@@ -315,13 +319,13 @@ function formatBytes (bytes) {
     const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
 
     if (bytes == 0) {
-        return "n/a"
+        return "n/a";
     }
 
     const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
 
     if (i == 0) {
-        return bytes + " " + sizes[i]
+        return bytes + " " + sizes[i];
     }
 
     return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
@@ -330,7 +334,7 @@ function formatBytes (bytes) {
 let alocareProces = process.memoryUsage();
 const detalii = {
     RAM: formatBytes(alocareProces.rss)
-}
+};
 
 console.log("Memoria RAM alocată la pornire este de: ", detalii.RAM);
 

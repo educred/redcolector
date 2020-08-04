@@ -1,3 +1,5 @@
+import {pubComm, uuid, csrfToken, createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+
 const fatete = new Set(); // set pentru selecții de fațete
 const primare = document.getElementById('primare');
 
@@ -1996,7 +1998,6 @@ function structureAriAndDiscs (elem) {
     }; // FIXME: Cred că trebuie refăcută funcția `structDiscipline()`.
 
     // #5 restructurează obiectul aferent clasei (cheie) din `mapCodDisc`
-    const 
 
     const clsTouples = Object.entries(clsdata); // generează un array de array-uri
     let k, v;

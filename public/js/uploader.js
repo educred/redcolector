@@ -1,4 +1,4 @@
-class UploaderPlus {
+export class UploaderPlus {
     /**
      * @param {Object} config
      * @param {Function} onUpload - callback for successful file upload
@@ -34,7 +34,7 @@ class UploaderPlus {
 }
 
 /* === EXTINDE Clasa AttacheTool === */
-class AttachesToolPlus extends AttachesTool{
+export class AttachesToolPlus extends AttachesTool{
     /**
      * @param {AttachesToolData} data
      * @param {Object} config

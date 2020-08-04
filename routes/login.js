@@ -12,12 +12,29 @@ const UserPassport = require('./controllers/user.ctrl')(passport);
 
 /* === LOGIN [GET] === */
 router.get('/', (req, res, next) => {
+
+    let scripts = [
+        // FONTAWESOME
+        {script: '/lib/npm/all.min.js'},
+    ];
+
+    let styles = [
+        {style: '/lib/npm/all.min.css'}
+    ];
+
+    let modules = [
+        {module: '/lib/npm/popper.min.js'},
+        {module: '/lib/npm/popper-utils.min.js'}
+    ]
     // console.log("Din user.ctrl avem din req.body pe /login: ", req.body);
     res.render('login', {
         title:    "login",
         // style:   "/lib/fontawesome/css/fontawesome.min.css",
         logoimg:  "img/rED-logo192.png",
-        credlogo: "img/CREDlogo150.jpg"
+        credlogo: "img/CREDlogo150.jpg",
+        scripts,
+        modules,
+        styles
     });
 });
 

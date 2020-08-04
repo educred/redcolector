@@ -1,4 +1,21 @@
-var uuid = '', csrfToken = '';
+import '../lib/editorjs/editor.js';
+import '../lib/editorjs/header.js';
+import '../lib/editorjs/paragraph.js';
+import '../lib/editorjs/list.js';
+import '../lib/editorjs/image.js';
+import '../lib/editorjs/table.js';
+import '../lib/editorjs/ajax.js';
+import '../lib/editorjs/attaches.js';
+import './uploader.js';
+import '../lib/editorjs/embed.js';
+import '../lib/editorjs/code.js';
+import '../lib/editorjs/quote.js';
+import '../lib/editorjs/inlinecode.js';   
+import '../lib/editorjs/table.js';  
+import '../lib/editorjs/list.js';
+import '../lib/editorjs/attaches.js';
+
+var csrfToken = '';
 
 if(document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
@@ -112,7 +129,8 @@ function decodeCharEntities (str) {
         return newArr.join('');
     });
     return arrNew.join(' ');
-};
+}
+
 /**
  * Funcția are rolul de a extrage setul de date atașat unui element prin data-*
  * @param {Object} elem 
@@ -128,16 +146,19 @@ function datasetToObject(elem){
         }
     });
     return data;
-};
+}
 
-export const main = {
-    uuid: uuid,
-    csrfToken: csrfToken,
-    pubComm: pubComm,
-    createElement: createElement,
-    decodeCharEntities: decodeCharEntities,
-    datasetToObject: datasetToObject
-};
+export {createElement, decodeCharEntities, datasetToObject};
+
+// export const main = {
+//     uuid: uuid,
+//     csrfToken:csrfToken,
+//     pubComm:pubComm,
+//     test:test,
+//     createElement:createElement,
+//     decodeCharEntities:decodeCharEntities,
+//     datasetToObject:datasetToObject
+// };
 
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
 
