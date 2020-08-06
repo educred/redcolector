@@ -84,7 +84,27 @@ async function commitAll (calea, autori, email, message) {
     }
 }
 
-module.exports = function sockets (pubComm) {
+// EXPORTĂ TOATE SOCKET-urile în app.js
+module.exports = function sockets (io) {
+
+    var pubComm = io.of('/redcol'); // creează obiectul `Namespace` pentru comunicare în afara administrării
+    var adminNs = io.of('/admin'); //creează obiectul `Namespace` pentru administrare
+
+    // Testează dacă primești socket format
+    // console.info('Server socket sniff: ', {
+    //     namespace: pubComm.name,
+    //     path: pubComm.server._path,
+    //     connected: pubComm.server.parser.CONNECT,
+    //     error: pubComm.server.parser.ERROR,
+    //     origins: pubComm.server.encoder._origins,
+    //     rooms: pubComm.server.sockets.rooms,
+    //     clients: pubComm.server.eio.clients,
+    //     numberofclients: pubComm.server.eio.clientsCount,
+    //     sockets: pubComm.sockets,
+    //     ids: pubComm.ids,
+    //     transports: pubComm.server.eio.transports
+    // });
+
     /* === FUNCȚII HELPER PENTRU LUCRUL CU SOCKET-URI */
     // EMIT
     function rre (nameEvt, payload) {
@@ -117,14 +137,20 @@ module.exports = function sockets (pubComm) {
 
     /* === SOCKETURI!!! === */
     pubComm.on('connect', (socket) => {
+
+        // === ERORI === ::Ascultă erorile din server
+        socket.on('error', (reason) => {
+            console.log(reason);
+        });
+
         // === MESAJE === ::Ascultă mesajele
         socket.on('mesaje', function cbMesaje (mesaj) {
-            console.log('Serverul a primi următorul mesaj: ', mesaj);
+            console.log('Serverul a primit următorul mesaj: ', mesaj);
         });
 
         // === COMPETENȚELE SPECIFICE ===
         socket.on('csuri', function cbCsuri (data) {
-            console.log("[sokets.js::<'csuri'>] Array-ul disciplinelor selectate de client este ", data);// De ex: [ 'arteviz3', 'stanat3' ] `data` sunt codurile disciplinelor selectate
+            // console.log("[sokets.js::<'csuri'>] Array-ul disciplinelor selectate de client este ", data);// De ex: [ 'arteviz3', 'stanat3' ] `data` sunt codurile disciplinelor selectate
             
             const CSModel = require('../models/competenta-specifica');
             // Proiecția se constituie pe același câmp, dar pe valorile primite prin socket.
@@ -979,5 +1005,5 @@ module.exports = function sockets (pubComm) {
         });
     });
 
-    return pubComm;
+    // return io;
 };

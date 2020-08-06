@@ -67,14 +67,14 @@ exports.getREDs = asyncHandler(async function getREDs (req, res, next) {
                 pagination.next = {
                         page: page + 1,
                         limit
-                }
+                };
         }
 
         if (startIndex > 0) {
                 pagination.prev = {
                         page: page - 1,
                         limit
-                }
+                };
         }
 
         res.status(200).send({

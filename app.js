@@ -25,24 +25,9 @@ const favicon        = require('serve-favicon');
 const { v1: uuidv1 } = require('uuid'); // https://github.com/uuidjs/uuid#deep-requires-now-deprecated
 const i18n           = require('i18n');
 
-/* === ÎNCĂRCAREA RUTELOR === */
-const UserPassport = require('./routes/controllers/user.ctrl')(passport);
-let index          = require('./routes/index');
-let authG          = require('./routes/authGoogle/authG');
-let callbackG      = require('./routes/authGoogle/callbackG');
+/* === ÎNCĂRCAREA RUTELOR NEPORTEJATE === */
 let login          = require('./routes/login');
-let logout         = require('./routes/logout');
-let administrator  = require('./routes/administrator');
-let tertium        = require('./routes/tertium');
-let resurse        = require('./routes/resurse');
-let log            = require('./routes/log');
-let resursepublice = require('./routes/resursepublice');
-let profile        = require('./routes/profile');
-let tags           = require('./routes/tags');
-let tools          = require('./routes/tools');
-let help           = require('./routes/help');
 let signupLoco     = require('./routes/signup');
-let apiv1          = require('./routes/apiV1');
 
 // minimal config
 i18n.configure({
@@ -138,9 +123,31 @@ app.use(function (req, res, next) {
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+// SERVER SOCKETURI
+// #1 Creează server prin atașarea celui existent
+const io = require('socket.io')(http, {
+    transports: ['polling', 'websocket']
+});
+// creează un wrapper de middleware Express pentru Socket.io
+function wrap (middleware) {
+    return function matcher (socket, next) {
+        middleware (socket.request, {}, next);
+    };
+}
+io.use(wrap(sessionMiddleware));
+// conectarea obiectului sesiune ca middleware în tratarea conexiunilor socket.io
+// io.use(function clbkIOuseSessions(socket, next) {
+//     sessionMiddleware(socket.request, socket.request.res, next);
+// });
+// when a socket.io connect connects, get the session and store the id in it (https://stackoverflow.com/questions/42379952/combine-sockets-and-express-when-using-express-middleware)
+
+require('./routes/sockets')(io); // injectează socket.io
+require('./routes/upload')(io);
+
 /* === RUTE ÎN AFARA CSRF-ului === */
 // UPLOAD
-let upload = require('./routes/upload')(pubComm);
+let upload = require('./routes/upload')(io);
 app.use('/upload', upload);
 // SIGNUP
 app.use('/signup', signupLoco); // SIGNUP!!!
@@ -184,23 +191,6 @@ app.use(function (err, req, res, next) {
     res.status(403).send('Sockets.io nu trimite înapoi tokenul!!!');
 });
 
-// UTILIZAREA SOCKETURILOR
-// when a socket.io connect connects, get the session and store the id in it (https://stackoverflow.com/questions/42379952/combine-sockets-and-express-when-using-express-middleware)
-const io = require('socket.io')(http, {
-    // path: '/socket.io', 
-    allowUpgrades: true, 
-    transports: ['polling', 'websocket'], 
-    httpCompression: true,
-    cookieHttpOnly: true
-});
-io.use(function clbkIOuseSessions(socket, next) {
-    sessionMiddleware(socket.request, socket.request.res, next);
-});
-
-var pubComm = io.of('/redcol');
-require('./routes/sockets')(pubComm); // injectează socket.io
-require('./routes/upload')(pubComm);
-
 // TIMP RĂSPUNS ÎN HEADER
 app.use(responseTime());
 
@@ -241,9 +231,24 @@ function shouldCompress (req, res) {
 }
 app.use(compression({ filter: shouldCompress }));
 
-// === MIDDLEWARE-ul RUTELOR ===
-// app.use('/',               csurfProtection, index);
+/* === ÎNCĂRCAREA RUTELOR === */
+const UserPassport = require('./routes/controllers/user.ctrl')(passport);
+let index          = require('./routes/index');
+let authG          = require('./routes/authGoogle/authG');
+let callbackG      = require('./routes/authGoogle/callbackG');
+let logout         = require('./routes/logout');
+let administrator  = require('./routes/administrator');
+let tertium        = require('./routes/tertium');
+let resurse        = require('./routes/resurse');
+let log            = require('./routes/log');
+let resursepublice = require('./routes/resursepublice');
+let profile        = require('./routes/profile');
+let tags           = require('./routes/tags');
+let tools          = require('./routes/tools');
+let help           = require('./routes/help');
+let apiv1          = require('./routes/apiV1');
 
+// === MIDDLEWARE-ul RUTELOR ===
 app.use('/api/v1',         apiv1); // accesul la prima versiune a api-ului
 app.use('/auth',           authG);
 app.use('/callback',       callbackG);
@@ -285,31 +290,6 @@ app.use(function catchAllMiddleware (err, req, res, next) {
     res.status(500).send('În lanțul de prelucrare a cererii, a apărut o eroare');
 });
 
-// gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
-process.on('uncaughtException', (err) => {
-    console.log('[app.js] A apărul un uncaughtException cu detaliile ', err.message);
-});
-
-// GESTIONAREA SEMNALELOR
-process.on('SIGINT', function onSiginit () {
-    console.info('Am prins un SIGINT (ctr+c). Închid procesul gracefull', new Date().toISOString());
-    shutdownserver();
-});
-
-process.on('SIGTERM', function onSiginit () {
-    console.info('Am prins un SIGTERM (stop). Închid procesul gracefull', new Date().toISOString());
-    shutdownserver();
-});
-
-function shutdownserver () {
-    server.close(function onServerClosed (err) {
-        if (err) {
-            console.error(err);
-            process.exitCode = 1;
-        }
-        process.exit(1);
-    });
-}
 
 /**
  * Funcția are rolul de a transforma numărul de bytes într-o valoare human readable
@@ -338,11 +318,42 @@ const detalii = {
 
 console.log("Memoria RAM alocată la pornire este de: ", detalii.RAM);
 
+// Pornește serverul!
 let port = process.env.PORT || 8080;
-http.listen(port, '127.0.0.1', function cbConnection () {
+var server = http.listen(port, '127.0.0.1', function cbConnection () {
     console.log('RED Colector ', process.env.APP_VER);
-    console.log('Server pornit pe 8080 -> binded pe 127.0.0.1');
+    console.log('Server pornit pe 8080 -> binded pe 127.0.0.1. Proces no: ', process.pid);
 });
 
-// exports.pubComm = pubComm;
-module.exports.io = io;
+// === GESTIONAREA evenimentelor pe `process` și a SEMNALELOR ===
+
+// gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
+process.on('uncaughtException', (err) => {
+    console.log('[app.js] A apărul un uncaughtException cu detaliile ', err.message);
+    // process.kill(process.pid, 'SIGTERM');
+    console.error(err.stack); // afișează stiva la momentul închidere
+    process.nextTick(function() {
+        process.exit(1);
+    });
+});
+
+process.on('SIGINT', function onSiginit () {
+    console.info('Am prins un SIGINT (ctr+c). Închid procesul! Data: ', new Date().toISOString());
+    shutdownserver();
+});
+
+process.on('SIGTERM', function onSiginit () {
+    console.info('Am prins un SIGTERM (stop). Închid procesul! Data: ', new Date().toISOString());
+    shutdownserver();
+});
+
+function shutdownserver () {
+    server.close(function onServerClosed (err) {
+        if (err) {
+            console.error(err.message, err.stack);
+            process.exitCode = 1;            
+        }
+        process.exit(1);
+    });
+}
+// FIXME: How an importer router can acces app variables?

@@ -22,13 +22,20 @@ if(document.getElementsByName('_csrf')[0].value) {
 }
 
 var pubComm = io('/redcol', {
-    // path: '/socket.io', 
-    allowUpgrades: true, 
-    transports: ['polling', 'websocket'], 
-    httpCompression: true,
-    cookieHttpOnly: true,
+    upgrade: true,
+    transports: ['polling', 'websocket'],
     query: {['_csrf']: csrfToken}
 });
+// globalThis.pubComm = pubComm; // HACK: necesar!
+
+console.log('Socket sniff: ', {
+    protocol: io.protocol,
+    detalii: pubComm.json
+});
+
+// setInterval(() => {
+//     pubComm.emit('mesaje', 'test');
+// }, 2000);
 
 // === MANAGEMENTUL COMUNICĂRII pe socketuri ===
 // pubComm.on('mesaje', (mess) => {
@@ -148,7 +155,7 @@ function datasetToObject(elem){
     return data;
 }
 
-export {createElement, decodeCharEntities, datasetToObject};
+export {pubComm,createElement, decodeCharEntities, datasetToObject};
 
 // export const main = {
 //     uuid: uuid,

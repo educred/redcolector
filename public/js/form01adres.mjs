@@ -3,10 +3,10 @@ import {AttachesToolPlus} from './uploader.js';
 
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
 
-
-    var uuid = '';
+    var uuid = '',
+        pubComm = null;
     
-    // // TOKEN-ul CSRF
+    // TOKEN-ul CSRF
     var csrfToken;
 
     if(document.getElementsByName('_csrf')[0].value) {
@@ -14,10 +14,9 @@ import {AttachesToolPlus} from './uploader.js';
     }
 
     // trebuie recreat pentru fiecare cale în parte [specific prin inperecherea cu csrf-ul]
-    var pubComm = io('/redcol', {
+    pubComm = io('/redcol', {
         // path: '/socket.io', 
-        allowUpgrades: true, 
-        transports: ['polling', 'websocket'], 
+        allowUpgrades: true,
         httpCompression: true,
         cookieHttpOnly: true,
         query: {['_csrf']: csrfToken}
@@ -3045,17 +3044,13 @@ import {AttachesToolPlus} from './uploader.js';
      * pubComm.on('csuri', clbkTabelGenerator); din disciplineBifate()
      */
     function clbkTabelGenerator (csuri) { 
-        console.log('[form01] Am csuri? ', csuri);
+        // console.log('[form01] Am csuri? ', csuri);
 
         const CSlist = JSON.parse(csuri);   // transformă stringul în array JS
         
         // modelarea tabelului 
         $(document).ready(function() {
             // console.log(globalThis.$.fn.DataTable);
-            if ( ! $.fn.DataTable.isDataTable( '#competenteS' ) ) {
-                console.log('[form01] Tabelul nu este un nod datatable ...');
-                // $('#competenteS').dataTable();
-            }
             var table = $('#competenteS').DataTable({
                 responsive: true,
                 "order": [[ 0, "asc" ]],
@@ -3169,8 +3164,7 @@ import {AttachesToolPlus} from './uploader.js';
             // === RED.discipline ===
             RED.discipline.push(value);
         });
-        console.log('[form01] Valorile care pleaca in servr', values);
-        // console.log('[form01] Am pubComm? ', pubComm);
+        // console.log('[form01] Valorile care pleaca in server', values);
 
         pubComm.emit('mesaje', 'Din disciplineBifate');
 
