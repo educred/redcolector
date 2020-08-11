@@ -38,7 +38,7 @@ router.get('/', (req, res) => {
             user:         req.user,
             // style:        "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:      "img/rED-logo192.png",
-            csfrToken:    req.csrfToken(),            
+            csrfToken:    req.csrfToken(),            
             resurse:      newResultArr,
             activeResLnk: true,
             resIdx:       idxRes,
@@ -81,7 +81,7 @@ router.get('/:id', (req, res) => {
                 style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
-                csfrToken: req.csrfToken(),
+                csrfToken: req.csrfToken(),
                 resursa:   newObi,
                 scripts
             });

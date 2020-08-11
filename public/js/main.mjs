@@ -1,6 +1,7 @@
 import '../lib/editorjs/editor.js';
 import '../lib/editorjs/header.js';
 import '../lib/editorjs/paragraph.js';
+import '../lib/editorjs/checklist.js';
 import '../lib/editorjs/list.js';
 import '../lib/editorjs/image.js';
 import '../lib/editorjs/table.js';
@@ -21,17 +22,21 @@ if(document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
 }
 
-var pubComm = io('/redcol', {
-    upgrade: true,
-    transports: ['polling', 'websocket'],
+var socket = io({
     query: {['_csrf']: csrfToken}
 });
-// globalThis.pubComm = pubComm; // HACK: necesar!
 
-console.log('Socket sniff: ', {
-    protocol: io.protocol,
-    detalii: pubComm.json
+var pubComm = io('/redcol', {
+    upgrade: true,
+    query: {['_csrf']: csrfToken}
 });
+// fă disponibil global-ului obiectul
+// globalThis.pubComm = pubComm; // HACK: !!!
+
+// console.log('Socket sniff: ', {
+//     protocol: io.protocol,
+//     detalii: pubComm.json
+// });
 
 // setInterval(() => {
 //     pubComm.emit('mesaje', 'test');
@@ -155,7 +160,7 @@ function datasetToObject(elem){
     return data;
 }
 
-export {pubComm,createElement, decodeCharEntities, datasetToObject};
+export {socket, pubComm, createElement, decodeCharEntities, datasetToObject};
 
 // export const main = {
 //     uuid: uuid,
@@ -166,6 +171,3 @@ export {pubComm,createElement, decodeCharEntities, datasetToObject};
 //     decodeCharEntities:decodeCharEntities,
 //     datasetToObject:datasetToObject
 // };
-
-// document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
-

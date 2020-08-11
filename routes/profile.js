@@ -26,7 +26,7 @@ router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, re
         // style:        "/lib/fontawesome/css/fontawesome.min.css",
         logoimg:      "/img/red-logo-small30.png",
         credlogo:     "../img/CREDlogo.jpg",
-        csfrToken:    req.csrfToken(),
+        csrfToken:    req.csrfToken(),
         activePrfLnk: true
     });
 });
@@ -78,7 +78,7 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
                 // style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
-                csfrToken: req.csrfToken(),
+                csrfToken: req.csrfToken(),
                 resurse:   newResultArr,
                 scripts,
                 styles,
@@ -95,26 +95,26 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
     // Adu înregistrarea resursei cu toate câmpurile referință populate deja
     // const editorJs2html = require('./controllers/editorJs2HTML');
     let scripts = [
-        {script: '/lib/editorjs/editor.js'},
-        {script: '/lib/editorjs/header.js'},
-        {script: '/lib/editorjs/paragraph.js'},
-        {script: '/lib/editorjs/list.js'},
-        {script: '/lib/editorjs/image.js'},
-        {script: '/lib/editorjs/table.js'},
-        {script: '/lib/editorjs/attaches.js'},
-        {script: '/lib/editorjs/embed.js'},
-        {script: '/lib/editorjs/code.js'},
-        {script: '/lib/editorjs/quote.js'},
-        {script: '/lib/editorjs/inlinecode.js'},
-        {script: '/lib/editorjs/checklist.js'},
         // MOMENT.JS
-        {script: '/lib/npm/moment-with-locales.min.js'},  
-        // UPLOADER
-        {script: '/js/uploader.js'},
+        {script: '/lib/npm/moment-with-locales.min.js'},
         // HELPER DETECT URLS or PATHS
-        {script: '/js/check4url.js'},
+        {script: '/js/check4url.js'}
+    ];
+
+    let modules = [
         // REEDIT RES
-        {script: '/js/personal-res.js'}
+        {module: '/js/personal-res.mjs'},
+        // MAIN
+        {module: '/js/main.mjs'}
+    ];
+
+    let styles = [
+        // FONTAWESOME
+        {style: '/lib/npm/all.min.css'},
+        // JQUERY TOAST
+        {style: '/lib/npm/jquery.toast.min.css'},
+        // BOOTSTRAP
+        {style: '/lib/npm/bootstrap.min.css'}
     ];
 
     let roles = ["user", "cred", "validator"];
@@ -243,62 +243,68 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 console.error(err);
             });
             return Promise.reject('Resursa nu mai există!'); // Rejectează promisiunea!
-        };
+        }
     }).then(resursa => {
         /* === ADMIN === */
         if(req.session.passport.user.roles.admin){
-            // Adaugă mecanismul de validare a resursei
+            // Adaugă checkbox de validare
             if (resursa.expertCheck) {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck" checked>`;
             } else {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck">`;
             }
-            // Adaugă mecanismul de prezentare la public
+            // Adaugă checkbox pentru zona publică
             if (resursa.generalPublic) {
                 resursa.genPub = `<input type="checkbox" id="public" class="generalPublic" checked>`;
             } else {
                 resursa.genPub = `<input type="checkbox" id="public" class="generalPublic">`;
             }
+            // Setul de date va fi disponibil în `data-content` ca string JSON. Este trimis cu helperul `hbs.registerHelper('json', cb)` definit în app.js
+            // Acest lucru este necesar pentru a reedita resursa în client.
             res.render('resursa-admin', {
-                title:     "Administrare RED",
-                user:      req.user,
-                // style:     "/lib/fontawesome/css/fontawesome.min.css",                
+                title:     "Administrator",
+                user:      req.user,                
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
-                csfrToken: req.csrfToken(),
+                csrfToken: req.csrfToken(),
                 resursa,
-                scripts
+                scripts,
+                modules,
+                styles
             });
         /* === VALIDATOR === */
         } else if (confirmedRoles.includes('validator')) {
-            // Adaugă mecanismul de validare a resursei
+            // Adaugă doar checkbox de validare
             if (resursa.expertCheck) {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck" checked>`;
             } else {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck">`;
             }
             res.render('resursa-validator', {            
-                title:     "Validare RED",
-                user:      req.user,
-                // style:     "/lib/fontawesome/css/fontawesome.min.css",                
+                title:     "Validator",
+                user:      req.user,               
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
-                csfrToken: req.csrfToken(),
+                csrfToken: req.csrfToken(),
                 resursa,
-                scripts
+                scripts,
+                modules,
+                styles
             });
         /* === ROLURI ÎN CRED === */
         } else if (confirmedRoles.length > 0) { 
             // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
             res.render('resursa', {                
-                title:     "Afișare RED",
+                title:     "RED",
                 user:      req.user,
                 // style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
-                csfrToken: req.csrfToken(),
+                csrfToken: req.csrfToken(),
                 resursa,
-                scripts
+                scripts,
+                modules,
+                styles
             });
         /* === NU FACI PARTE DIN CRED === */
         } else {
@@ -308,8 +314,8 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         if (err) {
             console.error(err);
             // rre('mesaje', `Nu pot să afișez resursa. Este posibil să nu mai existe! Eroare: ${err}`);
-            // next(); // fugi pe următorul middleware / rută
             res.redirect('/administrator/reds');
+            next(err); // fugi pe următorul middleware / rută
         }
     });
 });

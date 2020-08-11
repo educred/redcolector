@@ -61,7 +61,7 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
                 title:        "CRED RED-uri",
                 user:         req.user,
                 logoimg:      "img/rED-logo192.png",
-                csfrToken:    req.csrfToken(),
+                csrfToken:    req.csrfToken(),
                 resurse:      newResultArr,
                 activeResLnk: true,
                 resIdx:       idxRes,
@@ -88,7 +88,7 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
                 title:        "Resurse publice",
                 // style:        "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:      "img/rED-logo192.png",
-                csfrToken:    req.csrfToken(),
+                csrfToken:    req.csrfToken(),
                 user:         req.user,
                 resurse:      newResultArr,
                 activeResLnk: true,
@@ -172,7 +172,7 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
                 // style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
-                csfrToken: req.csrfToken(),
+                csrfToken: req.csrfToken(),
                 resursa:   result,
                 scripts
             });
@@ -210,31 +210,8 @@ exports.describeResource = function describeResource (req, res, next) {
     let modules = [
         // MOTORUL FORM-ULUI
         {module: '/js/form01adres.mjs'},
-        // FORM
-        {module: '/js/main.mjs'},
-        // EDITOR.JS
-        // {module: '/lib/editorjs/editor.js'},
-        // {module: '/lib/editorjs/header.js'},
-        // {module: '/lib/editorjs/paragraph.js'},
-        // {module: '/lib/editorjs/list.js'},
-        // {module: '/lib/editorjs/image.js'},
-        // {module: '/lib/editorjs/table.js'},
-        // {module: '/lib/editorjs/ajax.js'},
-        // {module: '/lib/editorjs/attaches.js'},
-        // {module: '/lib/editorjs/embed.js'},
-        // {module: '/lib/editorjs/code.js'},
-        // {module: '/lib/editorjs/quote.js'},
-        // {module: '/lib/editorjs/inlinecode.js'},   
-        // {module: '/lib/editorjs/table.js'},  
-        // {module: '/lib/editorjs/list.js'},
-        // {module: '/lib/editorjs/attaches.js'},
-
-        // DATATABLES
-        // {module: '/lib/npm/jquery.dataTables.min.js'},
-        // {module: '/lib/npm/dataTables.bootstrap4.min.js'},
-        // {module: '/lib/npm/dataTables.select.min.js'},
-        // {module: '/lib/npm/dataTables.buttons.min.js'},
-        // {module: '/lib/npm/dataTables.responsive.min.js'},         
+        // MAIN
+        {module: '/js/main.mjs'},        
         // LOCALS
         {module: '/js/uploader.js'}
     ];

@@ -67,7 +67,6 @@ var corsOptions = {
     origin: 'http://' + process.env.DOMAIN,
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
-
 app.use(cors(corsOptions));
 
 // PROCESAREA CORPULUI CERERII
@@ -123,12 +122,9 @@ app.use(function (req, res, next) {
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 // SERVER SOCKETURI
 // #1 Creează server prin atașarea celui existent
-const io = require('socket.io')(http, {
-    transports: ['polling', 'websocket']
-});
+const io = require('socket.io')(http);
 // creează un wrapper de middleware Express pentru Socket.io
 function wrap (middleware) {
     return function matcher (socket, next) {
@@ -289,7 +285,6 @@ app.use(function catchAllMiddleware (err, req, res, next) {
     console.error(err.stack);
     res.status(500).send('În lanțul de prelucrare a cererii, a apărut o eroare');
 });
-
 
 /**
  * Funcția are rolul de a transforma numărul de bytes într-o valoare human readable

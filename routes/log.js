@@ -39,7 +39,7 @@ router.get('/', function clbkLog (req, res, next) {
                 // style:      "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:    "/img/red-logo-small30.png",
                 credlogo:   "../img/CREDlogo.jpg",
-                csfrToken:  req.csrfToken(),
+                csrfToken:  req.csrfToken(),
                 logentries: newResultArr,
                 scripts
             });
@@ -76,7 +76,7 @@ router.get('/new', function (req, res) {
             // style:     "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:   "/img/red-logo-small30.png",
             credlogo:  "../img/CREDlogo.jpg",
-            csfrToken: req.csrfToken(),
+            csrfToken: req.csrfToken(),
             scripts
         });
     } else {

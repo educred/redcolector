@@ -87,22 +87,43 @@ async function commitAll (calea, autori, email, message) {
 // EXPORTĂ TOATE SOCKET-urile în app.js
 module.exports = function sockets (io) {
 
+    var main = io.of('/');
     var pubComm = io.of('/redcol'); // creează obiectul `Namespace` pentru comunicare în afara administrării
     var adminNs = io.of('/admin'); //creează obiectul `Namespace` pentru administrare
 
+    main.on('connect', (socket) => {
+        // console.log('[sockets.js: Id-ul la conectarea pe main este ]', socket.id);
+
+        // === ERORI === ::Ascultă erorile din server
+        socket.on('error', (reason) => {
+            console.log(reason);
+        });
+
+        // === TEST CONNECTION === ::Vezi dacă e conectat și upgradat
+        socket.on('testconn', function cbMesaje (mesaj) {
+            const detaliiConn = main.server.eio.clients[socket.id];
+            console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
+        });
+
+        // === MESAJE === ::Ascultă mesajele
+        socket.on('mesaje', function cbMesaje (mesaj) {
+            console.log('Serverul a primit următorul mesaj: ', mesaj);
+        });
+    });
+
     // Testează dacă primești socket format
     // console.info('Server socket sniff: ', {
-    //     namespace: pubComm.name,
-    //     path: pubComm.server._path,
-    //     connected: pubComm.server.parser.CONNECT,
-    //     error: pubComm.server.parser.ERROR,
-    //     origins: pubComm.server.encoder._origins,
-    //     rooms: pubComm.server.sockets.rooms,
-    //     clients: pubComm.server.eio.clients,
-    //     numberofclients: pubComm.server.eio.clientsCount,
-    //     sockets: pubComm.sockets,
-    //     ids: pubComm.ids,
-    //     transports: pubComm.server.eio.transports
+    //     namespace: main.name,
+    //     path: main.server._path,
+    //     connected: main.server.parser.CONNECT,
+    //     error: main.server.parser.ERROR,
+    //     origins: main.server.encoder._origins,
+    //     rooms: main.server.sockets.rooms,
+    //     clients: main.server.eio.clients,
+    //     numberofclients: main.server.eio.clientsCount,
+    //     sockets: main.sockets,
+    //     ids: main.ids,
+    //     transports: main.server.eio.transports
     // });
 
     /* === FUNCȚII HELPER PENTRU LUCRUL CU SOCKET-URI */
@@ -141,6 +162,12 @@ module.exports = function sockets (io) {
         // === ERORI === ::Ascultă erorile din server
         socket.on('error', (reason) => {
             console.log(reason);
+        });
+
+        // === TEST CONNECTION === ::Vezi dacă e conectat și upgradat
+        socket.on('testconn', function cbMesaje (mesaj) {
+            const detaliiConn = pubComm.server.eio.clients[socket.id]; // obține detaliile de conexiune individuale
+            console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
         });
 
         // === MESAJE === ::Ascultă mesajele

@@ -41,28 +41,40 @@
             <link rel="stylesheet" href="{{style}}" charset="utf-8"></script>
         {{/each}}
 
-        {{!-- <link rel="stylesheet" href="{{style}}" media="screen" title="no title" charset="utf-8"> --}}
-
         {{!-- Preîncărcarea modulelor --}}
         {{#each modules}}
             <link rel="modulepreload" href="{{module}}"></script>
         {{/each}}
 
+        {{!-- Încărcarea modulelor --}}
+        {{#each modules}}
+            <script type="module" src="{{module}}"></script>
+        {{/each}}
+
+
         <title>{{title}}</title>
     </head>
     <body data-spy="scroll" data-target="#navbarResponsive">
+
         {{{body}}}
+
         <footer class="footer">
             {{> footer}}
         </footer>
+
         <!-- Optional JavaScript -->
-        <!-- jQuery first, then Popper.js, then Bootstrap JS -->        
-        <script type="application/javascript" src="/lib/npm/jquery.slim.min.js"></script>
-        {{!-- <script type="application/javascript" src="/lib/popper.js/src/popper.js"></script> --}}
-        <script type="application/javascript" src="/lib/npm/bootstrap.bundle.min.js"></script>
         
-        <script type="application/javascript" src="/lib/npm/jquery.waypoints.min.js"></script>
+        {{!-- Încărcarea scripturilor --}}
+        {{#each scripts}}
+            <script defer type="application/javascript" src="{{script}}"></script>
+        {{/each}}
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->        
+        {{!-- <script type="application/javascript" src="/lib/npm/jquery.slim.min.js"></script> --}}
+        {{!-- <script type="application/javascript" src="/lib/popper.js/src/popper.js"></script> --}}
+        {{!-- <script type="application/javascript" src="/lib/npm/bootstrap.bundle.min.js"></script> --}}
+        
+        {{!-- <script type="application/javascript" src="/lib/npm/jquery.waypoints.min.js"></script> --}}
         {{!-- <script type="application/javascript" src="/js/main.js"></script> --}}
-        <script type="application/javascript" src="/js/custom.js"></script>
+        {{!-- <script type="application/javascript" src="/js/custom.js"></script> --}}
     </body>
 </html>

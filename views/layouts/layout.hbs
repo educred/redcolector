@@ -57,11 +57,14 @@
             <link rel="stylesheet" href="{{style}}" charset="utf-8"></script>
         {{/each}}
 
-        {{!-- <link rel="stylesheet" href="{{style}}" media="screen" title="no title" charset="utf-8"> --}}
-
         {{!-- Preîncărcarea modulelor --}}
         {{#each modules}}
             <link rel="modulepreload" href="{{module}}"></script>
+        {{/each}}
+
+        {{!-- Încărcarea modulelor --}}
+        {{#each modules}}
+            <script type="module" src="{{module}}"></script>
         {{/each}}
 
         <title>{{title}}</title>

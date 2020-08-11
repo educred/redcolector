@@ -1,3 +1,23 @@
+curl -X PUT "localhost:9200/resedus0/_settings?pretty" -H 'Content-Type: application/json' -d '
+{
+  "index.blocks.read_only_allow_delete":null
+}
+'
+
+{
+  "error": {
+    "root_cause": [
+      {
+        "type": "cluster_block_exception",
+        "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
+      }
+    ],
+    "type": "cluster_block_exception",
+    "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
+  },
+  "status": 429
+}
+
 [PM2][WARN] Current process list running is not in sync with saved list. app differs. Type 'pm2 save' to synchronize.
 nicu@red:/var/www/red.educred.ro$ pm2 start app.js
 [PM2] Starting /var/www/red.educred.ro/app.js in fork_mode (1 instance)

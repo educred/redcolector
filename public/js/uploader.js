@@ -1,4 +1,30 @@
-export class UploaderPlus {
+/* === EXTINDE Clasa AttacheTool === */
+export class AttachesToolPlus extends AttachesTool{
+    /**
+     * @param {AttachesToolData} data
+     * @param {Object} config
+     * @param {API} api
+     */
+    constructor({ data, config, api }) {
+        super({
+            data:   data,
+            config: config,
+            api:    api
+        });
+
+        super.uploader = new UploaderPlus({
+            config: config,
+            onUpload: (response) => {               
+                super.onUpload(response);
+            },
+            onError: (error) => {
+                super.uploadingFailed(error);
+            }
+        });
+    }
+}
+
+class UploaderPlus {
     /**
      * @param {Object} config
      * @param {Function} onUpload - callback for successful file upload
@@ -29,32 +55,6 @@ export class UploaderPlus {
         }).catch((error) => {
             const message = (error && error.message) ? error.message : this.config.errorMessage || 'File upload failed';
             this.onError(message);
-        });
-    }
-}
-
-/* === EXTINDE Clasa AttacheTool === */
-export class AttachesToolPlus extends AttachesTool{
-    /**
-     * @param {AttachesToolData} data
-     * @param {Object} config
-     * @param {API} api
-     */
-    constructor({ data, config, api }) {
-        super({
-            data:   data,
-            config: config,
-            api:    api
-        });
-
-        super.uploader = new UploaderPlus({
-            config: config,
-            onUpload: (response) => {               
-                super.onUpload(response);
-            },
-            onError: (error) => {
-                super.uploadingFailed(error);
-            }
         });
     }
 }

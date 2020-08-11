@@ -15,10 +15,7 @@ import {AttachesToolPlus} from './uploader.js';
 
     // trebuie recreat pentru fiecare cale în parte [specific prin inperecherea cu csrf-ul]
     pubComm = io('/redcol', {
-        // path: '/socket.io', 
         allowUpgrades: true,
-        httpCompression: true,
-        cookieHttpOnly: true,
         query: {['_csrf']: csrfToken}
     });
 
@@ -3243,7 +3240,7 @@ import {AttachesToolPlus} from './uploader.js';
         }
     }
 
-        /* === MECANISMUL DE AVANS AL FORMULARULUI */
+    /* === MECANISMUL DE AVANS AL FORMULARULUI */
     // Avans către pasul doi al formularului
     $('#next-1').click(function (e) {
         e.preventDefault();
