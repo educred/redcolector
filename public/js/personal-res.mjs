@@ -12,8 +12,9 @@ var pubComm = io('/redcol', {
     upgrade: true,
     query: {['_csrf']: csrfToken}
 });
+
 pubComm.on('connect', () => {
-    console.log(pubComm.id); // indică id-ul de conectare
+    // console.log(pubComm.id); // indică id-ul de conectare
 });
 
 /**
@@ -75,20 +76,22 @@ function clbkDOMContentLoaded () {
     const editorX = new EditorJS({
         placeholder: '',
         logLevel: 'VERBOSE', 
-        data: resObi.content,
+        data: resObi.content.content,
         onReady: () => {
             console.log('Editor.js e gata de treabă!');
             //Construiește logica pentru a popula `imagini` și `fisiere` de îndată ce s-au încărcat datele
-            resObi.content.blocks.map(obj => {
-                switch (obj.type) {
-                    case 'image':
-                        imagini.add(obj.data.file.url);
-                        break;
-                    case 'attaches':
-                        fisiere.add(obj.data.file.url);
-                        break;
-                }
-            });
+            if (resObi.content.blocks) {
+                resObi.content.blocks.map(obj => {
+                    switch (obj.type) {
+                        case 'image':
+                            imagini.add(obj.data.file.url);
+                            break;
+                        case 'attaches':
+                            fisiere.add(obj.data.file.url);
+                            break;
+                    }
+                });
+            }
             // console.log("[editorX::onReady] În setul imagini am: ", imagini, ", iar în setul fișiere am ", fisiere);
             
             // pickCover(); // Încarcă imaginile din resursă în previzualizatorul galeriei.

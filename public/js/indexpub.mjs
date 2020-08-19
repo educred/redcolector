@@ -5,6 +5,16 @@ import {socket} from './main.mjs';
 //     detalii: socket.json
 // });
 
-setInterval(() => {
-    socket.emit('testconn', 'test');
-}, 2000);
+var csrfToken = '';
+
+if(document.getElementsByName('_csrf')[0].value) {
+    csrfToken = document.getElementsByName('_csrf')[0].value;
+}
+
+// var socket = io({
+//     query: {['_csrf']: csrfToken}
+// });
+
+// setInterval(() => {
+//     socket.emit('testconn', 'test');
+// }, 2000);

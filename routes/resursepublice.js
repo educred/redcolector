@@ -28,21 +28,42 @@ router.get('/', (req, res) => {
             newResultArr.push(Object.assign(newObi));
         });
 
-        let scripts = [     
+        let scripts = [
+            //JQUERY
+            {script: '/lib/npm/jquery.slim.min.js'},
+            {script: '/lib/npm/jquery.waypoints.min.js'}, 
             // MOMENT.JS
-            {script: '/lib/npm/moment-with-locales.min.js'},       
+            {script: '/lib/npm/moment-with-locales.min.js'}, 
+            // FONTAWESOME
+            {script: '/lib/npm/all.min.js'},
+            // HOLDERJS
+            {script: '/lib/npm/holder.min.js'},
+            // BOOTSTRAP         
+            {script: '/lib/npm/bootstrap.bundle.min.js'},
+            {script: '/js/custom.js'},
+            {script: '/js/resursepublice.js'}
+        ];
+
+        let modules = [
+            {module: '/lib/npm/popper.min.js'},
+            
+        ];
+
+        let styles = [
+            {style: '/lib/npm/all.min.css'}
         ];
 
         res.render('resursepublice', {
-            title:        "Resurse publice",
+            title:        "Publice",
             user:         req.user,
-            // style:        "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:      "img/rED-logo192.png",
             csrfToken:    req.csrfToken(),            
             resurse:      newResultArr,
             activeResLnk: true,
             resIdx:       idxRes,
-            scripts
+            scripts,
+            modules,
+            styles
         });
     }).catch((err) => {
         if (err) throw err;
@@ -78,7 +99,6 @@ router.get('/:id', (req, res) => {
             res.render('resursa-publica', {                
                 title:     "RED public",
                 user:      req.user,
-                style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csrfToken: req.csrfToken(),

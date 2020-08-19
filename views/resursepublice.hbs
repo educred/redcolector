@@ -3,16 +3,13 @@
 {{!-- {{> nav-resurse-publice}} --}}
 {{> messages}}
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
-{{#each scripts}}
-    <script type="application/javascript"  src="{{script}}"></script>
-{{/each}}
 
     <div id="resursepublice">
         <div class="resurse">
 
             <div id="searchpublic" class="container pb-3 searchFrm">
                 {{!-- Câmpul de căutare --}}
-                <div class="col-12">
+                {{!-- <div class="col-12">
                     <div class="input-group">
                         <input id="searchterms" class="form-control border-secondary py-2" type="search" value="">
                         <div class="input-group-append">
@@ -21,7 +18,7 @@
                             </button>
                         </div>
                     </div>
-                </div>
+                </div> --}}
                 
                 {{!-- Mecanismele de selecție a rezultatelor afișate --}}
                 {{!-- <div id="selectors" class="container-fluid">

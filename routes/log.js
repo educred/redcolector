@@ -28,23 +28,48 @@ router.get('/', function clbkLog (req, res, next) {
                 newResultArr.push(newObi);
             });
 
-            let scripts = [     
+            let scripts = [
+                // FA
+                {script: '/lib/npm/all.min.js'},
                 // MOMENT.JS
-                {script: '/lib/npm/moment-with-locales.min.js'},         
+                {script: '/lib/npm/moment-with-locales.min.js'},
+                // JQUERY
+                {script: '/lib/npm/jquery.slim.min.js'},                
+                // BOOTSTRAP
+                {script: '/lib/npm/bootstrap.bundle.min.js'},
+                // HOLDERJS
+                {script: '/lib/npm/holder.min.js'}       
+            ];
+
+            let modules = [
+                // {module: '/js/main.mjs'},
+                // LOCAL
+                // {module: '/js/form02log.js'} 
+            ];
+
+            let styles = [
+                // FONTAWESOME
+                {style: '/lib/npm/all.min.css'},
+                // JQUERY TOAST
+                {style: '/lib/npm/jquery.toast.min.css'},
+                // BOOTSTRAP
+                {style: '/lib/npm/bootstrap.min.css'},
             ];
             
             res.render('logentry', {
                 title:      "Noutăți",
                 user:       req.user,
-                // style:      "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:    "/img/red-logo-small30.png",
                 credlogo:   "../img/CREDlogo.jpg",
                 csrfToken:  req.csrfToken(),
                 logentries: newResultArr,
-                scripts
+                scripts,
+                styles,
+                modules 
             });
         }).catch((err) => {
-            if (err) throw err;
+            console.error(err);
+            next(err);
         });
     } else {
         res.redirect('/401');
@@ -64,7 +89,32 @@ router.get('/new', function (req, res) {
         {script: '/lib/editorjs/attaches.js'},
         {script: '/lib/editorjs/embed.js'},
         {script: '/lib/editorjs/code.js'},
-        {script: '/lib/editorjs/inlinecode.js'}
+        {script: '/lib/editorjs/inlinecode.js'},
+        // FA
+        {script: '/lib/npm/all.min.js'},
+        // MOMENT.JS
+        {script: '/lib/npm/moment-with-locales.min.js'},
+        // JQUERY
+        {script: '/lib/npm/jquery.slim.min.js'},                
+        // BOOTSTRAP
+        {script: '/lib/npm/bootstrap.bundle.min.js'},
+        // HOLDERJS
+        {script: '/lib/npm/holder.min.js'}   
+    ];
+
+    let modules = [
+        // {module: '/js/main.mjs'},
+        // LOCAL
+        {module: '/js/form02log.js'} 
+    ];
+
+    let styles = [
+        // FONTAWESOME
+        {style: '/lib/npm/all.min.css'},
+        // JQUERY TOAST
+        {style: '/lib/npm/jquery.toast.min.css'},
+        // BOOTSTRAP
+        {style: '/lib/npm/bootstrap.min.css'},
     ];
 
     /* === VERIFICAREA CREDENȚIALELOR === */
@@ -73,11 +123,12 @@ router.get('/new', function (req, res) {
         res.render('logentry-form', {
             title:     "Adaugă în log",
             user:      req.user,
-            // style:     "/lib/fontawesome/css/fontawesome.min.css",
             logoimg:   "/img/red-logo-small30.png",
             credlogo:  "../img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
-            scripts
+            scripts,
+            modules,
+            styles
         });
     } else {
         res.redirect('/401');

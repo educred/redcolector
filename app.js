@@ -138,7 +138,7 @@ io.use(wrap(sessionMiddleware));
 // });
 // when a socket.io connect connects, get the session and store the id in it (https://stackoverflow.com/questions/42379952/combine-sockets-and-express-when-using-express-middleware)
 
-require('./routes/sockets')(io); // injectează socket.io
+require('./routes/sockets')(io); // injectează serverul socket.io
 require('./routes/upload')(io);
 
 /* === RUTE ÎN AFARA CSRF-ului === */

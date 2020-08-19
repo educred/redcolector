@@ -1,3 +1,6 @@
+DataTables warning: table id=DataTables_Table_0 - 
+Requested unknown parameter 'googleProfile.name' for row 3, column 5. For more information about this error, please see http://datatables.net/tn/4
+
 curl -X PUT "localhost:9200/resedus0/_settings?pretty" -H 'Content-Type: application/json' -d '
 {
   "index.blocks.read_only_allow_delete":null

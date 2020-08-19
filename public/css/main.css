@@ -641,7 +641,7 @@ a.facet {
 }
 
 .admUview {
-    display: flex;
+    /* display: flex; */
     background-color: rgba(255, 255, 255, .6);
     border-radius: .4em;
     margin: 1rem 2rem;
@@ -650,6 +650,14 @@ a.facet {
 
 .resurseUser {
     display: flex;
+    align-self: center;
+    align-items: space-between;
+}
+
+.last_contributed {
+    border: 1px solid black;
+    padding: .2rem;
+    margin: .4rem;
 }
 
 .admUsesc__admUroles {
@@ -682,7 +690,7 @@ a.facet {
 }
 
 .coperta {
-    width: 5rem;
+    /* width: 5rem; */
     margin-bottom: 1rem;
 }
 
@@ -965,3 +973,9 @@ a.facet {
     column-gap: 1.5em;
     font-size: .85em;
 }
+
+/* PROFILE - LANDING */
+#profile {
+    margin: 3rem;
+}
+

@@ -27,20 +27,9 @@ var socket = io({
 });
 
 var pubComm = io('/redcol', {
-    upgrade: true,
     query: {['_csrf']: csrfToken}
 });
-// fă disponibil global-ului obiectul
-// globalThis.pubComm = pubComm; // HACK: !!!
 
-// console.log('Socket sniff: ', {
-//     protocol: io.protocol,
-//     detalii: pubComm.json
-// });
-
-// setInterval(() => {
-//     pubComm.emit('mesaje', 'test');
-// }, 2000);
 
 // === MANAGEMENTUL COMUNICĂRII pe socketuri ===
 // pubComm.on('mesaje', (mess) => {

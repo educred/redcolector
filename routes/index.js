@@ -1,10 +1,10 @@
+require('dotenv').config();
 const express  = require('express');
 const router   = express.Router();
 const moment   = require('moment');
 const Resursa  = require('../models/resursa-red'); // Adu modelul resursei
-const socket = require('./sockets');
 
-/* === LANDING === */
+/* === LANDING :: / === */
 router.get('/', function clbkRootRoute (req, res, next) {
 
     // let localizat = moment(result.date).locale('ro').format('LLL');
@@ -31,6 +31,7 @@ router.get('/', function clbkRootRoute (req, res, next) {
         let scripts = [
             //JQUERY
             {script: '/lib/npm/jquery.slim.min.js'},
+            {script: '/lib/npm/jquery.waypoints.min.js'},
             // MOMENT.JS
             {script: '/lib/npm/moment-with-locales.min.js'}, 
             // FONTAWESOME
@@ -38,13 +39,12 @@ router.get('/', function clbkRootRoute (req, res, next) {
             // HOLDERJS
             {script: '/lib/npm/holder.min.js'},            
             {script: '/lib/npm/bootstrap.bundle.min.js'},
-            {script: '/lib/npm/jquery.waypoints.min.js'},
             {script: '/js/custom.js'}
         ];
 
         let modules = [
             {module: '/lib/npm/popper.min.js'},
-            {module: '/js/main.mjs'},
+            // {module: '/js/main.mjs'},
             {module: '/js/indexpub.mjs'}
         ];
 
@@ -54,8 +54,8 @@ router.get('/', function clbkRootRoute (req, res, next) {
     
         res.render('index', {
             title:     "Acasă",
-            logoimg:   "img/rED-logo192.png",
             user:      req.user,
+            logoimg:   "img/rED-logo192.png",            
             resurse:   newResultArr,
             csrfToken: req.csrfToken(),
             modules,

@@ -87,29 +87,26 @@ async function commitAll (calea, autori, email, message) {
 // EXPORTĂ TOATE SOCKET-urile în app.js
 module.exports = function sockets (io) {
 
+    // io.on('connection', socket => {
+    //     console.log("Id-ul conectat este: ", socket.id);
+    //     socket.on('testconn', function cbMesaje (mesaj) {
+    //         const detaliiConn = pubComm.server.eio.clients[socket.id]; // obține detaliile de conexiune individuale
+    //         console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
+    //     });
+    // });
+
     var main = io.of('/');
     var pubComm = io.of('/redcol'); // creează obiectul `Namespace` pentru comunicare în afara administrării
     var adminNs = io.of('/admin'); //creează obiectul `Namespace` pentru administrare
 
-    main.on('connect', (socket) => {
-        // console.log('[sockets.js: Id-ul la conectarea pe main este ]', socket.id);
+    // main.on('connection', socket => {
 
-        // === ERORI === ::Ascultă erorile din server
-        socket.on('error', (reason) => {
-            console.log(reason);
-        });
-
-        // === TEST CONNECTION === ::Vezi dacă e conectat și upgradat
-        socket.on('testconn', function cbMesaje (mesaj) {
-            const detaliiConn = main.server.eio.clients[socket.id];
-            console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
-        });
-
-        // === MESAJE === ::Ascultă mesajele
-        socket.on('mesaje', function cbMesaje (mesaj) {
-            console.log('Serverul a primit următorul mesaj: ', mesaj);
-        });
-    });
+    //     // === TEST CONNECTION === ::Vezi dacă e conectat și upgradat
+    //     socket.on('testconn', function cbMesaje (mesaj) {
+    //         const detaliiConn = pubComm.server.eio.clients[socket.id]; // obține detaliile de conexiune individuale
+    //         console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
+    //     });
+    // });
 
     // Testează dacă primești socket format
     // console.info('Server socket sniff: ', {
@@ -166,8 +163,7 @@ module.exports = function sockets (io) {
 
         // === TEST CONNECTION === ::Vezi dacă e conectat și upgradat
         socket.on('testconn', function cbMesaje (mesaj) {
-            const detaliiConn = pubComm.server.eio.clients[socket.id]; // obține detaliile de conexiune individuale
-            console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
+            console.log('Serverul a primit următorul mesaj: ', mesaj);
         });
 
         // === MESAJE === ::Ascultă mesajele
@@ -1032,5 +1028,5 @@ module.exports = function sockets (io) {
         });
     });
 
-    // return io;
+    return io;
 };

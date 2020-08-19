@@ -23,7 +23,6 @@ router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, re
     res.render('profile', {        
         title:        "Profil",
         user:         req.user,
-        // style:        "/lib/fontawesome/css/fontawesome.min.css",
         logoimg:      "/img/red-logo-small30.png",
         credlogo:     "../img/CREDlogo.jpg",
         csrfToken:    req.csrfToken(),
@@ -31,7 +30,7 @@ router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, re
     });
 });
 
-/* === ACCESAREA PROPRIILOR RESURSE === */
+/* === ACCESAREA PROPRIILOR RESURSE :: /resurse === */
 router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (req, res) {
         // var count = require('./controllers/resincred.ctrl')(req.user);
         var count = Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((resurse) => {
@@ -54,28 +53,36 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
             /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
             let scripts = [       
                 // MOMENT.JS
-                {script: '/lib/npm/moment-with-locales.min.js'},  
+                {script: '/lib/npm/moment-with-locales.min.js'},
+                // HOLDERJS
+                {script: '/lib/npm/holder.min.js'},
+                // LOCAL
+                {script: '/js/form02log.js'},
                 // DATATABLES
                 {script: '/lib/npm/jquery.dataTables.min.js'},
                 {script: '/lib/npm/dataTables.bootstrap4.min.js'},
                 {script: '/lib/npm/dataTables.select.min.js'},
                 {script: '/lib/npm/dataTables.buttons.min.js'},
                 {script: '/lib/npm/dataTables.responsive.min.js'},
-                // HOLDERJS
-                {script: '/lib/npm/holder.min.js'},  
-                // LOCALE
-                {script: '/js/res-visuals-user.js'}
+                // TIMELINE 3
+                {script: '/lib/timeline3/js/timeline.js'},
             ];
 
             let styles = [
+                // FONTAWESOME
+                {style: '/lib/npm/all.min.css'},
+                // JQUERY TOAST
+                {style: '/lib/npm/jquery.toast.min.css'},
+                // BOOTSTRAP
+                {style: '/lib/npm/bootstrap.min.css'},
                 {style: '/lib/npm/jquery.dataTables.min.css'},
-                {style: '/lib/npm/responsive.dataTables.min.css'}
+                {style: '/lib/npm/responsive.dataTables.min.css'},
+                {style: '/lib/npm/dataTables.bootstrap4.min.css'}
             ];
 
             res.render('resurse-profil', {                
                 title:     "Profil",
                 user:      req.user,
-                // style:     "/lib/fontawesome/css/fontawesome.min.css",
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csrfToken: req.csrfToken(),
@@ -90,7 +97,7 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
     }
 );
 
-/* === VALIDARE / PUBLICARE /ȘTERGERE /EDITARE === */
+/* === VALIDARE / PUBLICARE /ȘTERGERE /EDITARE :: /resurse/:idres === */
 router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProfResID (req, res, next){
     // Adu înregistrarea resursei cu toate câmpurile referință populate deja
     // const editorJs2html = require('./controllers/editorJs2HTML');

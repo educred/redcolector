@@ -1,5 +1,6 @@
 {{!< layout}}
 {{> nav-resurse}}
+
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
 
     <template id="paginator">
@@ -60,7 +61,6 @@
             <h4>Filtrare</h4>
             <section id="selector">
                 <form>
-
                     {{!-- Selectarea claselor --}}
                     <div class="btn-group">
                         <button type="button" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -1028,6 +1028,7 @@
         </div>
 
         <div id="primare" class="resurse">
+            {{!-- Randează resursele --}}
             {{#each resurse}}
                 <div class="card">
                     <div class="card-header">
@@ -1052,6 +1053,7 @@
                     <div class="card-body">
                         <p class="card-text">{{this.description}}</p>     
                     </div>
+                    
                     <div class="card-footer">
                         {{!-- {{this.date}} --}}
                         {{#each this.etichete}}

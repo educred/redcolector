@@ -16,7 +16,7 @@ require('./cache.helper');
 const {clearHash} = require('./cache.helper');
 let cookieHelper  = require('./cookie2obj.helper');
 
-/* === AFIȘAREA RESURSELOR === */
+/* === AFIȘAREA RESURSELOR :: /resurse === */
 exports.loadRootResources = function loadRootResources (req, res, next) {
     // Indexul de căutare
     let idxRes = process.env.RES_IDX_ALS;
@@ -58,7 +58,7 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
                 return newObi;
             });
             res.render('resurse', {
-                title:        "CRED RED-uri",
+                title:        "CRED RED",
                 user:         req.user,
                 logoimg:      "img/rED-logo192.png",
                 csrfToken:    req.csrfToken(),
@@ -86,10 +86,9 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
         
             res.render('resurse', {
                 title:        "Resurse publice",
-                // style:        "/lib/fontawesome/css/fontawesome.min.css",
-                logoimg:      "img/rED-logo192.png",
-                csrfToken:    req.csrfToken(),
                 user:         req.user,
+                logoimg:      "img/rED-logo192.png",
+                csrfToken:    req.csrfToken(),                
                 resurse:      newResultArr,
                 activeResLnk: true,
                 resIdx:       idxRes,
@@ -145,8 +144,9 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
             return Object.assign({}, resursa._doc);// Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
         }).then(result => {
             let scripts = [
+                // MOMENT.JS
+                {script: '/lib/npm/moment-with-locales.min.js'},
                 // EDITOR.JS
-                {script: '/lib/moment/min/moment.min.js'},
                 {script: '/lib/editorjs/editor.js'},
                 {script: '/lib/editorjs/header.js'},
                 {script: '/lib/editorjs/paragraph.js'},
@@ -158,22 +158,27 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
                 {script: '/lib/editorjs/code.js'},
                 {script: '/lib/editorjs/quote.js'},
                 {script: '/lib/editorjs/inlinecode.js'},
-                // MOMENT
-                {script: '/lib/npm/moment-with-locales.min.js'},
                 // HOLDER.JS
                 {script: '/lib/npm/holder.min.js'},                
                 // UPLOADER
-                {script: '/js/uploader.js'},   
-                {script: '/js/cred-res.js'}      
+                // {script: '/js/uploader.js'}      
             ];
-            res.render('resursa-cred', {
-                user:      req.user,
+
+            let modules = [
+                // LOCALS
+                {module: '/js/uploader.js'},
+                // LOCAL 
+                {module: '/js/cred-res.js'}                
+            ];
+
+            res.render('resursa-cred', {                
                 title:     "RED in CRED",
-                // style:     "/lib/fontawesome/css/fontawesome.min.css",
+                user:      req.user,
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csrfToken: req.csrfToken(),
                 resursa:   result,
+                modules,
                 scripts
             });
         }).catch(err => {
@@ -190,7 +195,6 @@ exports.describeResource = function describeResource (req, res, next) {
     // console.log("Sesiunea de la /resurse/adaugă arată așa: ", req.session);
     // pentru evitarea dependițelor din CDN-uri, se vor încărca dinamic scripturile necesare generării editorului
     let scripts = [
-
         // Datatables
         {script: '/lib/npm/jquery.dataTables.min.js'},
         {script: '/lib/npm/dataTables.bootstrap4.min.js'},
@@ -248,11 +252,11 @@ exports.describeResource = function describeResource (req, res, next) {
         if(!url.startsWith("http")) url = "#";
 
         // Dacă avem un admin, atunci oferă acces neîngrădit
-        res.render('adauga-res', {
-            user:    req.user,
+        res.render('adauga-res', {            
             title:   "Adauga",
+            user:    req.user,
             // style:   "/lib/fontawesome/css/fontawesome.min.css",
-            logoimg: "/img/rED-logo192.png",
+            logoimg: "red-logo-small30.png",
             credlogo:"/img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
             styles,
@@ -272,10 +276,9 @@ exports.describeResource = function describeResource (req, res, next) {
         let url = new LivresqConnect().prepareProjectRequest(user.email, given_name, family_name);
         if(!url.startsWith("http")) url = "#";
 
-        res.render('adauga-res', {
-            user:    req.user,
+        res.render('adauga-res', {            
             title:   "Adauga",
-            // style:   "/lib/fontawesome/css/fontawesome.min.css",
+            user:    req.user,
             logoimg: "/img/rED-logo192.png",
             credlogo:"/img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
