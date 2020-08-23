@@ -1,4 +1,14 @@
-import {pubComm, uuid, csrfToken, createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+
+var csrfToken = '';
+
+if(document.getElementsByName('_csrf')[0].value) {
+    csrfToken = document.getElementsByName('_csrf')[0].value;
+}
+
+var pubComm = io('/redcol', {
+    query: {['_csrf']: csrfToken}
+});
 
 const fatete = new Set(); // set pentru selecții de fațete
 const primare = document.getElementById('primare');
@@ -1947,8 +1957,11 @@ const cl8 = document.querySelector('#cl8');
 const discipline = document.querySelector('#discipline');
 
 let clase = [cl0, cl1, cl2, cl3, cl4, cl5, cl6, cl7, cl8];
+
 // pentru fiecare clasă care primește click generează întreaga structură de date necesară afișării cât mai compacte
-clase.forEach(elem => elem.addEventListener('click', structureAriAndDiscs));
+clase.map(elem => {
+    elem.addEventListener('click', structureAriAndDiscs);
+});
 
 /* === Constituirea selectorului pentru disciplină === */
 const DISCMAP = new Map(); // colector de structuri {nivel: "5", 5: {art5: [], bio5: []}} generate de `structDiscipline({cl:event.target.value, data});`
@@ -1957,18 +1970,31 @@ var disciplineSelectate = new Set(); // selecția disciplinelor
 var discSelected = document.querySelector('#disciplineselectate'); // zona de afișare a disciplinelor care au fost selectate
 
 /**
- * Funcția trebuie să încarce disciplinele aferente clasei selectate în selecturi ale ariilor
+ * Funcția este un helper pentru eliminarea tuturor
+ * elementelor copil a unei rădăcini pasate drept parametru
+ * @param element 
+ */
+function removeAllChildren(element) {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+}
+
+/**
+ * Funcția trebuie să genereze clasele și să atașeze un eveniment pentru 
+ * încarcarea disciplinelor aferente fiecărui element copil
  * @param {Object} elem este elementul pe care a fost atașat listener-ul
  */
 function structureAriAndDiscs (elem) {
-    // console.log('Target elem de clasă: ', elem.target);
-    discipline.innerHTML = ''; // #1 șterge elementele anterioare
+    // #1 șterge elementele anterioare
+    removeAllChildren(discipline); // alternativă la [discipline.innerHTML = '';]
 
     // #2 creează un obiect din dataset-ul aferent elementului din dropdown-ul claselor
     const clsdata = {...elem.target.dataset}; // constituie un obiect din setul data-*
     // #3 generează o structură consolidată a datelor prin generarea subseturilor disciplinelor.
     const STRUCTURE = structDiscipline({cl:elem.target.id, clsdata}); // event.target.id este id-ul elementului din dropdown-ul claselor:: id="cl5"
-    // console.log("Structure este: ",STRUCTURE);
+
+    // console.log("STRUCTURE are următoarea structură: ",STRUCTURE);
     /* 
         nivel: "0",
         rezultat: {
@@ -1994,22 +2020,42 @@ function structureAriAndDiscs (elem) {
     // #4 populează progresiv structura de date
     // dacă în DISCMAP nu există o structură corespondentă celei din STRUCTURE.nivel
     if (!DISCMAP.has(STRUCTURE.nivel)) {
-        DISCMAP.set(STRUCTURE.nivel, STRUCTURE.rezultat); // FIXME: Acest `STRUCTURE.rezultat` trebuie să fie remodelat (`model_de_ajuns_la_discipline.json`)
-    }; // FIXME: Cred că trebuie refăcută funcția `structDiscipline()`.
+        // remodelează datele aferente fiecărei clase
+        let newStructure = structDiscipline({cl: elem.target.id, clsdata});
+        console.log('[redincredall :: date remodelate: ', newStructure);
+
+        /*
+        nivel: "0",
+        rezultat: {
+            0: {
+                art0: [{
+                    codsdisc: "artViz0",
+                    nume: "Arte vizuale..."
+                }],
+                dezv0: [{...}]
+            }
+        }
+        */
+
+
+        DISCMAP.set(STRUCTURE.nivel, newStructure); // FIXME: Acest `STRUCTURE.rezultat` trebuie să fie remodelat (`model_de_ajuns_la_discipline.json`)
+    } // FIXME: Cred că trebuie refăcută funcția `structDiscipline()`.
+
+    // console.log('[redincredall :: DISCMAP este: ]', DISCMAP);
 
     // #5 restructurează obiectul aferent clasei (cheie) din `mapCodDisc`
 
-    const clsTouples = Object.entries(clsdata); // generează un array de array-uri
-    let k, v;
+    // const clsTouples = Object.entries(clsdata); // generează un array de array-uri
+    // let k, v;
     
     // rând pe rând sunt create toate elementele achor pentru fiecare disciplină în parte
-    for (let [k, v] of clsTouples) {
+    // for (let [k, v] of clsTouples) {
         // TODO: pentru disciplinele care sunt arondate unei arii, generează un dropdown pentru acea arie cu toate disciplinele
 
-        let aelem = new createElement('a', k, ['badge', 'facet', 'mansonry', k], {'href': '#', 'data-text': v, 'data-cod': k}).creeazaElem(v);
-        aelem.addEventListener('click', highlightf);
-        discipline.appendChild(aelem);
-    }
+        // let aelem = new createElement('a', k, ['badge', 'facet', 'mansonry', k], {'href': '#', 'data-text': v, 'data-cod': k, 'onclick': 'highlightf()'}).creeazaElem(v);
+        // aelem.addEventListener('click', highlightf);
+        // discipline.appendChild(aelem);
+    // }
 }
 
 /**
@@ -2046,7 +2092,7 @@ const searchResIntBtn = document.getElementById('searchResIntBtn'); // butonul d
 let index = searchResIntBtn.dataset.idx; // extrage indexul din atributul data.
 searchResIntBtn.addEventListener('click', function clbkSeachBtnResInterne (evt) {
     evt.preventDefault();
-    const fragSearch = document.getElementById('fragSearchDocs').value;
+    let fragSearch = document.getElementById('fragSearchDocs').value;
     if (fragSearch.length > 250) {
         fragSearch = fragSearch.slice(0, 250);
     }
@@ -2106,7 +2152,7 @@ function extragNumeDisciplina (obidisc) {
         }
     });
     return disciplina;
-};
+}
 
 /**
  * Funcția e listener pentru fiecare checkbox disciplină. Odată selectată disciplina, aceasta va fi afișată într-o zonă de selecție
@@ -2149,6 +2195,7 @@ function clickPeDisciplina (evt) {
  * @returns {Object} Returnează {nivel: <nivel>, rezultat: <Object> }
  */
 function structDiscipline (discs = {}) {
+    // console.log('Datele primite în `structDiscipline` sunt: ', discs);
     // discs are semnătura `cl: "cl5", data: {artDansc5: "Dans clasic",  artDesen5: "Desen"} }`
     let arrOfarr = Object.entries(discs.clsdata); // transformă înregistrările obiectului în array-uri
     // arrOfarr va avea semnătura `[ "lbcomRom5", "Limba și literatura română" ], [ "lbcomOpt5", "Opțional" ]`
@@ -2159,6 +2206,7 @@ function structDiscipline (discs = {}) {
     if (discs.cl) {
         nivelNo = discs.cl.split('').pop(); // scoate numărul aferent clasei!!!
     }
+    // constituie obiectul rezultat
     const obj = {
         nivel: nivelNo,
         rezultat: {}

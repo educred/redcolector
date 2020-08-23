@@ -43,7 +43,7 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
 
     let modules = [
         // LOCALE
-        {script: '/js/redincredall.mjs'} 
+        {module: '/js/redincredall.mjs'} 
     ];
     
     /* === VERIFICAREA CREDENȚIALELOR === */
