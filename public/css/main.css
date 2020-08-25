@@ -546,6 +546,7 @@ a[class$="8"], label[class$="8"] {
 }
 
 /* === CĂUTARE FAȚETATĂ === */
+
 .fatete, 
 .selectortxt {
     color: beige;
@@ -553,6 +554,7 @@ a[class$="8"], label[class$="8"] {
 
 .fatete {   
     padding: 0.3rem;
+    z-index: 5000;
 }
 
 #selectlevel {
@@ -565,10 +567,18 @@ a[class$="8"], label[class$="8"] {
     color: #777;
 }
 
-a.facet {
-    text-decoration: none;
-    color: black;
+.facet {
+    /* text-decoration: none;
+    color: black; */
+    margin: .2rem;
+    font-family: inherit;
 }
+
+.drpdwnmenucontent {
+    margin: 0 auto;
+    font-size: smaller;
+}
+
 /* === CĂUTARE FAȚETATĂ [END] === */
 
 #codex-editor {
