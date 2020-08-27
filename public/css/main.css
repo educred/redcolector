@@ -989,3 +989,87 @@ a[class$="8"], label[class$="8"] {
     margin: 3rem;
 }
 
+#disciplineselectate {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* BUTOANE TAGURI */
+@keyframes fadeInFromNone {
+    0% {
+        display: none;
+        opacity: 0;
+    }
+
+    1% {
+        display: block;
+        opacity: 0;
+    }
+
+    100% {
+        display: block;
+        opacity: 1;
+    }
+}
+
+.disctag {
+    position: relative;
+    display: block;
+    min-width: 4rem;
+    padding: .3rem;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.3);
+
+}
+
+.disctag:active,
+.disctag:visited {
+    color: #fff;
+}
+
+.disctag p {
+    text-align: center;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.disctag .iconATag {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.disctag .iconATag .fa {
+    vertical-align: middle;
+}
+
+.disctag:hover {
+    opacity: .9;
+    text-decoration: none;
+    overflow: hidden;
+}
+
+.disctag:hover p {
+    left: -80%;
+    opacity: 0;
+    text-decoration: none;
+    /* transition: all 1.2s cubic-bezier(0.31, -0.105, 0.43, 1.4) ease-out; */
+}
+
+.disctag:hover .fa-times {
+    width: 100%;
+    font-size: 3vw;
+    align-content: center;
+    vertical-align: middle;
+    color: #fff;
+    background-color: red;
+    /* transition: all 2s cubic-bezier(0.31, -0.105, 0.43, 1.4) ease-in; */
+    animation: fadeInFromNone .6s ease-in;
+}
+
+.disctag:active {
+    opacity: 1;
+}

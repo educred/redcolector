@@ -10,14 +10,7 @@ var pubComm = io('/redcol', {
     query: {['_csrf']: csrfToken}
 });
 
-const fatete = new Set(); // set pentru selecții de fațete
-const primare = document.getElementById('primare');
-
-// La `parent` va fi codul care este precizat în `data-*` de la `Aria/arii curriculare` din HTML - client
-// REGULĂ: array-urile disciplinelor nu trebuie să aibă coduri copiate de la array-ul altei discipline (produce ghosturi și orfani pe ecran)
-// REGULĂ: pentru a se face colocarea sub-disciplinelor la o disciplină, cele din array trebuie să pornească cu un fragment de caractere identic.
-// CLASA 0
-
+const primare = document.getElementById('primare'); // zona în care se încarcă ultimele resurse contribuite
 const codSeturiDisc = {
     "art": {
         "0": "Arte",
@@ -276,10 +269,12 @@ const codSeturiDisc = {
         "7": "Teorie/Solfegiu/Dicteu",
         "8": "Teorie/Solfegiu/Dicteu"
     }
-};
+}; // matcher între codul de set de discipline și numele setului. Este necesar pentru a genera drop-down-urile dseturilor de discipline
 
+/* === TRATAREA DISCIPLINELOR */
 // punctul din DOM unde vor fi injectate disciplinele
 const discipline = document.querySelector('#discipline');
+const discSelected = document.querySelector('#disciplineselectate'); // zona de afișare a disciplinelor care au fost selectate
 
 // Atașează listeneri pe fiecare element din meniu
 let clase = document.getElementsByClassName('dropdown-item'), i;
@@ -289,9 +284,6 @@ for (i of clase) {
 
 /* === Constituirea selectorului pentru disciplină === */
 const DISCMAP = new Map(); // colector de structuri {nivel: "5", 5: {art5: [], bio5: []}} generate de `structDiscipline({cl:event.target.value, data});`
-// Constituie setul disciplinelor care au fost selectate de utilizator
-var disciplineSelectate = new Set(); // selecția disciplinelor
-var discSelected = document.querySelector('#disciplineselectate'); // zona de afișare a disciplinelor care au fost selectate
 
 /**
  * Funcția este un helper pentru eliminarea tuturor
@@ -346,47 +338,92 @@ function generateUX4discs (dataset, nocls) {
         // dacă lungimea array-ului este 1, creezi un buton, dacă este mai mare creezi câte un dropdown 
 
         if (arrSet.length === 1) {
-            let butn = new createElement('button', '', ['btn', 'btn-sm', 'btn-warning', 'facet', 'mansonry'], {}).creeazaElem();
-            let spn =  new createElement('span', arrSet[0].codsdisc, ['badge', arrSet[0].codsdisc, numeSet], {}).creeazaElem(arrSet[0].nume);
-            spn.addEventListener('click', highlightf);
+            // console.log("La generarea butonului adaug urmatorul id ", arrSet[0].codsdisc);
+            /* === CAZUL UNEI SINGURE DISCIPLINE === */
+            let butn = new createElement('button', arrSet[0].codsdisc, ['btn', 'btn-sm', 'btn-warning', 'facet', 'mansonry'], {}).creeazaElem();
+            let spn =  new createElement('span', '', ['badge', arrSet[0].codsdisc, numeSet], {}).creeazaElem(arrSet[0].nume);
             butn.appendChild(spn);
+            butn.addEventListener('click', clickPeDisciplina); // atașează listener pentru tratarea selecție pe click
             discipline.appendChild(butn);
         } else {
+            /* === CAZUL SETURILOR DE DISCIPLINE === */
             let drpDwn = new createElement('div', '', ['btn-group', 'dropright', 'facet'], {}).creeazaElem();
-            numeSet = codSeturiDisc[numeSet][nocls];
+            numeSet = codSeturiDisc[numeSet][nocls]; // Adu numele setului de discipline și înlocuiește codul setului
+            // Construiește elementele Bootstrap pentru seturi și discipline individuale
             let btnDrpDwn = new createElement('button', '', ['btn', 'btn-sm', 'btn-warning', 'dropdown-toggle'], {'data-toggle': 'dropdown', 'aria-haspopup':'true', 'aria-expanded': 'false'}).creeazaElem(numeSet);
             let menuDrpDwn = new createElement('div', '', ['dropdown-menu', 'drpdwnmenucontent'], {}).creeazaElem();
             let disciplina;
+            // în cazul unui set, creează câte un drop down
             for (disciplina of arrSet) {
                 let aelem = new createElement('a', disciplina.codsdisc, ['dropdown-item', 'facet', disciplina.codsdisc], {'href': '#'}).creeazaElem(disciplina.nume);
-                aelem.addEventListener('click', highlightf);
+                aelem.addEventListener('click', clickPeDisciplina); // atașează listener pentru tratarea selecție pe click
                 menuDrpDwn.appendChild(aelem);
             }
+            // asamblează construcția DOM și atașează la `discipline`
             btnDrpDwn.appendChild(menuDrpDwn);
             drpDwn.appendChild(btnDrpDwn);
             discipline.appendChild(drpDwn);
         }
+    }
+}
 
+var divBtnCautareFatetata = document.getElementById('btnCautaFatetat'); // referință către div-ul gazdă al butonului de căutare fațetată
+var butonCautareFatetata = document.getElementById('searchF');
+var disciplineSelectate = new Set(); // SETUL DISCIPLINELOR CARE AU FOST SELECTATE
+/**
+ * Funcția e listener pentru fiecare element disciplină. Odată selectată disciplina, aceasta va fi afișată într-o zonă de selecție
+ * Afișarea în zona de selecție implică automat adăugarea codului disciplinei într-un array
+ * Adaugă un listener pentru stergere care artrage după sine și ștergerea keyword-ului din array-ul de secție
+ * La primul element care apare în array-ul de selecție, apare un buton de căutare, care va trimite interogare în server către Mongooge pentru deschiderea unui cursor
+ * @param {NodeElement} `evt` fiind chiar elementul obiect
+ */
+function clickPeDisciplina (evt) {
+    let id = evt.target.id || evt.target.parentElement.id; // este cazul în care userul dă click pe `span`, nu pe elementul părinte `button`, care are id
+    // injectează butonul de căutare fațetată dacă avem un prim element
 
+    if (disciplineSelectate.size === 0) {
+        let btnSearchF = new createElement('button', 'searchF', ['btn', 'btn-sm', 'btn-warning'], {}).creeazaElem("Caută"); // TODO: Funcția listener pentru căutare fațetată
+        btnSearchF.addEventListener('click', getPagedResults);
+        divBtnCautareFatetata.appendChild(btnSearchF);
     }
 
-    // pentru fiecare set cu discipline,
-    // dataset.rezultat[dataset.nivel].map(discSubsetGenerator);
+    // DACĂ EXISTĂ CODUL ÎN disciplineSelectate, șterge-l
+    if (disciplineSelectate.has(id) == false) {
+        disciplineSelectate.add(id); // adaugă disciplina în `Set`-ul `disciplineSelectate`
+        
+        let aTag = new createElement('a', '', ['disctag', id, `svg${id}`], {href: '#', "data-disc": id}).creeazaElem(); // `id` este necesar în clase pentru a fi colorat specific clasei
+        let pTag = new createElement('p', '', [], {}).creeazaElem(evt.target.textContent);
+        let faRemove = new createElement('i', id, ['iconATag', 'fa', 'fa-times'], {}).creeazaElem(); // pasezi id-ul ca informație în svg-ul generat de Fontawesome
+        aTag.addEventListener('click', delKeyword); // adaugă listener de ștergere keyword
+
+        aTag.appendChild(pTag);
+        aTag.appendChild(faRemove);
+        discSelected.appendChild(aTag);
+    }
 }
 
 /**
- *Funcția are rolul de a introduce id-ul elementului selectat ca nou element buton într-o zonă de evidență a ceea ce a fost selectat.
- * Va fi listener pentru fiecare disciplină din seturile afișate.
+ * Funcția este listener pentru butoanele disciplinelor care au fost alese
+ * @param evt Object tip eveniment
  */
-function highlightf () {
-    alert('bau');
+function delKeyword (evt) {
+    // setează id-ul elementului pentru ștergere
+    let id = evt.target.id || evt.target.parentElement.id; // când se dă click, fie pe `path`, fie pe `svg` (generat de Fontawesome).
+    let tgt = document.querySelector(`.svg${id}`); // țintește elementul `achor` prin țintirea unei clase construite special pentru a fi țintită aici (`svg${id}`)
+
+    // șterge din Set-ul disciplinelor selectate
+    if (disciplineSelectate.has(id) == true) {
+        disciplineSelectate.delete(id); // șterge din Set
+        // Dacă nu mai este nicio înregistrare în Set, șterge butonul de căutare
+        if (disciplineSelectate.size === 0) {
+            butonCautareFatetata.remove(); // șterge din DOM disciplina selectată și dacă e ultima, șterge și butonul de căutare
+        }
+    }
+    discSelected.removeChild(tgt);
 }
 
-/**
- * Funcția este callback pentru map pe obiectul seturilor de discipline tratat de `generateUX4discs()`
- * @param setDiscipline este un Array cu obiecte reprezentând fiecare o disciplină
- */
-function discSubSetGenerator (setDiscipline) {
+/* === BUTONUL DE CĂUTARE FAȚETATĂ === */
+function getPagedResults () {
 
 }
 
@@ -402,7 +439,7 @@ searchResIntBtn.addEventListener('click', function clbkSeachBtnResInterne (evt) 
     // console.log(fragSearch, "pe", index);
     
     // primul pas, curăță de conținut id-ul `primare`
-    primare.innerHTML = '';
+    removeAllChildren(primare); // old stuff: `primare.innerHTML = '';`
     pubComm.emit('searchres', {
         index, 
         fragSearch, 
@@ -420,7 +457,7 @@ const tmplrec = document.getElementById('searchresult');
 pubComm.on('searchres', (documents) => {
     console.log(documents);
     // primul pas, curăță de conținut id-ul `primare`
-    primare.innerHTML = '';
+    removeAllChildren(primare); // old stuff: `primare.innerHTML = '';`
     // pentru fiecare element din array-ul rezultatelor generează câte o înregistrare
     for (let doc of documents) {
         // clonează conținutul
@@ -455,40 +492,6 @@ function extragNumeDisciplina (obidisc) {
         }
     });
     return disciplina;
-}
-
-/**
- * Funcția e listener pentru fiecare checkbox disciplină. Odată selectată disciplina, aceasta va fi afișată într-o zonă de selecție
- * @param {NodeElement} `evt` fiind chiar elementul obiect
- */
-function clickPeDisciplina (evt) {
-    // face ca butonul de selecție să fie evidențiat doar dacă a fost apăsată vreo disciplină
-    if (compSpecPaginator.classList.contains('d-none')) {
-        compSpecPaginator.classList.remove('d-none');
-    } else {
-        compSpecPaginator.classList.add('d-block');
-    }
-
-    let e = evt || window.event;
-    // DACĂ EXISTĂ CODUL ÎN disciplineSelectate, șterge-l
-    if (disciplineSelectate.has(e.dataset.nume) == false) {
-        disciplineSelectate.add(e.dataset.nume); // adaugă disciplina în `Set`-ul `disciplineSelectate`
-        
-        let inputCheckBx      = new createElement('input', '', ['form-check-input'], {type: "checkbox", 'data-nume': e.dataset.nume, autocomplete: "off", value: e.dataset.nume, onclick: ""}).creeazaElem();
-        let labelBtn          = new createElement('label', '', ['discbtn','btn', 'btn-sm', e.dataset.nume], {}).creeazaElem(e.value);
-        labelBtn.textContent += ` `; //adaugă un spațiu între numar și textul butonului.
-        let clasaInfo         = new createElement('span', '', ['badge','badge-light'], {}).creeazaElem(e.dataset.nume.split('').pop());
-        labelBtn.appendChild(clasaInfo); // adaugă numărul care indică clasa pentru care a apărut disciplina (vezi bootstrap badges)
-        let divBtnGroupToggle = new createElement('div',   '', ['disciplina', 'btn-group-toggle', e.dataset.nume], {"data-toggle": "buttons", onclick: ""}).creeazaElem();           
-        
-        labelBtn.appendChild(inputCheckBx); // injectează checkbox-ul în label
-        divBtnGroupToggle.appendChild(labelBtn); // injectează label-ul în div
-        discSelected.appendChild(divBtnGroupToggle); // adaugă div-ul în discselected
-    } else {
-        disciplineSelectate.delete(e.dataset.nume);
-        let elemExistent = document.querySelector(`.${e.dataset.nume}`);
-        discSelected.removeChild(elemExistent);
-    }
 }
 
 /**

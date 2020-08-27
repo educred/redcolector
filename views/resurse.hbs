@@ -57,7 +57,9 @@
             </video>
         </div>
 
+        {{!-- Căutare fațetată --}}
         <div class="fatete">
+            {{!-- Acesta este selectorul disciplinelor --}}
             <section id="selector">
                 <form>
                     {{!-- Selectarea claselor --}}
@@ -1019,13 +1021,15 @@
                             {{!-- Afișarea disciplinelor selectate END --}}
                         </fieldset>
 
-                    </div>
+                    </div>                    
                 </form>
             </section>
-            <section id="selections">
-
-            </section>
+            {{!-- Aceastea sunt disciplinele selectate --}}
+            <section id="disciplineselectate"></section>
         </div>
+        
+        {{!-- Aici va fi injectat butonul de căutare fațetată --}}
+        <div id="btnCautaFatetat"></div>
 
         <div id="primare" class="resurse">
             {{!-- Randează resursele --}}

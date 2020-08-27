@@ -4,7 +4,6 @@ const path           = require('path');
 const logger         = require('morgan');
 const compression    = require('compression');
 const express        = require('express');
-const bodyParser     = require('body-parser');
 const cookies        = require('cookie-parser');
 const session        = require('express-session');
 const csurf          = require('csurf');
@@ -13,7 +12,6 @@ const helmet         = require('helmet');
 const passport       = require('passport');
 const LocalStrategy  = require('passport-local').Strategy;
 const responseTime   = require('response-time');
-// const multer         = require('multer');
 const RedisStore     = require('connect-redis')(session);
 
 const hbs            = require('express-hbs');
@@ -29,17 +27,17 @@ const i18n           = require('i18n');
 let login          = require('./routes/login');
 let signupLoco     = require('./routes/signup');
 
-// minimal config
+/* === I18N === */
 i18n.configure({
     locales: ['en', 'hu', 'de', 'ua', 'pl'],
     cookie: 'locale',
     directory: __dirname + "/locales"
 });
 
-// MONGOOSE
+/* === MONGOOSE === */
 const mongoose = require('./mongoose.config');
 
-// LOGGER
+/* === LOGGER === */
 app.use(logger('dev', {
     skip: function (req, res) {
         return res.statusCode < 400;
@@ -58,23 +56,33 @@ app.use('/repo', express.static(path.join(__dirname, 'repo')));
 // app.use(fileUpload());
 app.use(favicon(path.join(__dirname,  'public', 'favicon.ico')));
 
-// PROTECȚIE
+/* === HELMET === */
 app.use(helmet()); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
 // https://helmetjs.github.io/docs/dont-sniff-mimetype/
 
-// CORS
+/* === CORS === */
 var corsOptions = {
     origin: 'http://' + process.env.DOMAIN,
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 app.use(cors(corsOptions));
 
-// PROCESAREA CORPULUI CERERII
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+/* === BODY PARSER === */
+app.use(express.urlencoded({extended: true}));
+app.use(express.json());
 
-// === SESIUNI ===
+/* === SESIUNI === */
 app.use(cookies());// Parse Cookie header and populate req.cookies with an object keyed by the cookie names
+
+/* === TIMP RĂSPUNS ÎN HEADER === */
+app.use(responseTime());
+
+/* === PROXY SUPPORT === */
+app.set('trust proxy', true);
+app.enable('trust proxy');
+
+/* === INIȚIALIZARE I18N === */
+app.use(i18n.init); // instanțiere modul i18n - este necesar ca înainte de a adăuga acest middleware să fie cerut cookies
 
 // creează sesiune - https://expressjs.com/en/advanced/best-practice-security.html
 let sessionMiddleware = session({
@@ -96,7 +104,7 @@ let sessionMiddleware = session({
     }
 });
 
-// stabilirea sesiunii de lucru prin încercări repetate. Vezi: https://github.com/expressjs/session/issues/99
+// MIDDLEWARE de stabilirea a sesiunii de lucru prin încercări repetate. Vezi: https://github.com/expressjs/session/issues/99
 app.use(function (req, res, next) {
     var tries = 3; // număr de încercări
     function lookupSession (error) {
@@ -118,27 +126,28 @@ app.use(function (req, res, next) {
     lookupSession();
 });
 
-// Instanțiază Passport și restaurează starea sesiunii dacă aceasta există
-app.use(passport.initialize());
-app.use(passport.session());
+/* === PASSPORT === */
+app.use(passport.initialize()); // Instanțiază Passport
+app.use(passport.session()); // restaurează starea sesiunii dacă aceasta există
 
-// SERVER SOCKETURI
+/* === SERVER SOCKETURI === */
 // #1 Creează server prin atașarea celui existent
 const io = require('socket.io')(http);
-// creează un wrapper de middleware Express pentru Socket.io
+// #2 Creează un wrapper de middleware Express pentru Socket.io
 function wrap (middleware) {
     return function matcher (socket, next) {
         middleware (socket.request, {}, next);
     };
 }
 io.use(wrap(sessionMiddleware));
-// conectarea obiectului sesiune ca middleware în tratarea conexiunilor socket.io
+// conectarea obiectului sesiune ca middleware în tratarea conexiunilor socket.io (ALTERNATIVĂ, nu șterge)
 // io.use(function clbkIOuseSessions(socket, next) {
 //     sessionMiddleware(socket.request, socket.request.res, next);
 // });
 // when a socket.io connect connects, get the session and store the id in it (https://stackoverflow.com/questions/42379952/combine-sockets-and-express-when-using-express-middleware)
 
-require('./routes/sockets')(io); // injectează serverul socket.io
+/* === PASAREA SERVERULUI SOCKET === */
+require('./routes/sockets')(io);
 require('./routes/upload')(io);
 
 /* === RUTE ÎN AFARA CSRF-ului === */
@@ -158,8 +167,7 @@ passport.serializeUser(UserDetails.serializeUser());
 passport.deserializeUser(UserDetails.deserializeUser());
 app.use('/login', login);
 
-/* === CSRF - Cross Site Request Forgery === */
-// activarea protecției csurf - expressjs.com/en/resources/middleware/csurf.html
+/* === CSRF - Cross Site Request Forgery - expressjs.com/en/resources/middleware/csurf.html === */
 const csurfProtection = csurf({
     cookie: {
         key: '_csrf',
@@ -170,7 +178,12 @@ const csurfProtection = csurf({
         sameSite: 'strict', // https://www.owaspsafar.org/index.php/SameSite
         maxAge: 24 * 60 * 60 * 1000, // 24 ore
     }
-    // cookie: true
+});
+app.use(csurfProtection); // activarea protecției la CSRF
+app.use(function (err, req, res, next) {
+    if (err.code !== 'EBADCSRFTOKEN') return next(err);
+    // gestionarea erorilor CSRF token:
+    res.status(403).send('Sockets.io nu trimite înapoi tokenul!!!');
 });
 //https://github.com/expressjs/csurf/issues/21
 // app.use(function (req, res, next) {
@@ -178,24 +191,7 @@ const csurfProtection = csurf({
 //     csurfProtection(req, res, next);
 // })
 
-// Introdu în uz middleware-ul CSRF
-app.use(csurfProtection); // activarea protecției la CSRF
-// error handler
-app.use(function (err, req, res, next) {
-    if (err.code !== 'EBADCSRFTOKEN') return next(err);
-    // handle CSRF token errors here
-    res.status(403).send('Sockets.io nu trimite înapoi tokenul!!!');
-});
-
-// TIMP RĂSPUNS ÎN HEADER
-app.use(responseTime());
-
-// vezi http://expressjs.com/api.html#app.locals
-// app.locals({
-//     'PROD_MODE': 'production' === app.get('env')
-// });
-
-// SETAREA MOTORULUI DE ȘABLONARE
+/* === HANDLEBARS :: SETAREA MOTORULUI DE ȘABLONARE === */
 hbs.registerHelper('json', function clbkHbsHelperJSON (obi) {
     // console.log(JSON.stringify(obi.content));
     return JSON.stringify(obi);
@@ -209,12 +205,7 @@ app.engine('hbs', hbs.express4({
 app.set('views', __dirname + '/views'); // cu app.set se vor seta valori globale pentru aplicație
 app.set('view engine', 'hbs');
 
-// Activează protocoalele de proxy
-app.set('trust proxy', true);
-app.enable('trust proxy');
 
-// INIȚIALIZARE I18N
-app.use(i18n.init); // instanțiere modul i18n - este necesar ca înainte de a adăuga acest middleware să fie cerut cookies
 
 // === COMPRESIE ===
 function shouldCompress (req, res) {
@@ -312,6 +303,11 @@ const detalii = {
 };
 
 console.log("Memoria RAM alocată la pornire este de: ", detalii.RAM);
+
+// vezi http://expressjs.com/api.html#app.locals
+// app.locals({
+//     'PROD_MODE': 'production' === app.get('env')
+// });
 
 // Pornește serverul!
 let port = process.env.PORT || 8080;

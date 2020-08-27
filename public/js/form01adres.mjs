@@ -2601,7 +2601,6 @@ import {AttachesToolPlus} from './uploader.js';
         return disciplina;
     }
 
-
     /* === Constituirea selectorului pentru disciplină === */
     var niveluri   = document.querySelectorAll('.nivel'); // array de clase selectate
     var discipline = document.querySelector('#discipline');
@@ -2619,13 +2618,8 @@ import {AttachesToolPlus} from './uploader.js';
     var disciplineSelectate = new Set(); // selecția disciplinelor
     var discSelected = document.querySelector('#disciplineselectate'); // zona de afișare a disciplinelor care au fost selectate
 
-
-
-
-
     /**
      * Funcția e listener pentru fiecare checkbox disciplină. Odată selectată disciplina, aceasta va fi afișată într-o zonă de selecție
-     * FIXME: Elementul așteaptă ca funcția să fie în global. Nu o poate accesa dintr-un modul
      * @param {NodeElement} `evt` fiind chiar elementul obiect
      */
     function clickPeDisciplina (evt) {
@@ -2637,7 +2631,7 @@ import {AttachesToolPlus} from './uploader.js';
         }
 
         let e = evt || window.event;
-        // DACĂ EXISTĂ CODUL ÎN disciplineSelectate, șterge-l
+        // DACĂ EXISTĂ CODUL ÎN `disciplineSelectate`, șterge-l
         if (disciplineSelectate.has(e.dataset.nume) == false) {
             disciplineSelectate.add(e.dataset.nume); // adaugă disciplina în `Set`-ul `disciplineSelectate`
             
@@ -2658,9 +2652,8 @@ import {AttachesToolPlus} from './uploader.js';
         }
     }
 
-    // window.clickPeDisciplina = clickPeDisciplina; // HACK: doar de criză!
-    globalThis.clickPeDisciplina = clickPeDisciplina; // WORKING: doar de criză! Este un HACK: !!!
-
+    // window.clickPeDisciplina = clickPeDisciplina; // HACK: expunere pe global!
+    globalThis.clickPeDisciplina = clickPeDisciplina; // WORKING: Este un HACK: !!!
 
     /**
      * Funcția este calback pentru butonul de alegere a clasei (input type checkbox)
