@@ -21,13 +21,15 @@ const git         = require('isomorphic-git');
 
 // funcțiile de căutare
 const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
+// căutare resurse în Mongo prin Mongoose
+const paginate = require('./controllers/pagination.ctrl');
 
 /**
  * Funcția are rolul de a face staging la tot ce există în parametrul `calea` urmat de commit
  * Funcția este echivalentul lui `git add .` (cu respectarea unui `.gitignore`, dacă există) combinat cu `git commit -a -m "mesajul"`
  * @param {String} calea Este calea relativă a subdirectorului resursei. Începe cu punct
  * @param {String} autori Este stringul autorilor din care va fi extras primul ca fiind cel care face repo-ul
- * @param {String} email Adresa de email a celui care dace repo-ul
+ * @param {String} email Adresa de email a celui care face repo-ul
  * @param {String} message 
  */
 async function commitAll (calea, autori, email, message) {    
@@ -1006,6 +1008,11 @@ module.exports = function sockets (io) {
             }).catch(error => {
                 console.log(error);
             });
+        });
+
+        // === PAGEDRES === :: RESURSELE PAGINATE
+        socket.on('pagedRes', () => {
+            // TODO: modelează acest eveniment pentru resursele paginate necesare clientului
         });
 
         // === PERSONALRES === ::TOATE RESURSELE UNUI UTILIZATOR

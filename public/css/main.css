@@ -389,8 +389,7 @@ tr.shown td.details-control {
 }
 
 /* FORMAREA BUTOANELOR DISCIPLINELOR */
-
-.btn-success { background-color: red; }
+/* .btn-success { background-color: red; } */
 
 .disciplina {
     margin: .2rem;
@@ -994,7 +993,7 @@ a[class$="8"], label[class$="8"] {
     flex-wrap: wrap;
 }
 
-/* BUTOANE TAGURI */
+/* BUTOANE TAGURI CĂUTARE FAȚETATĂ */
 @keyframes fadeInFromNone {
     0% {
         display: none;
@@ -1072,4 +1071,10 @@ a[class$="8"], label[class$="8"] {
 
 .disctag:active {
     opacity: 1;
+}
+
+/* BUTONUL DE CAUTARE FAȚETATĂ */
+#searchF .btn-success {
+    width: 4rem;
+    background-color: #28a745 !important;
 }

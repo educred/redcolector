@@ -1,9 +1,10 @@
-exports.pagination = async function getPaginated (req, model, exclude) {
+exports.pagination = async function getPaginated (req, model) {
     // req trebuie să fie un obiect care să aibă următoarea semnătură
     /*
     {
         query: {
             select: 'primulCamp,alDoileaCamp,alTreilea,samd',
+            exclude: <array>,
             sort: <array>,
             sortDefaultField: <string>
         },
@@ -23,8 +24,10 @@ exports.pagination = async function getPaginated (req, model, exclude) {
     // instanțiază un obiet `Query`
     query = model.find(JSON.parse(queryStr));
 
-    // sterge câmpurile care nu vrei să aterizeze în obiectul `Query`
-    exclude.forEach(field => delete query[field]);
+    // Șterge câmpurile care nu vrei să aterizeze în obiectul `Query`
+    if (req.query.exclude) {
+        req.query.exclude.forEach(field => delete query[field]);
+    }
 
     // Câmpurile selectate
     if (req.query.select) {
