@@ -1,5 +1,4 @@
 import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
-import sockets from '../../routes/sockets';
 
 var csrfToken = '';
 
@@ -422,16 +421,46 @@ function delKeyword (evt) {
     discSelected.removeChild(tgt);
 }
 
-/* === BUTONUL DE CĂUTARE FAȚETATĂ === */
-function getPagedResults (evt) {
-    // Evenimentul folosit va fi `pagedRes` pentru aducerea resurselor paginate
-    pubComm.emit('pagedRes', {
-        query: {
-            select: Array.from(disciplineSelectate),
-            exclude: [],
-        }
-    });
+/* === SETAREA OBIECTULUI DE CĂUTARE === */
+let pageNr = 0, limitNr, skipNr;
+const selectObi = {
+    query: {
+        select: {},
+        exclude: [],
+        sortby: [],
+        sortDefaultField: 'date'
+    },
+    pageNr: pageNr,
+    limitNr: limitNr,
+    skipNr: skipNr
+};
+console.log("[redincredall] obiectul care trebuie să plece în server ", selectObi);
+
+// decorarea obiectului de selecție adăugând câmpurile de interes
+// #1 Selecție discipline!
+if (disciplineSelectate.size > 0) {
+    selectObi.query.select['discipline'] = Array.from(disciplineSelectate);
 }
+
+console.log("[redincredall] obiectul care trebuie să plece în server ", selectObi);
+
+/**
+ * === BUTONUL DE CĂUTARE FAȚETATĂ === *
+ * Funcția are rol de callback pentru evenimentul `click` al butonului de căutare fațetată
+ * @param evt obiectul eveniment al butonului de căutare fațetată
+ */
+function getPagedResults (evt) {
+    // TODO: creează un template de afișare a rezultatelor și apoi injectează datele. Explorează posibilitatea de a afișa datele într-un infinite scroll.
+    // Evenimentul folosit va fi `pagedRes` pentru aducerea resurselor paginate
+    pubComm.emit('pagedRes', selectObi);
+}
+
+/* === TRATAREA DATELOR CU RESURSE PAGINATE === */
+// pubComm.on('pagedRes', function clbkPagedRes (dataset) {
+//     console.log("Acesta este setul de date al resurselor paginate din server: ", dataset);
+//     // #1 Golește `id="primare"`
+//     removeAllChildren(primare);
+// });
 
 // === BUTONUL DE SEARCH ===
 const searchResIntBtn = document.getElementById('searchResIntBtn'); // butonul de search

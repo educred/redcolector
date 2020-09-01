@@ -22,7 +22,7 @@ const git         = require('isomorphic-git');
 // funcțiile de căutare
 const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
 // căutare resurse în Mongo prin Mongoose
-const paginate = require('./controllers/pagination.ctrl');
+const {pagination} = require('./controllers/pagination.ctrl');
 
 /**
  * Funcția are rolul de a face staging la tot ce există în parametrul `calea` urmat de commit
@@ -88,7 +88,7 @@ async function commitAll (calea, autori, email, message) {
 
 // EXPORTĂ TOATE SOCKET-urile în app.js
 module.exports = function sockets (io) {
-
+    
     // io.on('connection', socket => {
     //     console.log("Id-ul conectat este: ", socket.id);
     //     socket.on('testconn', function cbMesaje (mesaj) {
@@ -1011,8 +1011,16 @@ module.exports = function sockets (io) {
         });
 
         // === PAGEDRES === :: RESURSELE PAGINATE
-        socket.on('pagedRes', () => {
+        socket.on('pagedRes', (data) => {
             // TODO: modelează acest eveniment pentru resursele paginate necesare clientului
+            console.log("[sockets] Din client au venit datele: ", data);
+
+            let dataPromise = pagination(data, Resursa);
+            dataPromise.then( data => {
+                console.log(data);
+            }).catch(error => {
+                console.log(error);
+            });
         });
 
         // === PERSONALRES === ::TOATE RESURSELE UNUI UTILIZATOR
