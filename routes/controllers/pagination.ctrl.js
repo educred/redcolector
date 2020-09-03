@@ -6,7 +6,8 @@ exports.pagination = async function pagination (req, model) {
         /*
         {
             query: {
-                select: {<nume_camp>: <array>},
+                projection: {},
+                select: <string>,
                 exclude: <array>,
                 sortby: <array>,    
                 sortDefaultField: <string>
@@ -16,56 +17,69 @@ exports.pagination = async function pagination (req, model) {
             skipNr: <number>
         }
         */
-        // `model` este obiectul model pentru care se face interogarea și returnarea rezultatelor paginate
-        // `exclude` este un array care precizează câmpurile care trebuie excluse din căutare.
 
         let query; // construiește obiectul de interogare pentru Mongoose
         // serializează obiectul cerere
-        let queryStr = JSON.stringify(req.query.select);
+        let queryStr = JSON.stringify(req.query.projection);
         // creează operatorii dacă aceștia apar în obiectul cerere -> `$gt`, `$gte`, etc.
         queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)/g, match => `$${match}`);
 
         // reatribuirea obiectului după prelucrare
-        req.query.select = JSON.parse(queryStr);
+        req.query.projection = JSON.parse(queryStr);
 
-        // instanțiază un obiet `Query`
-        query = model.find(req.query.select);
-        console.log("[pagination.ctrl] Am obiect Query Mongoose aici? ", query);
-    
+        // pentru fiecare cheie valoare din projection, adaugă într-un find
+        let k, v, obi = {};
+        for ([k, v] of Object.entries(req.query.projection)) {
+            if (Array.isArray(v)) {
+                obi[`${k}`] = {$in: v}; // https://stackoverflow.com/questions/18148166/find-document-with-array-that-contains-a-specific-value FRACK $all!!!
+            } else {
+                obi[`${k}`] = v; // dacă nu e array, ai o singură valoare string
+            }
+        }
+        // console.log('[pagination.ctrl] obiectul criteriilor de selectie ptr Mongoose ', obi);
+
+        query = model.find(obi); // FIXME: Vezi cum se poate face căutare în cazul în care un câmp are drept valoare un array
+        // https://mongoosejs.com/docs/tutorials/query_casting.html -> Implicit $in
+        
+        let total; 
+        model.where(obi).countDocuments((err, nr) => {
+            if (err) {
+                console.error(err);
+            }
+            total = nr;
+        });
+        // console.log("Numarul datelor este: ", model.where(obi).countDocuments()); 
+
+        // Adu-mi doar următorul subset:
+        query.select(req.query.select);
+
         // Șterge câmpurile care nu vrei să aterizeze în obiectul `Query`
         if (req.query.exclude) {
             req.query.exclude.forEach(field => delete query[field]);
         }
-    
-        // Câmpurile selectate. Dacă cu este array (apel având query)
-        // if (!Array.isArray(req.query.select)) {
-        //     const fields = req.query.select.split(',').join(' '); // vom avea: `primulCamp alDoileaCamp alTreilea samd`
-        //     query = query.select(fields);
-        // } else {
-        //     query = query.select(req.query.select.join(' '));
-        // }
-    
-        // Sortare. Dacă nu primești un array, ci elementele separate prin virgulă din query
-        // if (!Array.isArray(req.query.sortby)) {
-        //     const sortBy = req.query.sortby.split(',').join(' ');
-        //     query = query.sort(sortBy);
-        // } else if (req.query.sortby.length === 0) {
-        //     query = query.sort(req.query.sortDefaultField); // acesta va fi câmpul default după care se face ordonarea în cazul în care nu ai `req.query.sort`
-        // }
-    
+        
+        // query.countDocuments(function clbkCount (err, count) {
+        //     if (err) {
+        //         console.error(err);
+        //         console.log("Numărul documentelor găsite este ", count);
+        //         total = count;
+        //     }
+        // }); // numărul total de documente găsite
+
         /* === PAGINAREA === */
-        const page = parseInt(req.pageNr, 10) || 1; // pagina 1 va fi din oficiu, dacă nu avem valoare precizată pentru pagină
-        const limit = parseInt(req.limitNr, 10) || 10; // dacă nu este precizat numărul de rezultate afișat de pagină, trimite din oficiu 10
-        const startIdx = (page -1 ) * limit; // calculează câte rezultate trebuie sărite pentru a ajunge la fereastra de date necesare
-        const endIdx = page * limit;
-        const total = await model.countDocuments();
-    
+        const page     = parseInt(req.pageNr, 10) || 1;   // pagina 1 va fi din oficiu, dacă nu avem valoare precizată pentru pagină
+        const limit    = parseInt(req.limitNr, 10) || 10; // dacă nu este precizat numărul de rezultate afișat de pagină, trimite din oficiu 10
+        const startIdx = (page -1 ) * limit;              // calculează câte rezultate trebuie sărite pentru a ajunge la fereastra de date necesare
+        const endIdx   = page * limit;
+        const allDocs  = await model.countDocuments();
         // console.log("[pagination] indexul de start este ", startIdx, " iar limita este ", limit);
-        query = query.skip(startIdx).limit(limit).exec();
+
+        // Setează indexul de la care culegi setul de date și care este limita de înregistrări
+        query.skip(startIdx).limit(limit);
 
         // execută interogarea bazei și adu rezultatele (se creează și cursorul cu această ocazie)
-        let date = await query;
-        // console.log("[pagination.ctrl] datele aduse din Mongo sunt: ", date, " cu un total de ", total);
+        let date = await query.exec();
+        // console.log("[pagination.ctrl] datele aduse din Mongo sunt: ", date.length, " dintr-un total de ", total);
     
         // rezultatul paginării
         const pagination = {};
@@ -86,8 +100,9 @@ exports.pagination = async function pagination (req, model) {
             };
         }
     
+        // console.log("Număr total documente găsite: ", total, " din ", allDocs);
         // constituie pachetul de date necesar clientului
-        return {date, total, pagination}; 
+        return {date, total, allDocs, pagination}; 
     } catch (error) {
         console.log(error);
     }

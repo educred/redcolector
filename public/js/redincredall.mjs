@@ -276,8 +276,15 @@ const codSeturiDisc = {
 var discipline            = document.querySelector('#discipline');          // toate disciplinele unei clase
 var discSelected          = document.querySelector('#disciplineselectate'); // zona de afișare a disciplinelor care au fost selectate
 var divBtnCautareFatetata = document.getElementById('btnCautaFatetat');     // referință către div-ul gazdă al butonului de căutare fațetată
-var butonCautareFatetata  = document.getElementById('searchF');
+var searchRes             = document.querySelector('#searchRes');
+var butonCautareFatetata; // referință către butonul de căutare
 var disciplineSelectate   = new Set(); // SETUL DISCIPLINELOR CARE AU FOST SELECTATE
+
+// Construiește un dicționar de seturi pentru că este posibil ca în viitor să fie adăugate și alte criterii de selecție cum ar fi metrici.
+// Numele proprietăților să fie cel al câmpurilor din modelul de date
+var searchSets = {
+    etichete: disciplineSelectate
+};
 
 // Atașează listeneri pe fiecare element din meniu
 var clase = document.getElementsByClassName('dropdown-item'), i;
@@ -384,6 +391,7 @@ function clickPeDisciplina (evt) {
         let btnSearchF = new createElement('button', 'searchF', ['btn', 'btn-success'], {}).creeazaElem("Caută"); // TODO: Funcția listener pentru căutare fațetată
         divBtnCautareFatetata.appendChild(btnSearchF);
         btnSearchF.addEventListener('click', getPagedResults);
+        butonCautareFatetata = document.getElementById('searchF'); // fă referința la butonul de căutare după ce l-ai creat.
     }
 
     // DACĂ NU EXISTĂ CODUL ÎN `disciplineSelectate`, adaugă-l!
@@ -413,19 +421,22 @@ function delKeyword (evt) {
     // șterge din Set-ul disciplinelor selectate
     if (disciplineSelectate.has(id) == true) {
         disciplineSelectate.delete(id); // șterge din Set
-        // Dacă nu mai este nicio înregistrare în Set, șterge butonul de căutare
+        
         if (disciplineSelectate.size === 0) {
-            butonCautareFatetata.remove(); // șterge din DOM disciplina selectată și dacă e ultima, șterge și butonul de căutare
+            // în cazul în care ai șters și ultima disciplină din selecție, șterge și butonul de căutare
+            butonCautareFatetata.remove();
         }
+
+        discSelected.removeChild(tgt);
     }
-    discSelected.removeChild(tgt);
 }
 
 /* === SETAREA OBIECTULUI DE CĂUTARE === */
-let pageNr = 0, limitNr, skipNr;
+let pageNr = 0, limitNr = 10, skipNr = 0;
 const selectObi = {
     query: {
-        select: {},
+        projection: {},
+        select: '',
         exclude: [],
         sortby: [],
         sortDefaultField: 'date'
@@ -434,33 +445,197 @@ const selectObi = {
     limitNr: limitNr,
     skipNr: skipNr
 };
-console.log("[redincredall] obiectul care trebuie să plece în server ", selectObi);
 
-// decorarea obiectului de selecție adăugând câmpurile de interes
-// #1 Selecție discipline!
-if (disciplineSelectate.size > 0) {
-    selectObi.query.select['discipline'] = Array.from(disciplineSelectate);
+/**
+ * Funcția are rolul de a adăuga obiectului `selectObi.query.select` o proprietate nouă cu un array de valori după care se va face căutarea.
+ * Numele proprietății este cel al unei proprietăți din dicționarul `searchSets`, iar valoarea este setul transformat în array
+ * @param numeSet referință către un obiect `Set` care culege cuvinte cheie ce vor fi utilizate în căutare (valoarea din dicționarul `searchSets`)
+ * @param numeCamp este un `String` cu numele unui câmp din modelul de date pentru care se face interogarea (cheia din dicționarul `searchSets`)
+ */
+function dataAggregator4Search (numeCamp, numeSet) {
+    // decorarea obiectului de selecție adăugând câmpurile de interes
+    // console.log('[redincredall] disciplinele selectate din set sunt ', [...numeSet]);
+    // #1 Selecție discipline!
+    if (numeSet.size > 0) {
+        selectObi.query.projection[numeCamp] = Array.from(numeSet);
+    }
 }
-
-console.log("[redincredall] obiectul care trebuie să plece în server ", selectObi);
 
 /**
  * === BUTONUL DE CĂUTARE FAȚETATĂ === *
  * Funcția are rol de callback pentru evenimentul `click` al butonului de căutare fațetată
+ * Este apelată de `pgNavRequest` și lister pentru butonul `Caută`.
  * @param evt obiectul eveniment al butonului de căutare fațetată
  */
 function getPagedResults (evt) {
-    // TODO: creează un template de afișare a rezultatelor și apoi injectează datele. Explorează posibilitatea de a afișa datele într-un infinite scroll.
+    // pentru fiecare proprietate din dicționarul `searchSets`, apelează `dataAggregator4Search` pentru a completa obiectul de căutare trimis serverului
+    let prop, val;
+    for ([prop, val] of Object.entries(searchSets)) {
+        dataAggregator4Search(prop, val);
+    }
+    // console.log('[redincredall] obiectul care pleacă în server este: ', selectObi);
+
+    // TODO: afișează un set de câmpuri pe care userul să le aleagă pentru a aduce un subset din întreaga înregistrare. Acum, hard codată
+    selectObi.query.select = 'title autori description etichete';
+
     // Evenimentul folosit va fi `pagedRes` pentru aducerea resurselor paginate
     pubComm.emit('pagedRes', selectObi);
 }
 
 /* === TRATAREA DATELOR CU RESURSE PAGINATE === */
-// pubComm.on('pagedRes', function clbkPagedRes (dataset) {
-//     console.log("Acesta este setul de date al resurselor paginate din server: ", dataset);
-//     // #1 Golește `id="primare"`
-//     removeAllChildren(primare);
-// });
+pubComm.on('pagedRes', function clbkPagedRes (dataset) {
+    removeAllChildren(primare);
+    paginare(dataset);
+});
+
+var currentPg = 1; // este pagina curentă. Actualizat din `paginare()`
+
+// Această funcție va modifica `pageNr` și `skipNr` și va apela `getPagedResults`
+// pentru fiecare buton apăsat din navigatorul de paginare a setului de rezultate de căutare
+function pgNavRequest (evt) {
+    removeAllChildren(searchRes); // #1 șterge rezultatele anterioare
+    // console.log("[redincredall.mjs] obiectul evt este ", evt.target.innerText);
+    selectObi.skipNr = parseInt(evt.target.innerText) * parseInt(limitNr);  // setează noua valoare a lui `skipNr`
+    selectObi.pageNr = parseInt(evt.target.innerText);            // va fi valoarea paginii pentru care s-a apăsat butoul navigatorului
+    // console.log("[redincredall.js] noile valori ale lui skipNr și pageNr sunt: ", skipNr, pageNr);
+    // console.log("[redincredall.js] În server va pleca pentru o pagină nouă de date ", selectObi);
+    getPagedResults();
+}
+
+// varianta pentru prev
+function prevPgNavRequest (evt) {
+    removeAllChildren(searchRes); // #1 șterge rezultatele anterioare
+    let dataset = evt.target.dataset;
+    let pageP = dataset.pg; // trebuie să fie `prev`
+    selectObi.skipNr = parseInt(currentPg--) * parseInt(limitNr);  // setează noua valoare a lui `skipNr`
+    selectObi.pageNr = parseInt(currentPg--);            // va fi valoarea paginii pentru care s-a apăsat butoul navigatorului
+    // console.log("[redincredall.js] noile valori ale lui skipNr și pageNr sunt: ", skipNr, pageNr);
+    // console.log("[redincredall.js] În server va pleca pentru o pagină nouă de date ", selectObi);
+    getPagedResults();
+}
+
+// varianta pentru next
+function nextPgNavRequest (evt) {
+    removeAllChildren(searchRes); // #1 șterge rezultatele anterioare
+    let dataset = evt.target.dataset;
+    let pageP = dataset.pg; // trebuie să fie `next`
+    selectObi.skipNr = parseInt(currentPg++) * parseInt(limitNr);  // setează noua valoare a lui `skipNr`
+    selectObi.pageNr = parseInt(currentPg++);            // va fi valoarea paginii pentru care s-a apăsat butoul navigatorului
+    getPagedResults();
+}
+
+let tplRec = document.querySelector('#record').content;
+let tplNav = document.querySelector('#paginator').content;
+/**
+ * Funcția are rolul de a crea zona de afișare a rezultatelor.
+ * Este apelată de callback-ul butonului `Caută`
+ */
+function paginare (dataset) {
+    removeAllChildren(searchRes); // #1 șterge rezultatele anterioare
+
+    /* === REZULTATELE DE CĂUTARE === */
+    // #2 Pentru fiecare înregistrare, introdu în div-ul `searchRes` template-ul populat
+    let rec, result, title, titleLnk;
+    for (rec of Object.entries(dataset.date)) {
+        // console.log("[redincredall] am următorul set de informații din înregistrare ", rec);
+        result = tplRec.cloneNode(true); // ref la template
+
+        // Generează titlul
+        title = result.querySelector(`.title`);
+        titleLnk = new createElement('a', '', [], {href: `/resurse/${rec[1]._id}`}).creeazaElem(`${rec[1].title}`);
+        title.appendChild(titleLnk);
+        
+        result.querySelector(`.autori`).textContent = rec[1].autori;            // generează autorii
+        result.querySelector(`.description`).textContent = rec[1].description;  // generează descrierea
+        result.querySelector(`.etichete`).textContent = rec[1].etichete;        // generează etichetele
+
+        searchRes.appendChild(result); // inserează rezultat de căutare
+    }
+    
+    /* === CREEZĂ ELEMENTELE DE NAVIGARE - Bootstrap4 === */
+    let paginator    = tplNav.cloneNode(true);           // clonează template-ul navigatorului de pagini
+    let insetPgElems = paginator.querySelector('#noPg'); // referință la elementul `ul`
+
+    console.log("[redincredall.mjs] Setul de date primit de la server la momentul paginării este ", dataset);
+
+    // stabilește valoarea limitei numărului de înregistrări returnate
+    let getLimit;
+    if (dataset.pagination.hasOwnProperty('next')) {
+        getLimit = dataset.pagination.next.limit;
+    } else {
+        getLimit = dataset.pagination.prev.limit;
+    }
+
+    let totalPg = Math.ceil(dataset.total / getLimit); // află numărul total de pagini cu date pentru a ști câte butoane corespondente creezi;
+    // referință la pagina curentă. Actualizată la momentul apăsării butonului unei pagini
+    let pag;
+    if (dataset.pagination.hasOwnProperty('next')) {
+        pag = parseInt(dataset.pagination.next.page); 
+        currentPg = --pag;
+    } else {
+        pag = parseInt(dataset.pagination.prev.page);
+        currentPg = ++pag;
+    }
+
+    /* === PREV === */
+    // Creează butonul PREVIOUS -> `Anterior` în UI
+    let prevBtn = new createElement('li', '', ["page-item"], {'data-pg': 'prev'}).creeazaElem(); // Creează `li` pentru butonul PREVIOUS (`Anterior`).
+    // în cazul în care nu avem proprietatea `prev` în obiect, suntem chiar pe prima pagină, ceea ce înseamnă că primul `li` cu child `a` -> `Anterior`, va fi disabled
+    if (!dataset.pagination.hasOwnProperty('prev')) {
+        prevBtn.className = "page-item disabled"; // preferabil pentru a extinde suportul și pentru browsere mai vechi
+    } else {
+        prevBtn.className = "page-item";
+    }
+    // creează elementul a
+    let prevAelem = new createElement('a', '', ['page-link'], {href: "#", tabindex: -1}).creeazaElem('Anterior');
+    // inserează în li a-ul
+    prevBtn.appendChild(prevAelem);
+    // adu-mi datele din pagina anterioară
+    prevBtn.addEventListener('click', prevPgNavRequest);
+    // inserează li-ul în ul.
+    insetPgElems.appendChild(prevBtn);
+
+    /* === PAGES === */
+    // Creează restul li-urilor care fiecare este comandă către a aduce o pagină nouă cu rezultate
+    let pgElem;
+    for (pgElem = 1; pgElem <= totalPg; ++pgElem) {
+        let liElem = new createElement('li', '', ['page-item'], {}).creeazaElem();
+        let aElem = new createElement('a', '', ['page-link'], {href: "#"}).creeazaElem(pgElem);
+
+        // dacă `pgElem`este egal cu `currentPg` [elementul este egal cu pagina corespondentă]
+        if (pgElem == currentPg) {
+            let active = new createElement('span', '', ['sr-only'], {}).creeazaElem(`(current)`);
+            liElem.className = 'page-item active';
+            aElem.appendChild(active);
+        } else {
+            // pentru restul butoanelor corespondente celorlalte pagini cu date, atașăm eveniment de aducere a datelor corespondente
+            liElem.addEventListener('click', pgNavRequest);
+        }
+
+        liElem.appendChild(aElem);
+        insetPgElems.appendChild(liElem);
+        // paginator.appendChild(insetPgElems);
+    }
+    // adaugă la `ul` elementele de legătură ale paginilor
+    searchRes.appendChild(paginator);
+
+    /* === NEXT === */
+    // Creează butonul NEXT -> `Următoarele` în UI
+    let nextBtn = new createElement('li', '', ["page-item"], {'data-pg': 'next'}).creeazaElem(); // Creează `li` pentru butonul PREVIOUS (`Anterior`).
+    // în cazul în care nu avem proprietatea `next` în obiect, suntem chiar pe ultima pagină, ceea ce înseamnă că ultimul `li` cu child `a` -> `Următoarele`, va fi disabled
+    if (dataset.pagination.hasOwnProperty('prev')) {
+        nextBtn.className = "page-item disabled"; // preferabil pentru a extinde suportul și pentru browsere mai vechi
+    } else {
+        nextBtn.className = "page-item";
+    }
+    let nextAelem = new createElement('a', '', ['page-link'], {href: "#"}).creeazaElem('Următoarele');
+    // inserează în li a-ul
+    nextBtn.appendChild(nextAelem);
+    // adu-mi datele din pagina următoare
+    nextBtn.addEventListener('click', nextPgNavRequest);
+    // inserează li-ul în ul.
+    insetPgElems.appendChild(nextBtn);
+}
 
 // === BUTONUL DE SEARCH ===
 const searchResIntBtn = document.getElementById('searchResIntBtn'); // butonul de search

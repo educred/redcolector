@@ -3,18 +3,31 @@
 
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
 
+    <template id="record">
+        <div class="result">
+            <h3 class="title"></h3>
+            <h5 class="autori"></h4>
+            <p class="description"></p>
+            <p class="etichete"></p>
+        </div>
+    </template>
+
     <template id="paginator">
-        <nav aria-label="Căutare">
-            <ul class="pagination justify-content-center">
-                <li class="page-item disabled">
-                <a class="page-link" href="#" tabindex="-1">Anterior</a>
+        <nav id="navRes" aria-label="Căutare">
+            <ul id="noPg" class="pagination justify-content-center">
+                {{!-- ACEASTA ESTE STRUCTURA PE CARE O GENEREAZĂ redincredall.mjs --}}
+
+                {{!-- <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Anterior</a>
                 </li>
-                    <li class="page-item"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
+
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+
+                <li class="page-item">
                     <a class="page-link" href="#">Următoarele</a>
-                </li>
+                </li> --}}
             </ul>
         </nav>
     </template>
@@ -68,6 +81,7 @@
                             Selectează clasa
                         </button>
                         <br>
+
                         <div class="dropdown-menu">
                             <a class="dropdown-item cl0" id="cl0" href="#" 
                                 data-lbcom-rom0      ="Comunicare în limba română" 
@@ -1010,7 +1024,7 @@
                         </div>
                         
                         <fieldset>
-                            {{!-- Încărcarea DISCIPLINELOR --}}
+                            {{!-- Încărcarea DISCIPLINELOR Atenție!!! Numele id-ului trebuie să corespundă câmpului din modelul de date --}}
                             <div id="discipline" style="background-color: whitesmoke;">
                                 {{!-- disciplinele sunt adaugate programatic in functie de clasa selectată --}}
                             </div>
@@ -1020,7 +1034,6 @@
                             <div id="disciplineselectate"></div>
                             {{!-- Afișarea disciplinelor selectate END --}}
                         </fieldset>
-
                     </div>                    
                 </form>
             </section>
@@ -1029,6 +1042,7 @@
         {{!-- Aici va fi injectat butonul de căutare fațetată --}}
         <div id="btnCautaFatetat"></div>
 
+        {{!-- Ultimele resurse afișate --}}
         <div id="primare" class="resurse">
             {{!-- Randează resursele --}}
             {{#each resurse}}
@@ -1068,6 +1082,9 @@
                 </div>
             {{/each}}
         </div>
+
+        {{!-- Afișarea rezultatelor de căutare --}}
+        <div id="searchRes" class="container"></div>
     </div>
     
     <template id="recordRED">

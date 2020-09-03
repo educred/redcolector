@@ -264,7 +264,7 @@ nav.navbar-light {
 
 .redcontent {
     background-color: beige;
-    margin: .3rem;
+    /* margin: .3rem; */
 }
 
 .card {
@@ -1077,4 +1077,21 @@ a[class$="8"], label[class$="8"] {
 #searchF .btn-success {
     width: 4rem;
     background-color: #28a745 !important;
+}
+
+/* GESTIONAREA rezultatelor de căutare fațetată */
+#searchRes {
+    padding: 1rem 0;
+}
+
+#noPg {
+    width: 100%;
+}
+
+.result {
+    background-color: antiquewhite;
+}
+
+.result * {
+    padding: .4rem;
 }

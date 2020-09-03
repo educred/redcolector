@@ -1013,11 +1013,12 @@ module.exports = function sockets (io) {
         // === PAGEDRES === :: RESURSELE PAGINATE
         socket.on('pagedRes', (data) => {
             // TODO: modelează acest eveniment pentru resursele paginate necesare clientului
-            console.log("[sockets] Din client au venit datele: ", data);
+            // console.log("[sockets] Din client au venit datele: ", data);
 
             let dataPromise = pagination(data, Resursa);
             dataPromise.then( data => {
-                console.log(data);
+                // console.log('[sockets] Datele aduse din Mongoo', data);
+                socket.emit('pagedRes', data);
             }).catch(error => {
                 console.log(error);
             });
