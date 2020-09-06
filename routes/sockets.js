@@ -188,6 +188,7 @@ module.exports = function sockets (io) {
 
         // === RESURSA === ::Primește fișiere, fapt care conduce la crearea Bag-ului. Servește instanței de Editor.js (uploadByFile și uploadByUrl)
         socket.on('resursa', function clbkResursa (resourceFile) {
+            //TODO: Detectează dimensiunea fișierului și dă un mesaj în cazul în care depășește anumită valoare (vezi API-ul File)
             /* 
                 Obiectul primit `resourceFile` este `objRes` din `form01adres` și are următoarea semnătură
                 {
@@ -238,7 +239,7 @@ module.exports = function sockets (io) {
                         // console.log("[sockets.js::'resource'] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
                     }
                     // Generează bag-ul. La Contact-Name vei avea numele autorului/rilor introduși în formular
-                    lastBag = BagIt(newPath, 'sha256', {'Contact-Name': `${resourceFile.name}`}); //creează BAG-ul
+                    lastBag = BagIt(newPath, 'sha256', {'Contact-Name': `${resourceFile.name}`}); // instanțiază obiectul BAG
                     // console.log("[sockets.js::'resource'] Am creat Bag-ul și `lastBag` are aceste detalii: ", lastBag);
                     
                     // creează stream-ul destinație
@@ -248,7 +249,7 @@ module.exports = function sockets (io) {
                     // sourceStream.pipe(destinationStream); // SCRIE PE HARD [OLD]
                     pipeline(sourceStream, destinationStream, (error, val) => {
                         if (error) {
-                            console.error("Nu s-a reușit scrierea primului fișier în Bag", error);
+                            console.error("Nu s-a reușit scrierea primului fișier în Bag. Detaliile sunt: ", error);
                         }
                         // console.log('[sockets.js::resursa] Am primit următoarea valoare de pe streamul destination ', val);
                     });
@@ -256,19 +257,22 @@ module.exports = function sockets (io) {
                     // Calea către fișier [ce pleacă în client] și calea locală către aceasta
                     let file = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/${lastUuid}/data/${resourceFile.numR}`;
                     let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/${lastUuid}/data/${resourceFile.numR}`;
+                    // construiește obiectul de răspuns necesar lui Editor.js
+                    var responseObj = {
+                        success: 0,
+                        uuid: lastUuid,
+                        file,
+                        size: resourceFile.size
+                    };
 
                     /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
                     fs.access(localF, fs.F_OK, (err) => {
                         if (err) {
                             console.log("[sockets.js::'resursa'::fără uuid] Nu am găsit fișierul tocmai scris: ",err);
+                            socket.emit('resursa', responseObj);
                         }
-                        // construiește obiectul de răspuns necesar lui Editor.js
-                        var responseObj = {
-                            success: 1,
-                            uuid: lastUuid,
-                            file,
-                            size: resourceFile.size
-                        };
+                        // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
+                        responseObj.success = 1;                        
                         // trimite înapoi în client obiectul de care are nevoie Editor.js pentru confirmare
                         socket.emit('resursa', responseObj);
                         // socket.emit('uuid', lastUuid); // actualizează uuid-ul în client
@@ -307,18 +311,22 @@ module.exports = function sockets (io) {
                         // console.log('[sockets.js::resursa] Am primit următoarea valoare de pe streamul destination ', val);
                     });
 
+                    // construiește obiectul de răspuns.
+                    var responseObj4AddedFile = {
+                        success: 0,
+                        file,
+                        size: resourceFile.size
+                    };
+
                     /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
                     fs.access(localF, fs.F_OK, (err) => {
                         if (err) {
                             console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ",err);
+                            socket.emit('resursa', responseObj);
                             // socket.emit('mesaje', 'Deci, e grav rău! Nu am putut găsi fișierul subdirectorul resursei din depozit!');
                         }
-                        // construiește obiectul de răspuns.
-                        var responseObj4AddedFile = {
-                            success: 1,
-                            file,
-                            size: resourceFile.size
-                        };
+                        // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
+                        responseObj4AddedFile.success = 1;
                         // trimite înapoi obiectul necesar confirmării operațiunii lui Editor.js
                         socket.emit('resursa', responseObj4AddedFile);
                     });                    
@@ -553,15 +561,14 @@ module.exports = function sockets (io) {
         socket.on('delfile', (components) => {
             let cleanFileName = decodeURIComponent(components.fileName);
             let dirPath = path.join(`${process.env.REPO_REL_PATH}`, `${components.idContributor}/`, `${components.uuid}/`, `data/`, `${cleanFileName}`);
-            console.log("Fișierul pe care trebuie să-l șterg este: ", dirPath);
+            console.log("[sockets::delfile] Fișierul pe care trebuie să-l șterg este: ", dirPath);
             
             /* === ȘTERGE FIȘIER === */
             fs.remove(dirPath, function clbkDirFolder (error) {
                 if (error) {
                     console.error(error);
                 }
-                // rre('mesaje', `Am șters fișierul ${cleanFileName}`);
-                // socket.emit('delfile', `Am șters fișierul ${cleanFileName}`);
+                socket.emit('delfile', `Am șters fișierul ${cleanFileName}`);
             });
         });
 

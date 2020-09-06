@@ -1,6 +1,6 @@
 {
   "name": "redcolector",
-  "version": "0.9",
+  "version": "0.9.1",
   "description": "Aplicația pentru colectare de RED-uri",
   "main": "app.js",
   "scripts": {

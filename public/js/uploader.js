@@ -1,5 +1,5 @@
-/* === EXTINDE Clasa AttacheTool === */
-export class AttachesToolPlus extends AttachesTool{
+/* === EXTINDE Clasa AttachesTool === */
+export class AttachesToolPlus extends AttachesTool {
     /**
      * @param {AttachesToolData} data
      * @param {Object} config
@@ -48,6 +48,16 @@ class UploaderPlus {
             multiple:   this.config.multiple || true,
             data:       this.config.additionalRequestData || {},
             headers:    this.config.additionalRequestHeaders || {},
+            /**
+             * Din modulul ajax imporat de clasa Uploader pe care o extind aici.
+             * List of available values for 'Content-Type' header for POST requests
+             * 
+             *  const contentType = {
+                    URLENCODED: 'application/x-www-form-urlencoded; charset=utf-8',
+                    FORM: 'multipart/form-data',
+                    JSON: 'application/json; charset=utf-8'
+                };
+             */
             beforeSend: () => onPreview(),
             fieldName:  this.config.field || 'file'
         }).then((response) => {            

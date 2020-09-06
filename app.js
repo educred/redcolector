@@ -148,7 +148,6 @@ io.use(wrap(sessionMiddleware));
 
 /* === PASAREA SERVERULUI SOCKET === */
 require('./routes/sockets')(io);
-require('./routes/upload')(io);
 
 /* === RUTE ÎN AFARA CSRF-ului === */
 // UPLOAD
