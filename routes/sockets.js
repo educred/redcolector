@@ -561,7 +561,7 @@ module.exports = function sockets (io) {
         socket.on('delfile', (components) => {
             let cleanFileName = decodeURIComponent(components.fileName);
             let dirPath = path.join(`${process.env.REPO_REL_PATH}`, `${components.idContributor}/`, `${components.uuid}/`, `data/`, `${cleanFileName}`);
-            console.log("[sockets::delfile] Fișierul pe care trebuie să-l șterg este: ", dirPath);
+            // console.log("[sockets::delfile] Fișierul pe care trebuie să-l șterg este: ", dirPath);
             
             /* === ȘTERGE FIȘIER === */
             fs.remove(dirPath, function clbkDirFolder (error) {

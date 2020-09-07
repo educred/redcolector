@@ -61,10 +61,19 @@ module.exports = function uploader (io) {
             // console.log('[upload.js] Am să scriu fișierul în calea: ', path);
             
             // Afișează posibile erori
-            if (err) return cb(err);
-    
-            let contactName;
-            req.user.googleProfile ? contactName = req.user.googleProfile.name : contactName = req.user.username;
+            // if (err) return cb(err);
+            if (err) {
+                cb(err);
+                next(err);
+            }
+
+            let contactName, profile = req.user;
+            if (profile.hasOwnProperty('googleProfile')) {
+                contactName = profile.googleProfile.name;
+            } else {
+                contactName = profile.username;
+            }
+
             var bag = BagIt(path, 'sha256', {'Contact-Name': `${contactName}`});
             var fileName = file.originalname;
     
@@ -75,6 +84,7 @@ module.exports = function uploader (io) {
             
             let destination = bag.createWriteStream(fileName);
             file.stream.pipe(destination);
+
             // https://stackoverflow.com/questions/9768444/possible-eventemitter-memory-leak-detected
             destination.on('finish', function () {
                 // trimite clientului uuid-ul creat pentru fișierul încărcat ca PRIMA RESURSĂ
@@ -85,11 +95,11 @@ module.exports = function uploader (io) {
                 cb(null, {
                     path: path
                 });
-            })
+            });
 
             destination.on('close', () => {
                 file.stream.destroy();
-            })
+            });
 
             destination.on('error', () => {
                 file.stream.destroy();
@@ -180,7 +190,7 @@ module.exports = function uploader (io) {
 
         if (fileObj[file.mimetype] == undefined) {
             cb(new Error("Formatul de fișier nu este acceptat"), false); // nu stoca fișierul și trimite eroarea
-            // pubComm.emit('message', 'Formatul de fișier nu este acceptat');
+            pubComm.emit('message', 'Formatul de fișier nu este acceptat');
         } else {
             cb(null, true); // acceptă fișierul pentru a fi stocat
         }
@@ -189,11 +199,13 @@ module.exports = function uploader (io) {
     // crearea mecanismului de stocare pentru ca multer să știe unde să trimită
     var upload = multer({
         storage,
+        fileFilter,
         limits: {
-            // fileSize: 1024 * 1024 * 5 // limitarea dimensiunii fișierelor la 5MB
-            fileSize: process.env.FILE_LIMIT_UPL_RES
-        },
-        fileFilter
+            files: 5, // permite încărcarea doar a 5 fișiere odată
+            fieldSize: 50 * 1024 * 1024,
+            fileSize: 50 * 1024 * 1024  // limitarea dimensiunii fișierelor la 5MB
+            // fileSize: process.env.FILE_LIMIT_UPL_RES
+        }        
     }); // multer() inițializează pachetul
 
     /* === GESTIONAREA rutei /upload === */
