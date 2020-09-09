@@ -3,7 +3,10 @@ const fs           = require('fs-extra');
 var BagIt          = require('bagit-fs');
 const express      = require('express');
 const router       = express.Router();
-const {v4: uuidv4} = require('uuid'); 
+const {v4: uuidv4} = require('uuid');
+var crypto         = require('crypto');
+var mkdirp         = require('mkdirp');
+
 // pentru a accesa variabilele setate de socket-ul care creează bag-ul.
 // const sockets      = require('./sockets');
 
@@ -18,12 +21,13 @@ module.exports = function uploader (io) {
     // const app            = express();
     // const http           = require('http').createServer(app);
     // const io             = require('socket.io')(http);
-    var pubComm = io.of('/redcol');
-    
+    var pubComm = io.of('/redcol'),
+        lastUuid = '';
+
     /* === FUNCȚII HELPER PENTRU LUCRUL CU SOCKET-URI */
     // EMIT
     function rre (nameEvt, payload) {
-        pubComm.on('connect', socket => {
+        pubComm.on('connect', (socket) => {
             // socket.handshake.headers
             // console.log(`socket.io connected: ${socket.id}`);
             // save socket.io socket in the session
@@ -36,7 +40,7 @@ module.exports = function uploader (io) {
 
     // ON
     function rro (nameEvt, cb) {
-        pubComm.on('connect', socket => {
+        pubComm.on('connect', (socket) => {
             // socket.handshake.headers
             // console.log(`socket.io connected: ${socket.id}`);
             // save socket.io socket in the session
@@ -47,99 +51,155 @@ module.exports = function uploader (io) {
         });
     }
 
+    /**
+    * Funcția are rolul de callback pentru rro()
+    * Se ascultă evenimentul `uuid`. Dacă `form01adres.msj` emite pe eveniment, înseamnă că a fost încărcată deja prima imagine și există un uuid
+    * Se va seta uuid-ul local doar dacă nu are valoare.
+    * În cazul în care deja este setat, se va emite către client valoarea (`form01adres.mjs`)
+    */
+    // function clbkOnUUID (token) {
+    //     // console.log("[routes::upload.js] TOKENUL primit este ", token);
+    //     lastUuid = token;
+    //     if (lastUuid !== 'undefined') {
+    //         rre('uuid', lastUuid);
+    //     }
+    // }
+
+    /* === ASCULTĂ UUID-UL DIN CLIENT === */
+    // rro('uuid', clbkOnUUID);
+
     // distruge fișierul dacă obiectul `destination` nu este primit
     function destroyFile(req, file, cb) {
         cb(null, '/dev/null');
     }
-    // Creează clasa Multer2Bag
+
+    // OBȚINE UN NUME DE FIȘIER ÎN CAZUL ÎN CARE CEVA S-A PETRECUT ȘI FIȘIERUL E FĂRĂ (poate o folosesc mai târziu în vreun scenariu)
+    function getFilename (req, file, cb) {
+        crypto.randomBytes(16, function (err, raw) {
+            cb(err, err ? undefined : raw.toString('hex'));
+        });
+    }
+
+    // Creează clasa Multer2Bag :: https://github.com/expressjs/multer/blob/master/StorageEngine.md
+    // https://github.com/expressjs/multer/blob/6b5fff5feaf740f249b1b2858e5d06009cbd245c/storage/disk.js#L13
     function Multer2Bag (opts) {
+        // console.log("Obiectul opts care intră în custom engine este ", opts);
+        // this.getFilename = (opts.filename || getFilename);
+        this.getFilename = opts.filename;
         this.getDestination = (opts.destination || destroyFile);
     }
-    
+    /* Your engine is responsible for storing the file and returning information on how to access the file in the future. This is done by the _handleFile function. */
     Multer2Bag.prototype._handleFile = function _handleFile (req, file, cb) {
-        this.getDestination(req, file, function clbkGetDest (err, path) {
-            // console.log('[upload.js] Am să scriu fișierul în calea: ', path);
+        // extrage uuid din headers
+        if (req.header('uuid')) lastUuid = req.header('uuid');
+        console.log("Valorile din headers sunt: ", req.headers, " și am setat și lastUuid la valoarea ", lastUuid);
+
+        var that = this;
+        
+        that.getDestination(req, file, function clbkGetDest (err, destination) {
+            console.log('[routes::upload.js::that.getDestinationa] Am să scriu fișierul în calea: ', destination);
             
             // Afișează posibile erori
             // if (err) return cb(err);
             if (err) {
                 cb(err);
-                next(err);
+                return next(err);
             }
 
-            let contactName, profile = req.user;
-            if (profile.hasOwnProperty('googleProfile')) {
-                contactName = profile.googleProfile.name;
-            } else {
-                contactName = profile.username;
-            }
+            that.getFilename(req, file, function clbkGetFilename (err, fileName) {
 
-            var bag = BagIt(path, 'sha256', {'Contact-Name': `${contactName}`});
-            var fileName = file.originalname;
-    
-            // asigură originalitatea fișierelor dacă fișierele au numele și extensia generice `image.png`
-            if (file.originalname === 'image.png') {
-                fileName = file.originalname + `${Date.now()}`;
-            }
-            
-            let destination = bag.createWriteStream(fileName);
-            file.stream.pipe(destination);
+                console.log("[routes::upload.js::that.getDestinationa] Am filename: ", fileName);
 
-            // https://stackoverflow.com/questions/9768444/possible-eventemitter-memory-leak-detected
-            destination.on('finish', function () {
-                // trimite clientului uuid-ul creat pentru fișierul încărcat ca PRIMA RESURSĂ
-                if (!lastUuid) {
-                    // dacă nu ai lastUuid, nu declanșa `uuid`
-                    pubComm.emit('uuid', lastUuid);
+                // Afișează posibile erori
+                // if (err) return cb(err);
+                if (err) {
+                    cb(err);
+                    return next(err);
                 }
-                cb(null, {
-                    path: path
+
+                // Extrage informația necesară BAG-ului pentru `Contact-Name`
+                let contactName, profile = req.user;
+                if (profile.hasOwnProperty('googleProfile')) {
+                    contactName = profile.googleProfile.name;
+                } else {
+                    contactName = profile.username;
+                }
+
+                var bag = BagIt(destination, 'sha256', {'Contact-Name': `${contactName}`});
+                // var fileName = file.originalname;
+        
+                // asigură originalitatea fișierelor dacă fișierele au numele și extensia generice `image.png`
+                if (file.originalname === 'image.png') {
+                    fileName = file.originalname + `${Date.now()}`;
+                }
+                
+                /* The file data will be given to you as a stream (file.stream). You should pipe this data somewhere, and when you are done, call cb with some information on the file. */
+                let sink = bag.createWriteStream(fileName);
+                file.stream.pipe(sink);
+
+                // https://stackoverflow.com/questions/9768444/possible-eventemitter-memory-leak-detected
+                sink.on('finish', function () {
+                    // trimite clientului uuid-ul creat pentru fișierul încărcat ca PRIMA RESURSĂ
+                    if (!lastUuid) {
+                        // dacă nu ai lastUuid, nu declanșa `uuid`
+                        pubComm.emit('uuid', lastUuid);
+                    }
+                    /* The information you provide in the callback will be merged with multer's file object, and then presented to the user via req.files */
+                    cb(null, {
+                        destination: destination,
+                        filename: fileName,
+                        path: destination,
+                        size: sink.bytesWritten
+                    });
                 });
-            });
 
-            destination.on('close', () => {
-                file.stream.destroy();
-            });
+                sink.on('close', () => {
+                    file.stream.destroy();
+                    console.log("Am încheiat scrierea stream-ului");
+                });
 
-            destination.on('error', () => {
-                file.stream.destroy();
-            });
+                sink.on('error', () => {
+                    file.stream.destroy();
+                    return next("A apărut o eroare la scrierea stream-ului");
+                });
 
-            file.stream.on('error', () => {
-                destination.destroy();
-            });
+                file.stream.on('error', () => {
+                    sink.destroy();
+                    return next("A apărut o eroare la scrierea stream-ului");
+                });
 
-            file.stream.on('end', () => {
-                destination.destroy();
+                file.stream.on('end', () => {
+                    sink.destroy();
+                    console.log("Am scris cu succes stream-ul fișierului pe disc");
+                });
             });
         });
     };
     
+    /*
+    Your engine is also responsible for removing files if an error is encountered later on. 
+    Multer will decide which files to delete and when. 
+    Your storage class must implement the _removeFile function. 
+    It will receive the same arguments as _handleFile. 
+    Invoke the callback once the file has been removed. 
+    */
     Multer2Bag.prototype._removeFile = function _removeFile (req, file, cb) {
+        var path = file.path;
+
+        delete file.destination;
+        delete file.filename;
+        delete file.path;
+
         fs.unlink(file.path, cb);
     };
 
-    var lastUuid = '';
-
-    /**
-    * Funcția are rolul de callback pentru rro()
-    */
-    function clbkOnUUID (token) {
-        // console.log("TOKENUL primit este ", token);
-        lastUuid = token;
-        if (lastUuid) {
-            rre('uuid', lastUuid);
-        }
-    }
-
-    // rre('uuid', {requested: true});
-    rro('uuid', clbkOnUUID);
-
     // setează destinația fișierului
-    function destination (req, file, cb) {
+    function getDestination (req, file, cb) {
         // console.log("Valoarea lui lastUuid este ", lastUuid);
         
-        pubComm.emit('uuid', {requested: true});
+        /* === CERE CLIENTULUI UN UUID === */
+        // rre('uuid', {requested: true});
+        // pubComm.emit('uuid', {requested: true});
 
         // dacă nu ai lastUuid, înseamnă că ai de-a face cu prima resursă. Generează de aici uuid-ul
         if (lastUuid == '') {
@@ -161,11 +221,11 @@ module.exports = function uploader (io) {
     }
 
     var objConf = {
-        destination: destination,
-        filename: function (req, file, cb) {
+        destination: getDestination,
+        filename: function giveMeFileName (req, file, cb) {
             cb(null, file.originalname);
         }        
-    }
+    };
 
     /* === CREEAZĂ STORAGE-ul === */
     var storage = new Multer2Bag(objConf);

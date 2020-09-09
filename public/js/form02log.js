@@ -1,5 +1,5 @@
-import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
-import {AttachesToolPlus} from './uploader.js';
+// import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+// import {AttachesToolPlus} from './uploader.mjs';
 
 var csrfToken = '';
 
@@ -141,6 +141,5 @@ submitBtn.addEventListener('click', (evt) => {
 
 // aștept răspunsul de la server și redirecționez utilizatorul către resursa tocmai creată.
 pubComm.on('log', (entry) => {
-    console.log(entry); // FIXME: Dezactivează!
     window.location.href = '/log';
 });

@@ -1,14 +1,18 @@
 import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
-import {AttachesToolPlus} from './uploader.js';
+import {AttachesToolPlus} from './uploader.mjs';
 
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
 
-    var uuid = '',
-        pubComm = null;
-    
-    // TOKEN-ul CSRF
-    var csrfToken;
+    /* === VARIABILE NECESARE LA NIVEL DE MODUL ȘI MAI DEPARTE === */
+    var uuid    = '',
+        RED     = {},
+        csrfToken = '',
+        pubComm = null,
+        sync    = false,     // variabila ține evidența tranzacționării uuid-ului cu serverul. În cazul în care uuid-ul este setat, nu se va mai emite mai jos la prima modificare a editorului (onchange editor.js)
+        imagini = new Set(), // un `Set` cu toate imaginile care au fost introduse în document.
+        fileRes = new Set(); // un `Set` care unifică fișierele, fie imagini, fie atașamente.
 
+    // TOKEN-ul CSRF
     if(document.getElementsByName('_csrf')[0].value) {
         csrfToken = document.getElementsByName('_csrf')[0].value;
     }
@@ -17,6 +21,46 @@ import {AttachesToolPlus} from './uploader.js';
     pubComm = io('/redcol', {
         allowUpgrades: true,
         query: {['_csrf']: csrfToken}
+    });
+    
+    /* === Obiectul RED - valori din oficiu === */
+    RED.expertCheck     = false;
+    RED.uuid            = '';
+    RED.emailContrib    = '';
+    RED.langRED         = '';
+    RED.title           = '';
+    RED.titleI18n       = [];
+    RED.idContributor   = '';
+    RED.description     = '';
+    RED.licenta         = '';
+    // pas 2 formular va completa următoarele
+    RED.arieCurriculara = [];
+    RED.level           = [];
+    RED.discipline      = [];
+    RED.competenteGen   = [];
+    RED.competenteS     = [];
+    RED.activitati      = [];
+    RED.relatedTo       = [];
+    RED.etichete        = [];
+
+    /* === UUID === */
+    globalThis.uuid = uuid; // expunerea uuid-ului în global
+    // este necesar pentru a primi uuid-ul generat de multer atunci când prima resursă încărcată este un fișier
+    pubComm.on('uuid', (token) => {
+        // console.log("[form01adres.mjs] Am primit pe uuid următoarea solicitare: ", token);
+        if (token.requested) {                              /* MULTER:: servește uuid-ul existent lui multer: semnătura `{requested: true}` este a multer-ului (engine customizat) */ 
+            if (uuid !== 'undefined') {                     /* -> `uuid` este deja setat, înseamnă că o primă resursă a fost scrisă pe disc; trimite-l celui care l-a solicitat */
+                pubComm.emit('uuid', uuid);                 /* -> a fost încărcată vreo imagine, atunci, `uuid` este setat. Trimite-l! */
+            } else {
+                pubComm.emit('uuid', '');                   /* -> primul fișier este un atașament, trimite șir vid */
+            }
+        } else if (token === uuid) {                        /* cazul în care nu avem `token.requested`, ci un string cu un uuid trimis de prin `routes::sockets`, verifică să fie ce este în client */
+            if (RED.uuid == 'undefined') RED.uuid = uuid;   /* cazul în care este trimis `uuid`-ul și este același cu cel setat în client deja, dar încă `RED.uuid` este gol */
+            sync = true; // setează la `true` pe `sync`
+        } else if (uuid === 'undefined') {
+            uuid = RED.uuid = token;                        /* cazul în care `uuid` nu a fost încă setat, înseamnă că ai de a face cu prima resursă încărcată, fie atașament, fie imagine */
+            sync = true; // setează la `true` pe `sync`
+        }
     });
 
     var cookie2obj = document.cookie.split(/; */).reduce((obj, str) => {
@@ -32,49 +76,6 @@ import {AttachesToolPlus} from './uploader.js';
         obj[key] = val;
         return obj;
     }, {});
-
-    // colectorul datelor din form
-    var RED = {
-        expertCheck: false,
-        uuid: '',
-        emailContrib: '',
-        langRED: '',
-        title: '',
-        titleI18n: [],
-        idContributor: '',
-        description: '',
-        licenta: '',
-        // pas 2
-        arieCurriculara: [],
-        level: [],
-        discipline: [],
-        competenteGen: [],
-        competenteS: [],
-        activitati: [],
-        relatedTo: [],
-        etichete: []
-    };
-
-    let sync = false; // variabila ține evidența tranzacționării uuid-ului cu serverul. În cazul în care uuid-ul este setat, nu se va mai emite mai jos la prima modificare a editorului (onchange editor.js)
-    let imagini = new Set(); // un `Set` cu toate imaginile care au fost introduse în document.
-    let fileRes = new Set(); // un `Set` care unifică fișierele, fie imagini, fie atașamente.
-
-    // este necesar pentru a primi uuid-ul generat la încărcarea unui fișier mai întâi de orice în Editor.js. Uuid-ul este trimis din multer
-    pubComm.on('uuid', (uuid) => {
-        // servește uuid-ul existent pentru cazul în care ai nevoie în server de uuid-ul setat în client
-        if (uuid.requested) {
-            if (RED.uuid) {
-                // console.log('Mi-a cerut serverul UUID-ul resursei în lucru și i-am trimis: ', RED.uuid);
-                pubComm.emit('uuid', RED.uuid);
-            } else {
-                pubComm.emit('uuid', ''); // cazul în care primul fișier este un atașament
-            }
-        } else if (uuid == RED.uuid) {
-            sync = true;
-        } else {
-            RED.uuid = uuid;
-        }
-    });
 
     /* === Integrarea lui EditorJS === https://editorjs.io */
     const editorX = new EditorJS({
@@ -119,9 +120,10 @@ import {AttachesToolPlus} from './uploader.js';
             attaches: {
                 class: AttachesToolPlus,            
                 config: {
-                    endpoint: `${location.origin}/upload`,
-                    buttonText: 'Încarcă un fișier',
-                    errorMessage: 'Nu am putut încărca fișierul.'
+                    endpoint:     `${location.origin}/upload`,
+                    buttonText:   'Încarcă un fișier',
+                    errorMessage: 'Nu am putut încărca fișierul.',
+                    headers: {'uuid': uuid} //  FIXME: Este gol pentru că pur și simplu atunci când se încarcă editorul, nu există un `uuid`. Caută o metodă să actualizezi această proprietate în mod dinamic.
                 }
             },
             inlineCode: {
@@ -153,17 +155,16 @@ import {AttachesToolPlus} from './uploader.js';
                     uploader: {
                         /**
                          * ÎNCARCĂ FIȘIERUL DE PE HARD!!!
+                         * Folosește sockets pentru comunicarea cu serverul. Evenimentul `resursa`
                          * @param {File} file - Fișierul încărcat ca prim parametru
                          * @return o promisiune a cărei rezolvare trebuie să fie un obiect având câmpurile specificate de API -> {Promise.<{success, file: {url}}>}
                          */
-                        uploadByFile(file){  
-                            //TODO: Detectează dimensiunea fișierului și dă un mesaj în cazul în care depășește anumită valoare (vezi API-ul File)
-
+                        uploadByFile(file){
                             // => construcția obiectul care va fi trimis către server
                             let objRes = {
                                 user: RED.idContributor, // este de forma "5e31bbd8f482274f3ef29103" [înainte era email-ul]
                                 name: RED.nameUser,      // este de forma "Nicu Constantinescu"
-                                uuid: RED.uuid,          // dacă deja a fost trimisă o primă resursă, înseamnă că în `RED.uuid` avem valoare deja. Dacă nu, la prima încărcare, serverul va emite unul înapoi în client
+                                uuid: uuid,              // dacă deja a fost trimisă o primă resursă, înseamnă că în `uuid` avem valoare deja. Dacă nu, la prima încărcare, serverul va emite unul înapoi în client
                                 resF: file,              // este chiar fișierul: lastModified: 1583135975000  name: "Sandro_Botticelli_083.jpg" size: 2245432 type: "image/jpeg"
                                 numR: file.name,         // name: "Sandro_Botticelli_083.jpg"
                                 type: file.type,         // type: "image/jpeg"
@@ -172,24 +173,24 @@ import {AttachesToolPlus} from './uploader.js';
 
                             /**
                              * Funcția are rolul de executor pentru promisiune
-                             * @param {Function} resolve `callback-ul care se declanșează la rezolvarea promisiunii
-                             * @param {Function} reject `callback-ul declanșat la respingerea promisiunii`
+                             * @param {Function} resolve callback-ul care se declanșează la rezolvarea promisiunii
+                             * @param {Function} reject  callback-ul declanșat la respingerea promisiunii
                              */
                             function executor (resolve, reject) {
-                                // console.log('Cand încarc un fișier, trimit obiectul: ', objRes);
-                                
+                                // console.log('Cand încarc un fișier, trimit obiectul: ', objRes);                                
                                 // TRIMITE ÎN SERVER
                                 pubComm.emit('resursa', objRes); // TRIMITE RESURSA către server. Serverul creează bag-ul și scrie primul fișier!!! [UUID creat!]
 
                                 // RĂSPUNSUL SERVERULUI
                                 pubComm.on('resursa', (respObj) => {
                                     // în cazul în care pe server nu există nicio resursă, prima va fi creată și se va primi înapoi uuid-ul directorului nou creat
-                                    if (RED.uuid === '') {
-                                        RED.uuid = respObj.uuid; // setează și UUID-ul în obiectul RED local
+                                    if (uuid === '') {
+                                        uuid = respObj.uuid; // setează și UUID-ul în variabila de modul dar și în obiectul RED
+                                        RED.uuid = respObj.uuid;
                                     }
                                     // console.log('În urma încărcării fișierului de imagine am primit de la server: ', respObj);
 
-                                    // constituie cale relativă către imagine
+                                    // constituie cale relativă de pe server
                                     var urlAll = new URL(`${respObj.file}`);
                                     var path = urlAll.pathname; // VERIFICĂ `path` SĂ FIE DE FORMA: "/repo/5e31bbd8f482274f3ef29103/5af78e50-5ebb-11ea-9dcc-f50399016f10/data/628px-European_Union_main_map.svg.png"
 
@@ -198,14 +199,12 @@ import {AttachesToolPlus} from './uploader.js';
                                         success: respObj.success, // 1 succes, 0 eșec
                                         file: {
                                             url: path, // introducerea url-ului nou format în obiectul de răspuns pentru Editor.js
-                                            size: respObj.file.size
+                                            size: respObj.size
                                         }
                                     };
 
-                                    // Adaugă imaginea încărcată în `Set`-ul `imagini`.
-                                    if (!fileRes.has(path)) {
-                                        fileRes.add(path); // încarcă url-ul imaginii în Set-ul destinat ținerii evidenței acestora. Necesar alegerii copertei
-                                    }
+                                    // Adaugă imaginea încărcată în `Set`-ul `fileRes`.
+                                    fileRes.add(path); // încarcă url-ul imaginii în Set-ul destinat ținerii evidenței acestora. Necesar alegerii copertei
 
                                     resolve(obj4EditorJS); // REZOLVĂ PROMISIUNEA
                                 });
@@ -214,6 +213,7 @@ import {AttachesToolPlus} from './uploader.js';
                             var promise = new Promise(executor);
                             // REZOLVĂ PROMISIUNEA!!!                     
                             return promise.then((obi) => {
+                                console.log("form01adress obiectul promisiune la încărcarea unei imagini ", obi);
                                 return obi; // returnează rezultatul promisiunii. Este ceea ce are nevoie Editor.js în caz de succes
                             }).catch((error) => {
                                 if (error) {
@@ -224,6 +224,8 @@ import {AttachesToolPlus} from './uploader.js';
                         
                         /**
                          * ÎNCARCĂ CU PASTE LINK SAU DRAG-AND-DROP
+                         * Follosește `fetch` pentru a aduce imaginea de la distanță
+                         * Folosește sockets pentru comunicarea cu serverul. Evenimentul `resursa`
                          * @param {String} url - Întreaga adresă către fișierul de imagine
                          * @return o promisiune a cărei rezolvare trebuie să fie un obiect având câmpurile specificate de API -> {Promise.<{success, file: {url}}>}
                          */
@@ -239,10 +241,10 @@ import {AttachesToolPlus} from './uploader.js';
                             function validateResponse(response) {
                                 if (!response.ok) {
                                     // pubComm.emit('mesaje', `Am încercat să „trag” imaginea de la URL-ul dat, dar: ${response.statusText}`);
-                                    // console.log('[uploadByUrl::validateResponse] Am detectat o eroare: ', response.statusText);
+                                    console.log('[uploadByUrl::validateResponse] Am detectat o eroare: ', response.statusText);
                                 }
                                 // console.log('[uploadByUrl::validateResponse] fetch a adus: ', response); // response.body este deja un ReadableStream
-                                // FIXME: Caută aici să detectezi dimensiunea iar dacă depășește o valoare, încheie aici orice operațiunea cu throw Error!!!
+                                // FIXME: Caută aici să detectezi dimensiunea iar dacă depășește o valoare, încheie aici orice operațiune cu throw Error!!!
                                 return response;
                             }
 
@@ -255,7 +257,7 @@ import {AttachesToolPlus} from './uploader.js';
                                     let objRes = {
                                         user: RED.idContributor,
                                         name: RED.nameUser,
-                                        uuid: RED.uuid,
+                                        uuid: uuid,
                                         resF: response,                 // introdu fișierul ca blob
                                         numR: urlObj.afterLastSlash,    // completează obiectul care va fi trimis serverului cu numele fișierului
                                         type: response.type,            // completează cu extensia
@@ -278,7 +280,8 @@ import {AttachesToolPlus} from './uploader.js';
                                             */
 
                                             // cazul primei trimiteri de resursă: setează UUID-ul proaspăt generat! Este cazul în care prima resursă trimisă este un fișier imagine.
-                                            if (RED.uuid === '') {
+                                            if (uuid === '') {
+                                                uuid = respObj.uuid;
                                                 RED.uuid = respObj.uuid; // setează UUID-ul cu cel creat de upload-ul primei resurse
                                             }
                                             // console.log('[uploadByUrl::pubComm<resursa>)] UUID-ul primit prin obiectul răspuns este: ', respObj.uuid);
@@ -291,14 +294,12 @@ import {AttachesToolPlus} from './uploader.js';
                                                 success:  respObj.success,
                                                 file: {
                                                     url:  path, // introducerea url-ului nou format în obiectul de răspuns pentru Editor.js
-                                                    size: response.size
+                                                    size: respObj.size
                                                 }
                                             };
 
-                                            // Adaugă imaginea încărcată în `Set`-ul `imagini`. Este necesar alegerii copertei și comparatorului pentru ștergere
-                                            if (!fileRes.has(path)) {
-                                                fileRes.add(path);
-                                            }                                 
+                                            // Adaugă imaginea încărcată în `Set`-ul `fileRes`. Este necesar comparatorului pentru ștergere
+                                            fileRes.add(path);
 
                                             resolve(obj4EditorJS); // REZOLVĂ PROMISIUNEA
                                         });
@@ -308,13 +309,13 @@ import {AttachesToolPlus} from './uploader.js';
                                         return obi;
                                     }).catch(error => {
                                         if (error) {
-                                            console.log('Am eșuat cu următoarele detalii: ', error);
+                                            console.log('Promisiunea așteptată de Editor.js a eșuat cu următoarele detalii: ', error);
                                         }
                                     });
                                 })
                                 .catch((error) => {
                                     if (error) {
-                                        console.log('Am eșuat cu următoarele detalii: ', error);
+                                        console.log('Am eșuat în aducerea resursei cu `fetch` cu următoarele detalii: ', error);
                                     }
                                 });
                         }
@@ -405,10 +406,8 @@ import {AttachesToolPlus} from './uploader.js';
     function changeContent () {
         // de fiecare dată când se modifică conținutul, actualizează `RED.content`.
         editorX.save().then((content) => {
-            // Când operațiunile din backend pentru prelucrarea fișierelor încărcate, nu au același uuid cu al clientului, se va emite uuid pentru toți cei care ascultă.
-            if (!sync) {
-                pubComm.emit('uuid', RED.uuid);
-            }
+
+            console.log("form01adres la onChange al editorului am uuid-ul: ", uuid);
 
             /* === ACTUALIZEAZĂ `RED.content` cu noua valoare === */
             if (!('content' in RED)) {
@@ -418,7 +417,6 @@ import {AttachesToolPlus} from './uploader.js';
                 RED.content = content; // actualizează obiectul `content` la noua stare.
 
                 /* === Logică de ștergere din server a imaginilor și fișierelor care au fost șterse din editor === */
-
                 // PAS 1: constituie array-ul celor rămase
                 let contentResArr = content.blocks.map((element) => {
                     // imagini.clear(); // curăță setul imaginilor de cele anterioare pentru că altfel poluezi galeria
@@ -439,7 +437,8 @@ import {AttachesToolPlus} from './uploader.js';
                             }
                             break;
                         default:
-                            break;
+                            return;
+                            // break;
                     }
                 });
                 // console.log("După onchange se formează array-ul contentResArr care contine ", contentResArr);
@@ -461,7 +460,7 @@ import {AttachesToolPlus} from './uploader.js';
                         let fileName = fpath.split('/').pop();
                         // emite un eveniment de ștergere a fișierului din subdirectorul resursei.
                         pubComm.emit('delfile', {
-                            uuid: RED.uuid,
+                            uuid: uuid,
                             idContributor: RED.idContributor,
                             fileName
                         });
@@ -3643,11 +3642,11 @@ import {AttachesToolPlus} from './uploader.js';
     deleteRes.addEventListener('click', function (evt) {
         evt.preventDefault();
         // șterge subdirectorul creat cu tot ce există
-        if (RED.uuid) {
+        if (uuid) {
             pubComm.emit('deldir', {
                 content: {
                     idContributor: RED.idContributor,
-                    uuid: RED.uuid
+                    uuid: uuid
                 }
             });
             pubComm.on('deldir', (res) => {

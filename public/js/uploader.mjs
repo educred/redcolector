@@ -11,8 +11,16 @@ export class AttachesToolPlus extends AttachesTool {
             config: config,
             api:    api
         });
-
-        super.uploader = new UploaderPlus({
+        this.config.headers = config.headers || {}; // FIXME: Caută să capturezi aici uuid-ul!!!! 
+        // {
+        //     endpoint:     config.endpoint     || '',
+        //     field:        config.field        || 'file',
+        //     types:        config.types        || '*',
+        //     buttonText:   config.buttonText   || 'Select file to upload',
+        //     errorMessage: config.errorMessage || 'File upload failed',
+        //     headers:      config.headers      || {}
+        // };
+        this.uploader = new UploaderPlus({
             config: config,
             onUpload: (response) => {               
                 super.onUpload(response);
@@ -24,16 +32,16 @@ export class AttachesToolPlus extends AttachesTool {
     }
 }
 
-class UploaderPlus {
+class UploaderPlus{
     /**
      * @param {Object} config
      * @param {Function} onUpload - callback for successful file upload
      * @param {Function} onError - callback for uploading errors
      */
-    constructor({config, onUpload, onError}) {
-        this.config   = config;
+    constructor({ config, onUpload, onError }) {
+        this.config = config;
         this.onUpload = onUpload;
-        this.onError  = onError;
+        this.onError = onError;
     }
 
     /**
@@ -44,22 +52,16 @@ class UploaderPlus {
     uploadSelectedFile({onPreview}) {
         ajax.transport({
             url:        this.config.endpoint || '',
-            accept:     this.config.types || '*',
+            accept:     this.config.types    || '*',
             multiple:   this.config.multiple || true,
-            data:       this.config.additionalRequestData || {},
-            headers:    this.config.additionalRequestHeaders || {},
-            /**
-             * Din modulul ajax imporat de clasa Uploader pe care o extind aici.
-             * List of available values for 'Content-Type' header for POST requests
-             * 
-             *  const contentType = {
-                    URLENCODED: 'application/x-www-form-urlencoded; charset=utf-8',
-                    FORM: 'multipart/form-data',
-                    JSON: 'application/json; charset=utf-8'
-                };
-             */
+            data:       this.config.data     || {},
+            headers:    this.config.headers  || {},
+            fieldName:  this.config.field    || 'file',
             beforeSend: () => onPreview(),
-            fieldName:  this.config.field || 'file'
+            progress: function (percentage) {
+                document.title = `${percentage}%`;
+            },
+            ratio: 95,
         }).then((response) => {            
             this.onUpload(response);
         }).catch((error) => {

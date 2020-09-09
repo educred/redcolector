@@ -1,5 +1,5 @@
 import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
-import {AttachesToolPlus} from './uploader.js';
+import {AttachesToolPlus} from './uploader.mjs';
 
 var csrfToken = '';
 

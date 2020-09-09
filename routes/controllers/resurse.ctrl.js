@@ -159,14 +159,12 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
                 {script: '/lib/editorjs/quote.js'},
                 {script: '/lib/editorjs/inlinecode.js'},
                 // HOLDER.JS
-                {script: '/lib/npm/holder.min.js'},                
-                // UPLOADER
-                // {script: '/js/uploader.js'}      
+                {script: '/lib/npm/holder.min.js'}    
             ];
 
             let modules = [
                 // LOCALS
-                {module: '/js/uploader.js'},
+                {module: '/js/uploader.mjs'},
                 // LOCAL 
                 {module: '/js/cred-res.js'}                
             ];
@@ -201,23 +199,21 @@ exports.describeResource = function describeResource (req, res, next) {
         {script: '/lib/npm/dataTables.select.min.js'},
         {script: '/lib/npm/dataTables.buttons.min.js'},
         {script: '/lib/npm/dataTables.responsive.min.js'},        
-        // UPLOADER
-        // {script: '/js/uploader.js'},
         // HELPER DETECT URLS or PATHS
         {script: '/js/check4url.js'},
         // EDITOR.JS
-        // {script: '/lib/editorjs/attaches.js'},
+        {script: '/lib/editorjs/ajax.js'},
         // DEPENDIȚELE FORM-ului
         {script: '/js/custom.js'},
     ];
 
     let modules = [
-        // MOTORUL FORM-ULUI
-        {module: '/js/form01adres.mjs'},
         // MAIN
         {module: '/js/main.mjs'},        
         // LOCALS
-        {module: '/js/uploader.js'}
+        {module: '/js/uploader.mjs'},
+        // MOTORUL FORM-ULUI
+        {module: '/js/form01adres.mjs'}
     ];
 
     let styles = [

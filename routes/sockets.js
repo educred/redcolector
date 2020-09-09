@@ -194,7 +194,7 @@ module.exports = function sockets (io) {
                 {
                     user: RED.idContributor, // este de forma "5e31bbd8f482274f3ef29103" [înainte era email-ul]
                     name: RED.nameUser,      // este de forma "Nicu Constantinescu"
-                    uuid: RED.uuid,          // dacă deja a fost trimisă o primă resursă, înseamnă că în `RED.uuid` avem valoare deja. Dacă nu, la prima încărcare, serverul va emite unul înapoi în client
+                    uuid: uuid,              // dacă deja a fost trimisă o primă resursă, înseamnă că în `RED.uuid` avem valoare deja. Dacă nu, la prima încărcare, serverul va emite unul înapoi în client
                     resF: file,              // este chiar fișierul: lastModified: 1583135975000  name: "Sandro_Botticelli_083.jpg" size: 2245432 type: "image/jpeg"
                     numR: file.name,         // name: "Sandro_Botticelli_083.jpg"
                     type: file.type,         // type: "image/jpeg"
@@ -257,6 +257,7 @@ module.exports = function sockets (io) {
                     // Calea către fișier [ce pleacă în client] și calea locală către aceasta
                     let file = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/${lastUuid}/data/${resourceFile.numR}`;
                     let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/${lastUuid}/data/${resourceFile.numR}`;
+                    
                     // construiește obiectul de răspuns necesar lui Editor.js
                     var responseObj = {
                         success: 0,
