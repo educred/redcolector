@@ -194,7 +194,7 @@ module.exports = function sockets (io) {
                 {
                     user: RED.idContributor, // este de forma "5e31bbd8f482274f3ef29103" [înainte era email-ul]
                     name: RED.nameUser,      // este de forma "Nicu Constantinescu"
-                    uuid: uuid,              // dacă deja a fost trimisă o primă resursă, înseamnă că în `RED.uuid` avem valoare deja. Dacă nu, la prima încărcare, serverul va emite unul înapoi în client
+                    uuid: uuid,              // `uuid` are valoare deja
                     resF: file,              // este chiar fișierul: lastModified: 1583135975000  name: "Sandro_Botticelli_083.jpg" size: 2245432 type: "image/jpeg"
                     numR: file.name,         // name: "Sandro_Botticelli_083.jpg"
                     type: file.type,         // type: "image/jpeg"
@@ -220,70 +220,10 @@ module.exports = function sockets (io) {
             });
 
             /*
-            * === PRIMUL FIȘIER ÎNCĂRCAT ===
-            * dacă resursa primită nu are UUID, înseamnă că este prima. Tratează cazul primei resurse
+            * === ÎNCĂRCAREA FIȘIERELOR ===
+            * valoarea `uuid` este setată la momentul trimiterii template-ului
             */
-            if (resourceFile.uuid === '') {
-                // console.log('[sockets::resursa] Prima imagine incarcata uuid-ul va fi: ', typeof(resourceFile.uuid));
-                // setează lastUuid [este chiar numele subdirectorului resursei]
-                lastUuid = uuidv4();
-
-                // ajustează calea adăugând fragmentul uuid [subdirectorului resursei]
-                let newPath = calea + `${lastUuid}`;
-                // console.log("[sockets.js::'resource'] Aceasta este calea în care voi crea Bag-ul: ", newPath);
-
-                /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
-                fs.ensureDir(newPath, desiredMode, err => {
-                    // dacă directorul nu există, va fi emisă eroarea, dar va fi creat
-                    if(err === null){
-                        // console.log("[sockets.js::'resource'] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
-                    }
-                    // Generează bag-ul. La Contact-Name vei avea numele autorului/rilor introduși în formular
-                    lastBag = BagIt(newPath, 'sha256', {'Contact-Name': `${resourceFile.name}`}); // instanțiază obiectul BAG
-                    // console.log("[sockets.js::'resource'] Am creat Bag-ul și `lastBag` are aceste detalii: ", lastBag);
-                    
-                    // creează stream-ul destinație
-                    var destinationStream = lastBag.createWriteStream(`${resourceFile.numR}`);
-
-                    // adăugarea fișierului primit în Bag
-                    // sourceStream.pipe(destinationStream); // SCRIE PE HARD [OLD]
-                    pipeline(sourceStream, destinationStream, (error, val) => {
-                        if (error) {
-                            console.error("Nu s-a reușit scrierea primului fișier în Bag. Detaliile sunt: ", error);
-                        }
-                        // console.log('[sockets.js::resursa] Am primit următoarea valoare de pe streamul destination ', val);
-                    });
-
-                    // Calea către fișier [ce pleacă în client] și calea locală către aceasta
-                    let file = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/${lastUuid}/data/${resourceFile.numR}`;
-                    let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/${lastUuid}/data/${resourceFile.numR}`;
-                    
-                    // construiește obiectul de răspuns necesar lui Editor.js
-                    var responseObj = {
-                        success: 0,
-                        uuid: lastUuid,
-                        file,
-                        size: resourceFile.size
-                    };
-
-                    /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
-                    fs.access(localF, fs.F_OK, (err) => {
-                        if (err) {
-                            console.log("[sockets.js::'resursa'::fără uuid] Nu am găsit fișierul tocmai scris: ",err);
-                            socket.emit('resursa', responseObj);
-                        }
-                        // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
-                        responseObj.success = 1;                        
-                        // trimite înapoi în client obiectul de care are nevoie Editor.js pentru confirmare
-                        socket.emit('resursa', responseObj);
-                        // socket.emit('uuid', lastUuid); // actualizează uuid-ul în client
-                    });
-                });  
-            /*
-            * === SCRIEREA CELORLALTE FIȘIERE CARE VIN ===
-            * dacă este primit un uuid din client, scrie fișierul în acel uuid!!
-            */
-            } else if (resourceFile.uuid) {
+            if (resourceFile.uuid) {
                 // setează calea către directorul deja existent al resursei
                 let existPath = calea + `${resourceFile.uuid}`;
 
@@ -297,8 +237,12 @@ module.exports = function sockets (io) {
                     if(err === null){
                         console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
                     }
+
+                    // FIXME: VERIFICĂ DACĂ ESTE SCRIS, {'Contact-Name': `${resourceFile.name}`}. DACĂ NU E PRIMA RESURSĂ ȘI TREBUIE SCRIS
+                    // #1 Verifică dacă există fișierul `bag-info.txt`.
+
                     // reactualizează referința către Bag. Verifică dacă cu cumva funcționează fără.
-                    lastBag = BagIt(existPath, 'sha256');
+                    lastBag = BagIt(existPath, 'sha256', {'Contact-Name': `${resourceFile.name}`});
 
                     // creează stream-ul destinație
                     var destinationStream = lastBag.createWriteStream(`${resourceFile.numR}`);
@@ -324,7 +268,6 @@ module.exports = function sockets (io) {
                         if (err) {
                             console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ",err);
                             socket.emit('resursa', responseObj);
-                            // socket.emit('mesaje', 'Deci, e grav rău! Nu am putut găsi fișierul subdirectorul resursei din depozit!');
                         }
                         // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
                         responseObj4AddedFile.success = 1;

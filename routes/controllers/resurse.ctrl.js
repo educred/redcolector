@@ -1,4 +1,5 @@
 require('dotenv').config();
+const {v4: uuidv4} = require('uuid');
 
 /* === LIVRESQ - CONNECTOR === */
 const LivresqConnect = require('../../models/livresq-connect').LivresqConnect;
@@ -107,8 +108,6 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
 
 /* AFIȘAREA UNEI SINGURE RESURSE / ȘTERGERE / EDITARE */
 exports.loadOneResource = function loadOneResource (req, res, next) {
-    // console.log(req.params);
-    // var record = require('./resincredid.ctrl')(req.params); // aduce resursa și transformă conținutul din JSON în HTML
     let query = Resursa.findById(req.params.id).populate({path: 'competenteS'});
     query.then( (resursa) => {
             if (resursa.id) {
@@ -169,6 +168,11 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
                 {module: '/js/cred-res.js'}                
             ];
 
+            let data = {
+                uuid: result.uuid,
+                publisher: process.env.PUBLISHER
+            };            
+
             res.render('resursa-cred', {                
                 title:     "RED in CRED",
                 user:      req.user,
@@ -176,6 +180,7 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
                 credlogo:  "../img/CREDlogo.jpg",
                 csrfToken: req.csrfToken(),
                 resursa:   result,
+                data,
                 modules,
                 scripts
             });
@@ -189,7 +194,8 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
 /* FORM DESCRIERE RESURSE (ADAUGĂ) */
 exports.describeResource = function describeResource (req, res, next) {
     const cookieObj = cookieHelper.cock2obj(req.headers.cookie);
-    
+    // Unică sursă de identificator
+    let uuid = uuidv4();
     // console.log("Sesiunea de la /resurse/adaugă arată așa: ", req.session);
     // pentru evitarea dependițelor din CDN-uri, se vor încărca dinamic scripturile necesare generării editorului
     let scripts = [
@@ -231,6 +237,11 @@ exports.describeResource = function describeResource (req, res, next) {
         {style: '/lib/npm/select.dataTables.min.css'}
     ];
 
+    let data = {
+        uuid: uuid,
+        publisher: process.env.PUBLISHER
+    };
+
     // roluri pe care un cont le poate avea în proiectul CRED.
     let roles = ["user", "cred", "validator"];
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
@@ -258,6 +269,7 @@ exports.describeResource = function describeResource (req, res, next) {
             styles,
             modules,
             scripts,
+            data,
             livresqProjectRequest: url /* === LIVRESQ CONNECTOR === */
         });
         // trimite informații despre user care sunt necesare formularului de încărcare pentru autocompletare
@@ -281,6 +293,7 @@ exports.describeResource = function describeResource (req, res, next) {
             styles,
             modules,
             scripts,
+            data,
             livresqProjectRequest: url /* === LIVRESQ CONNECTOR === */
         });
     } else {

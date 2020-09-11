@@ -1,37 +1,6 @@
-/* === EXTINDE Clasa AttachesTool === */
-export class AttachesToolPlus extends AttachesTool {
-    /**
-     * @param {AttachesToolData} data
-     * @param {Object} config
-     * @param {API} api
-     */
-    constructor({ data, config, api }) {
-        super({
-            data:   data,
-            config: config,
-            api:    api
-        });
-        this.config.headers = config.headers || {}; // FIXME: Caută să capturezi aici uuid-ul!!!! 
-        // {
-        //     endpoint:     config.endpoint     || '',
-        //     field:        config.field        || 'file',
-        //     types:        config.types        || '*',
-        //     buttonText:   config.buttonText   || 'Select file to upload',
-        //     errorMessage: config.errorMessage || 'File upload failed',
-        //     headers:      config.headers      || {}
-        // };
-        this.uploader = new UploaderPlus({
-            config: config,
-            onUpload: (response) => {               
-                super.onUpload(response);
-            },
-            onError: (error) => {
-                super.uploadingFailed(error);
-            }
-        });
-    }
-}
-
+export let headers = {
+    uuid: 'test'
+};
 class UploaderPlus{
     /**
      * @param {Object} config
@@ -67,6 +36,54 @@ class UploaderPlus{
         }).catch((error) => {
             const message = (error && error.message) ? error.message : this.config.errorMessage || 'File upload failed';
             this.onError(message);
+        });
+    }
+}
+
+/* === EXTINDE Clasa AttachesTool === */
+export class AttachesToolPlus extends AttachesTool {
+    /**
+     * @param {AttachesToolData} data
+     * @param {Object} config
+     * @param {API} api
+     */
+    constructor({ data, config, api }) {
+        super({
+            data:   data,
+            config: config,
+            api:    api
+        });
+        this.config.headers = config.headers || {}; // FIXME: Caută să capturezi aici uuid-ul!!!! 
+        this.x = headers;
+        this.y = "martor";
+        // {
+        //     endpoint:     config.endpoint     || '',
+        //     field:        config.field        || 'file',
+        //     types:        config.types        || '*',
+        //     buttonText:   config.buttonText   || 'Select file to upload',
+        //     errorMessage: config.errorMessage || 'File upload failed',
+        //     headers:      config.headers      || {}
+        // };
+        this.uploader = new UploaderPlus({
+            config: config,
+            onUpload: (response) => {               
+                super.onUpload(response);
+            },
+            onError: (error) => {
+                super.uploadingFailed(error);
+            }
+        });
+    }
+    //Suprascrierea metodei pentru a culege uuid-ul
+    enableFileUpload() {
+        // Culege uuid!
+        console.log("[uploader] Valoarea uuid-ului este: ", this.x, " martor ", this.y);
+        // this.uuid = uuid;
+
+        this.uploader.uploadSelectedFile({
+            onPreview: () => {
+                this.nodes.wrapper.classList.add(this.CSS.wrapperLoading, this.CSS.loader);
+            }    
         });
     }
 }

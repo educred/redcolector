@@ -91,9 +91,14 @@ module.exports = function uploader (io) {
     /* Your engine is responsible for storing the file and returning information on how to access the file in the future. This is done by the _handleFile function. */
     Multer2Bag.prototype._handleFile = function _handleFile (req, file, cb) {
         // extrage uuid din headers
-        if (req.header('uuid')) lastUuid = req.header('uuid');
+        if (req.header('uuid')) {
+            lastUuid = req.header('uuid');
+        } else {
+            console.error("Nu am primit uuid din header: ", req.header('uuid'));
+        }
         console.log("Valorile din headers sunt: ", req.headers, " și am setat și lastUuid la valoarea ", lastUuid);
 
+        // puntea lexicală necesară
         var that = this;
         
         that.getDestination(req, file, function clbkGetDest (err, destination) {

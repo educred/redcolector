@@ -1,10 +1,10 @@
 import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
-import {AttachesToolPlus} from './uploader.mjs';
+import {AttachesToolPlus, headers} from './uploader.mjs';
 
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
 
     /* === VARIABILE NECESARE LA NIVEL DE MODUL ȘI MAI DEPARTE === */
-    var uuid    = '',
+    var uuid    = document.querySelector("meta[property='uuid']").getAttribute("content") || '',
         RED     = {},
         csrfToken = '',
         pubComm = null,
@@ -25,7 +25,7 @@ import {AttachesToolPlus} from './uploader.mjs';
     
     /* === Obiectul RED - valori din oficiu === */
     RED.expertCheck     = false;
-    RED.uuid            = '';
+    RED.uuid            = uuid;
     RED.emailContrib    = '';
     RED.langRED         = '';
     RED.title           = '';
@@ -44,7 +44,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     RED.etichete        = [];
 
     /* === UUID === */
-    globalThis.uuid = uuid; // expunerea uuid-ului în global
     // este necesar pentru a primi uuid-ul generat de multer atunci când prima resursă încărcată este un fișier
     pubComm.on('uuid', (token) => {
         // console.log("[form01adres.mjs] Am primit pe uuid următoarea solicitare: ", token);
@@ -63,6 +62,17 @@ import {AttachesToolPlus} from './uploader.mjs';
         }
     });
 
+    // Este obiectul de configurare al lui `attaches` din Editor.js
+    let attachesCfg = {
+        class: AttachesToolPlus,            
+        config: {
+            endpoint:     `${location.origin}/upload`,
+            buttonText:   'Încarcă un fișier',
+            errorMessage: 'Nu am putut încărca fișierul.',
+            headers:      {'uuid': uuid}
+        }
+    };
+    
     var cookie2obj = document.cookie.split(/; */).reduce((obj, str) => {
         if (str === "") return obj;
         const eq = str.indexOf('=');
@@ -117,15 +127,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                 class: Table,
                 inlineToolbar: true
             },
-            attaches: {
-                class: AttachesToolPlus,            
-                config: {
-                    endpoint:     `${location.origin}/upload`,
-                    buttonText:   'Încarcă un fișier',
-                    errorMessage: 'Nu am putut încărca fișierul.',
-                    headers: {'uuid': uuid} //  FIXME: Este gol pentru că pur și simplu atunci când se încarcă editorul, nu există un `uuid`. Caută o metodă să actualizezi această proprietate în mod dinamic.
-                }
-            },
+            attaches: attachesCfg,
             inlineCode: {
                 class: InlineCode,
                 shortcut: 'CMD+SHIFT+M',
@@ -183,11 +185,6 @@ import {AttachesToolPlus} from './uploader.mjs';
 
                                 // RĂSPUNSUL SERVERULUI
                                 pubComm.on('resursa', (respObj) => {
-                                    // în cazul în care pe server nu există nicio resursă, prima va fi creată și se va primi înapoi uuid-ul directorului nou creat
-                                    if (uuid === '') {
-                                        uuid = respObj.uuid; // setează și UUID-ul în variabila de modul dar și în obiectul RED
-                                        RED.uuid = respObj.uuid;
-                                    }
                                     // console.log('În urma încărcării fișierului de imagine am primit de la server: ', respObj);
 
                                     // constituie cale relativă de pe server
@@ -271,19 +268,6 @@ import {AttachesToolPlus} from './uploader.mjs';
                                     // promisiune necesară pentru a confirma resursa primită OK!
                                     const promissed = new Promise((resolve, reject) => {                                   
                                         pubComm.on('resursa', (respObj) => {
-                                            // semnătura lui respObj:
-                                            /*
-                                                file: "http://localhost:8080/repo/5ebaf1ae32061d3fa4b7f0ae/ceb79940-8755-41e7-95fd-ee88e5e193fa/data/Marcus_Aurelius_Louvre_MR561_n02.jpg"
-                                                size: 9026609                                        ​
-                                                success: 1                                        ​
-                                                uuid: "ceb79940-8755-41e7-95fd-ee88e5e193fa"
-                                            */
-
-                                            // cazul primei trimiteri de resursă: setează UUID-ul proaspăt generat! Este cazul în care prima resursă trimisă este un fișier imagine.
-                                            if (uuid === '') {
-                                                uuid = respObj.uuid;
-                                                RED.uuid = respObj.uuid; // setează UUID-ul cu cel creat de upload-ul primei resurse
-                                            }
                                             // console.log('[uploadByUrl::pubComm<resursa>)] UUID-ul primit prin obiectul răspuns este: ', respObj.uuid);
 
                                             let fileLink = new URL(`${respObj.file}`);
@@ -405,10 +389,7 @@ import {AttachesToolPlus} from './uploader.mjs';
      */
     function changeContent () {
         // de fiecare dată când se modifică conținutul, actualizează `RED.content`.
-        editorX.save().then((content) => {
-
-            console.log("form01adres la onChange al editorului am uuid-ul: ", uuid);
-
+        editorX.save().then((content) => {            
             /* === ACTUALIZEAZĂ `RED.content` cu noua valoare === */
             if (!('content' in RED)) {
                 RED.content = content; // Dacă nu există introduc `content` drept valoare.
@@ -460,7 +441,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                         let fileName = fpath.split('/').pop();
                         // emite un eveniment de ștergere a fișierului din subdirectorul resursei.
                         pubComm.emit('delfile', {
-                            uuid: uuid,
+                            uuid,
                             idContributor: RED.idContributor,
                             fileName
                         });

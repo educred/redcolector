@@ -7,7 +7,7 @@ const Assets = require('./assets');
 
 module.exports = {
     name: 'browser',
-    devtool: 'eval',
+    // devtool: 'eval',
     mode: 'development',
     entry: {
         app: "./public/js/main.mjs",
