@@ -96,13 +96,13 @@ module.exports = function uploader (io) {
         } else {
             console.error("Nu am primit uuid din header: ", req.header('uuid'));
         }
-        console.log("Valorile din headers sunt: ", req.headers, " și am setat și lastUuid la valoarea ", lastUuid);
+        // console.log("Valorile din headers sunt: ", req.headers, " și am setat și lastUuid la valoarea ", lastUuid);
 
         // puntea lexicală necesară
         var that = this;
         
         that.getDestination(req, file, function clbkGetDest (err, destination) {
-            console.log('[routes::upload.js::that.getDestinationa] Am să scriu fișierul în calea: ', destination);
+            // console.log('[routes::upload.js::that.getDestination] Am să scriu fișierul în calea: ', destination);
             
             // Afișează posibile erori
             // if (err) return cb(err);
@@ -112,8 +112,7 @@ module.exports = function uploader (io) {
             }
 
             that.getFilename(req, file, function clbkGetFilename (err, fileName) {
-
-                console.log("[routes::upload.js::that.getDestinationa] Am filename: ", fileName);
+                // console.log("[routes::upload.js::that.getDestination] Am filename: ", fileName);
 
                 // Afișează posibile erori
                 // if (err) return cb(err);

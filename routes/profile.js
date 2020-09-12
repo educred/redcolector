@@ -109,6 +109,20 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
     ];
 
     let modules = [
+        // EDITOR.JS
+        {module: '/lib/editorjs/editor.js'},
+        {module: '/lib/editorjs/header.js'},
+        {module: '/lib/editorjs/paragraph.js'},
+        {module: '/lib/editorjs/checklist.js'},
+        {module: '/lib/editorjs/list.js'},
+        {module: '/lib/editorjs/image.js'},
+        {module: '/lib/editorjs/embed.js'},
+        {module: '/lib/editorjs/code.js'},
+        {module: '/lib/editorjs/quote.js'},
+        {module: '/lib/editorjs/inlinecode.js'},
+        {module: '/lib/editorjs/table.js'},
+        {module: '/lib/editorjs/attaches.js'},
+        {module: '/lib/editorjs/ajax.js'},        
         // REEDIT RES
         {module: '/js/personal-res.mjs'},
         // MAIN

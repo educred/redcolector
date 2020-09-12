@@ -206,20 +206,28 @@ exports.describeResource = function describeResource (req, res, next) {
         {script: '/lib/npm/dataTables.buttons.min.js'},
         {script: '/lib/npm/dataTables.responsive.min.js'},        
         // HELPER DETECT URLS or PATHS
-        {script: '/js/check4url.js'},
-        // EDITOR.JS
-        {script: '/lib/editorjs/ajax.js'},
-        // DEPENDIȚELE FORM-ului
-        {script: '/js/custom.js'},
+        {script: '/js/check4url.js'}
     ];
 
     let modules = [
-        // MAIN
-        {module: '/js/main.mjs'},        
-        // LOCALS
-        {module: '/js/uploader.mjs'},
+        // EDITOR.JS
+        {module: '/lib/editorjs/editor.js'},
+        {module: '/lib/editorjs/header.js'},
+        {module: '/lib/editorjs/paragraph.js'},
+        {module: '/lib/editorjs/checklist.js'},
+        {module: '/lib/editorjs/list.js'},
+        {module: '/lib/editorjs/image.js'},
+        {module: '/lib/editorjs/embed.js'},
+        {module: '/lib/editorjs/code.js'},
+        {module: '/lib/editorjs/quote.js'},
+        {module: '/lib/editorjs/inlinecode.js'},
+        {module: '/lib/editorjs/table.js'},
+        {module: '/lib/editorjs/attaches.js'},
+        {module: '/lib/editorjs/ajax.js'},
         // MOTORUL FORM-ULUI
-        {module: '/js/form01adres.mjs'}
+        {module: '/js/custom.js'},
+        {module: '/js/uploader.mjs'},
+        {module: '/js/form01adres.mjs'}        
     ];
 
     let styles = [
@@ -262,7 +270,6 @@ exports.describeResource = function describeResource (req, res, next) {
         res.render('adauga-res', {            
             title:   "Adauga",
             user:    req.user,
-            // style:   "/lib/fontawesome/css/fontawesome.min.css",
             logoimg: "red-logo-small30.png",
             credlogo:"/img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),

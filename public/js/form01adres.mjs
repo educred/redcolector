@@ -1,5 +1,5 @@
 import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
-import {AttachesToolPlus, headers} from './uploader.mjs';
+import {AttachesToolPlus} from './uploader.mjs';
 
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
 
@@ -98,7 +98,7 @@ import {AttachesToolPlus, headers} from './uploader.mjs';
 
         /* onReady callback */
         onReady: () => {
-            console.log('Editor.js e gata de treabă!');
+            console.log('Editor.js e gata de treabă! UUID-ul resursei este: ', uuid);
         },
 
         /* id element unde se injectează editorul */
@@ -544,7 +544,7 @@ import {AttachesToolPlus, headers} from './uploader.mjs';
             });
         }
     }
-
+    globalThis.creeazaTitluAlternativ = creeazaTitluAlternativ;
     /**
      * Funcția `creeazaTitluAlternativHelper()` servește funcției `creeazaTitluAlternativ()`.
      * Are rolul de a genera întreaga structură DOM necesară inserării unui nou titlu alternativ.

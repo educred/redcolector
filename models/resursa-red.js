@@ -242,15 +242,12 @@ ResursaSchema.post(/^find/, async function clbkResFindPostHookREDschema (doc, ne
         });
     } else {
         // console.log("De pe hook-ul `post` metoda ^find, ramura unui singur document: ", doc.title);
-        
         try {
             // verifică dacă înregistrarea din Mongo există în ES?
-            // console.log("ramura unui singur document - THEN: ", doc.title, "cu id: ", doc._id);
+            // console.log("[Scheme::resursa-red.js] Documentul nu este array și este de forma: ", doc);
             ES7Helper.recExists(doc._id, process.env.RES_IDX_ALS).then(function (e) {                
                 if (e === false) {
-                    let obi = Object.assign({}, doc._doc);
-                    
-                    //FIXME: Aici apare eroare: UnhandledPromiseRejectionWarning: ResponseError: mapper_parsing_exception
+                    let obi = Object.assign({}, doc); // recast la înregistrare pentru a elimina artefacte Mongoose document
 
                     // verifică dacă există conținut
                     var content2txt = '';
@@ -294,7 +291,19 @@ ResursaSchema.post(/^find/, async function clbkResFindPostHookREDschema (doc, ne
                     };
 
                     ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
-                }   
+                }
+                /* TODO: === REINDEXARE ÎN BAZA HASHULUI DE CONȚINUT :: componentă a REEDITĂRII de resursă === */
+                // else {
+                    //  version conflict, document already exists (statusCode === 409)
+                    // Aici va fi tratat cazul în care documentul există, dar conținutul a fost actualizat și ca urmare este necesară reindexare
+                    // Verifică dacă nu cumva documentul deja există în index
+                    // const {body} = await esClient.exists({
+                    //     index: aliasidx,
+                    //     id:    data.id
+                    // });
+                    // Compară HASH-ul conținutului existent al lui `body` in ES cu hash-ul documentului curent
+                    // În cazul în care diferă, REINDEXEAZĂ DOCUMENT!!!
+                // } 
             }).catch((error) => {
                 console.error(JSON.stringify(error, null, 2));
                 next(error);

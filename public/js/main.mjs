@@ -1,22 +1,3 @@
-import '../lib/editorjs/editor.js';
-import '../lib/editorjs/header.js';
-import '../lib/editorjs/paragraph.js';
-import '../lib/editorjs/checklist.js';
-import '../lib/editorjs/list.js';
-import '../lib/editorjs/image.js';
-import '../lib/editorjs/table.js';
-import '../lib/editorjs/ajax.js';
-import '../lib/editorjs/attaches.js';
-import '../lib/editorjs/embed.js';
-import '../lib/editorjs/code.js';
-import '../lib/editorjs/quote.js';
-import '../lib/editorjs/inlinecode.js';   
-import '../lib/editorjs/table.js';  
-import '../lib/editorjs/list.js';
-import '../lib/editorjs/attaches.js';
-import '../lib/editorjs/ajax.js';
-import './uploader.mjs';
-
 var csrfToken = '';
 
 if(document.getElementsByName('_csrf')[0].value) {

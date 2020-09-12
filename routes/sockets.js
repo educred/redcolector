@@ -213,7 +213,7 @@ module.exports = function sockets (io) {
             // asigură-te că poți scrie în directorul userului
             fs.access(calea, function clbkfsAccess (error) {
                 if (error) {
-                    console.log("[sockets.js::resursa] La verificarea posibilității de a scrie în directorul userului am dat de eroare: ", error);
+                    // console.log("[sockets.js::resursa] La verificarea posibilității de a scrie în directorul userului am dat de eroare: ", error);
                 } else {
                     // console.log("[sockets.js::resursa] Directorul există și poți scrie liniștit în el!!!");
                 }
@@ -233,9 +233,8 @@ module.exports = function sockets (io) {
 
                 /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
                 fs.ensureDir(existPath, desiredMode, err => {
-                    // console.log(err) // => null
                     if(err === null){
-                        console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
+                        // console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
                     }
 
                     // FIXME: VERIFICĂ DACĂ ESTE SCRIS, {'Contact-Name': `${resourceFile.name}`}. DACĂ NU E PRIMA RESURSĂ ȘI TREBUIE SCRIS
@@ -252,6 +251,7 @@ module.exports = function sockets (io) {
                     pipeline(sourceStream, destinationStream, (error, val) => {
                         if (error) {
                             console.error("[sockets.js::'resursa'::cu uuid] Nu s-a reușit scrierea fișierului în Bag", error);
+                            next(error);
                         }
                         // console.log('[sockets.js::resursa] Am primit următoarea valoare de pe streamul destination ', val);
                     });
