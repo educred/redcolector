@@ -6,7 +6,6 @@ const path        = require('path');
 const BagIt       = require('bagit-fs');
 const {v4: uuidv4}= require('uuid'); // https://github.com/uuidjs/uuid#deep-requires-now-deprecated
 // const Readable    = require('stream').Readable;
-// const {pipeline}  = require('stream');
 const {Readable, pipeline} = require('stream');
 const mongoose    = require('mongoose');
 const validator   = require('validator');
@@ -236,9 +235,6 @@ module.exports = function sockets (io) {
                     if(err === null){
                         // console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
                     }
-
-                    // FIXME: VERIFICĂ DACĂ ESTE SCRIS, {'Contact-Name': `${resourceFile.name}`}. DACĂ NU E PRIMA RESURSĂ ȘI TREBUIE SCRIS
-                    // #1 Verifică dacă există fișierul `bag-info.txt`.
 
                     // reactualizează referința către Bag. Verifică dacă cu cumva funcționează fără.
                     lastBag = BagIt(existPath, 'sha256', {'Contact-Name': `${resourceFile.name}`});

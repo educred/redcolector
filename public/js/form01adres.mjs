@@ -201,7 +201,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                                     };
 
                                     // Adaugă imaginea încărcată în `Set`-ul `fileRes`.
-                                    fileRes.add(path); // încarcă url-ul imaginii în Set-ul destinat ținerii evidenței acestora. Necesar alegerii copertei
+                                    imagini.add(path); // încarcă url-ul imaginii în Set-ul destinat ținerii evidenței acestora. Necesar alegerii copertei
 
                                     resolve(obj4EditorJS); // REZOLVĂ PROMISIUNEA
                                 });
@@ -283,7 +283,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                                             };
 
                                             // Adaugă imaginea încărcată în `Set`-ul `fileRes`. Este necesar comparatorului pentru ștergere
-                                            fileRes.add(path);
+                                            imagini.add(path);
 
                                             resolve(obj4EditorJS); // REZOLVĂ PROMISIUNEA
                                         });
@@ -389,30 +389,33 @@ import {AttachesToolPlus} from './uploader.mjs';
      */
     function changeContent () {
         // de fiecare dată când se modifică conținutul, actualizează `RED.content`.
-        editorX.save().then((content) => {            
+        editorX.save().then((content) => {    
             /* === ACTUALIZEAZĂ `RED.content` cu noua valoare === */
-            if (!('content' in RED)) {
-                RED.content = content; // Dacă nu există introduc `content` drept valoare.
-            } else if (typeof(RED.content) === 'object') {
-                RED.content = null;    // Dacă există deja, mai întâi setează `content` la `null` 
-                RED.content = content; // actualizează obiectul `content` la noua stare.
+            RED.content = null;    // Dacă există deja, mai întâi setează `content` la `null` 
+            RED.content = content; // actualizează obiectul `content` la noua stare.
 
-                /* === Logică de ștergere din server a imaginilor și fișierelor care au fost șterse din editor === */
-                // PAS 1: constituie array-ul celor rămase
-                let contentResArr = content.blocks.map((element) => {
-                    // imagini.clear(); // curăță setul imaginilor de cele anterioare pentru că altfel poluezi galeria
+            /* === Logică de ștergere din server a imaginilor și fișierelor care au fost șterse din editor === */
+            // PAS 1: constituie array-ul celor rămase
+            let contentResArr = content.blocks.map((element) => {
+                // imagini.clear(); // curăță setul imaginilor de cele anterioare pentru că altfel poluezi galeria
+
+                /* 
+                * trebuie făcută verificare pentru că la files, se consideră eveniment apariția selecției de pe disc
+                * și astfel, se introduc elemente vide în `Set`-uri 
+                * */
+                if (element.data.file.url !== undefined) {
                     let fileUrl = check4url(element.data.file.url);
                     let pathF = fileUrl.path2file;
                     switch (element.type) {
-                        case 'image': 
-                            if (pathF) {
-                                imagini.add(pathF); // dacă sunt imagini, încarcă-le în setul necesar galeriei
-                                fileRes.add(pathF); // și încarcă-le și în fileRes
+                        case 'image':
+                            // dacă există o cale și este și în setul `imagini`
+                            if (pathF !== undefined) {
+                                fileRes.add(pathF); // și încarcă-le în Set-ul `fileRes`
                                 return pathF;
                             }                           
                             break;
                         case 'attaches':
-                            if (pathF) {
+                            if (pathF !== undefined) {
                                 fileRes.add(pathF);
                                 return pathF;
                             }
@@ -421,43 +424,49 @@ import {AttachesToolPlus} from './uploader.mjs';
                             return;
                             // break;
                     }
-                });
-                // console.log("După onchange se formează array-ul contentResArr care contine ", contentResArr);
+                }
+            });
+            
 
-                let fileResArr = Array.from(fileRes);
-                // console.log("Array-ul fileResArr contine ", fileResArr);
+            let fileResArr = Array.from(fileRes);
 
-                let differenceArr = fileResArr.filter((elem) => {
-                    if (!contentResArr.includes(elem)) return elem;
-                });
-                // console.log("Array-ul differenceArr contine ", differenceArr);
+            let differenceArr = fileResArr.filter((elem) => {
+                if (!contentResArr.includes(elem)) return elem;
+            });
 
-                // PAS 2: compară fiecare înregistrare din `Set` cu cele ale array-ului `contentResArr`
-                differenceArr.forEach((fpath) => {
-                    // if (fileRes.has(fpath)) fileRes.delete(fpath);
-                    if (fileRes.delete(fpath)) {
-                        if (imagini.has(fpath) && !contentResArr.includes(fpath)) imagini.delete(fpath);
-                        // extrage numele fișierului din `fileUrl`
-                        let fileName = fpath.split('/').pop();
-                        // emite un eveniment de ștergere a fișierului din subdirectorul resursei.
-                        pubComm.emit('delfile', {
-                            uuid,
-                            idContributor: RED.idContributor,
-                            fileName
-                        });
-                    }
-                });
+            // console.group('Stare seturi resurse [`onchange`]');
+            // console.log("În obiectul blocurilor de conținut sunt: ", content.blocks);
+            // console.info("`contentResArr` care contine ce este în `content`; ", contentResArr);
+            // console.info("`fileResArr` conține tot ce a fost încărcat anterior `onchange`: ", fileResArr);
+            // console.info("`differenceArr` ar trebui să indice ce a dispărut după `onchange`", differenceArr);
+            // console.info("Setul `imagini` ar trebui să fie actualizat `onchange`", imagini);
+            // console.groupEnd();
 
-                // console.log("Rămâne câte un rest în imagini? ", imagini);
-                pickCover(); // formează galeria pentru ca utilizatorul să poată selecta o imagine
-            }
+            // PAS 2: compară fiecare înregistrare din `Set` cu cele ale array-ului `contentResArr`
+            differenceArr.forEach((fpath) => {
+                // dacă ai șters cu succes din `fileRes`, șterge imediat și din `imagini`
+                if (fileRes.delete(fpath)) {
+                    imagini.delete(fpath);
+                    // extrage numele fișierului din `fileUrl`
+                    let fileName = fpath.split('/').pop();
+                    // emite un eveniment de ștergere a fișierului din subdirectorul resursei.
+                    pubComm.emit('delfile', {
+                        uuid,
+                        idContributor: RED.idContributor,
+                        fileName
+                    });
+                }
+            });
+
+            // console.log("Rămâne câte un rest în imagini? ", imagini);
+            pickCover(); // formează galeria pentru ca utilizatorul să poată selecta o imagine
         }).catch((e) => {
             console.log(e);
         });
     }
 
     pubComm.on('delfile', (message) => {
-        console.log("Am șters cu următoarele detalii: ", message);
+        console.log("[form01adres.mjs] Am șters cu următoarele detalii: ", message);
     });
 
     // este setul opțiunilor pentru selecție de limbă în cazul minorităților

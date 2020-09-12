@@ -3,9 +3,9 @@ const fs           = require('fs-extra');
 var BagIt          = require('bagit-fs');
 const express      = require('express');
 const router       = express.Router();
-const {v4: uuidv4} = require('uuid');
 var crypto         = require('crypto');
 var mkdirp         = require('mkdirp');
+const {pipeline}   = require('stream');
 
 // pentru a accesa variabilele setate de socket-ul care creează bag-ul.
 // const sockets      = require('./sockets');
@@ -18,55 +18,8 @@ const UserPassport = require('./controllers/user.ctrl')(passport);
 var multer = require('multer');
 
 module.exports = function uploader (io) {
-    // const app            = express();
-    // const http           = require('http').createServer(app);
-    // const io             = require('socket.io')(http);
     var pubComm = io.of('/redcol'),
         lastUuid = '';
-
-    /* === FUNCȚII HELPER PENTRU LUCRUL CU SOCKET-URI */
-    // EMIT
-    function rre (nameEvt, payload) {
-        pubComm.on('connect', (socket) => {
-            // socket.handshake.headers
-            // console.log(`socket.io connected: ${socket.id}`);
-            // save socket.io socket in the session
-            // console.log("session at socket.io connection:\n", socket.request.session);
-            socket.request.session.socketio = socket.id;
-            socket.request.session.save();
-            return socket.emit(nameEvt, payload);
-        });
-    }
-
-    // ON
-    function rro (nameEvt, cb) {
-        pubComm.on('connect', (socket) => {
-            // socket.handshake.headers
-            // console.log(`socket.io connected: ${socket.id}`);
-            // save socket.io socket in the session
-            // console.log("session at socket.io connection:\n", socket.request.session);
-            socket.request.session.socketio = socket.id;
-            socket.request.session.save();
-            return socket.on(nameEvt, cb);
-        });
-    }
-
-    /**
-    * Funcția are rolul de callback pentru rro()
-    * Se ascultă evenimentul `uuid`. Dacă `form01adres.msj` emite pe eveniment, înseamnă că a fost încărcată deja prima imagine și există un uuid
-    * Se va seta uuid-ul local doar dacă nu are valoare.
-    * În cazul în care deja este setat, se va emite către client valoarea (`form01adres.mjs`)
-    */
-    // function clbkOnUUID (token) {
-    //     // console.log("[routes::upload.js] TOKENUL primit este ", token);
-    //     lastUuid = token;
-    //     if (lastUuid !== 'undefined') {
-    //         rre('uuid', lastUuid);
-    //     }
-    // }
-
-    /* === ASCULTĂ UUID-UL DIN CLIENT === */
-    // rro('uuid', clbkOnUUID);
 
     // distruge fișierul dacă obiectul `destination` nu este primit
     function destroyFile(req, file, cb) {
@@ -102,20 +55,16 @@ module.exports = function uploader (io) {
         var that = this;
         
         that.getDestination(req, file, function clbkGetDest (err, destination) {
-            // console.log('[routes::upload.js::that.getDestination] Am să scriu fișierul în calea: ', destination);
-            
-            // Afișează posibile erori
-            // if (err) return cb(err);
+            // console.log('[routes::upload.js::that.getDestination] #1 Am să scriu fișierul în calea: ', destination);
+
             if (err) {
                 cb(err);
                 return next(err);
             }
 
             that.getFilename(req, file, function clbkGetFilename (err, fileName) {
-                // console.log("[routes::upload.js::that.getDestination] Am filename: ", fileName);
+                // console.log("[routes::upload.js::that.getDestination] #2 Am filename: ", fileName);
 
-                // Afișează posibile erori
-                // if (err) return cb(err);
                 if (err) {
                     cb(err);
                     return next(err);
@@ -139,43 +88,32 @@ module.exports = function uploader (io) {
                 
                 /* The file data will be given to you as a stream (file.stream). You should pipe this data somewhere, and when you are done, call cb with some information on the file. */
                 let sink = bag.createWriteStream(fileName);
-                file.stream.pipe(sink);
+                // file.stream.pipe(sink);
 
                 // https://stackoverflow.com/questions/9768444/possible-eventemitter-memory-leak-detected
-                sink.on('finish', function () {
-                    // trimite clientului uuid-ul creat pentru fișierul încărcat ca PRIMA RESURSĂ
-                    if (!lastUuid) {
-                        // dacă nu ai lastUuid, nu declanșa `uuid`
-                        pubComm.emit('uuid', lastUuid);
+                pipeline(file.stream, sink, (error) => {
+                    if (error) {
+                        // console.error("[upload.js::pipeline] #3-erroare Nu s-a reușit scrierea fișierului în Bag cu următoarele detalii: ", error);
+                        return next(error);
                     }
-                    /* The information you provide in the callback will be merged with multer's file object, and then presented to the user via req.files */
-                    cb(null, {
-                        destination: destination,
-                        filename: fileName,
-                        path: destination,
-                        size: sink.bytesWritten
+
+                    /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
+                    fs.access(`${destination}/data/${file.originalname}`, fs.F_OK, (err) => {
+                        if (err) {
+                            // console.log("[upload.js] #3-eroare-acces-file Nu am găsit fișierul tocmai scris: ",err);
+                            return next(err);
+                        }
+                        const {size} = fs.statSync(`${destination}/data/${file.originalname}`);
+                        /* The information you provide in the callback will be merged with multer's file object, and then presented to the user via req.files */
+                        cb(null, {
+                            destination: destination,
+                            filename: fileName,
+                            path: destination,
+                            size: size
+                        });
+                        // console.log("[upload.js] #4 Am scris pe disc ", size," bytes la: ", destination);
                     });
-                });
-
-                sink.on('close', () => {
-                    file.stream.destroy();
-                    console.log("Am încheiat scrierea stream-ului");
-                });
-
-                sink.on('error', () => {
-                    file.stream.destroy();
-                    return next("A apărut o eroare la scrierea stream-ului");
-                });
-
-                file.stream.on('error', () => {
-                    sink.destroy();
-                    return next("A apărut o eroare la scrierea stream-ului");
-                });
-
-                file.stream.on('end', () => {
-                    sink.destroy();
-                    console.log("Am scris cu succes stream-ul fișierului pe disc");
-                });
+                });                
             });
         });
     };
@@ -197,31 +135,34 @@ module.exports = function uploader (io) {
         fs.unlink(file.path, cb);
     };
 
+    let desiredMode = 0o2775;
     // setează destinația fișierului
     function getDestination (req, file, cb) {
-        // console.log("Valoarea lui lastUuid este ", lastUuid);
-        
-        /* === CERE CLIENTULUI UN UUID === */
-        // rre('uuid', {requested: true});
-        // pubComm.emit('uuid', {requested: true});
-
-        // dacă nu ai lastUuid, înseamnă că ai de-a face cu prima resursă. Generează de aici uuid-ul
-        if (lastUuid == '') {
-            lastUuid = uuidv4();
-            // imediat ce l-ai creat, actualizează-l și în client
-            pubComm.emit('uuid', lastUuid);
-        }
-
         let calea = `${process.env.REPO_REL_PATH}${req.user.id}/${lastUuid}/`;
         // console.log('[upload.js] calea formată în destination pe care se vor scrie fișierele este ', calea);
-
-        /* === Directorul utilizatorului nu există. Trebuie creat !!!! === */
-        if (!fs.existsSync(calea)) {
-            cb(null, calea);// introdu primul fișier aici.
-        } else if(fs.existsSync(calea)) {
-            // păstrează spațiile fișierului original dacă acestea le avea. La întoarcere în client, va fi un path rupt de spații.
-            cb(null, calea);
-        }
+        
+        /* === VERIFICĂ DIRECTORUL USERULUI === */
+        fs.access(calea, function clbkfsAccess (error) {
+            /* === DIRECTORUL UUID-ULUI VENIT DIN HEADER NU EXISTĂ === */
+            if (error) {
+                // console.log("[upload.js] #A La verificarea posibilității de a scrie în directorul userului am dat de eroare: ", error);
+                /* === CREEAZĂ DIRECTORUL DACĂ NU EXISTĂ === */
+                fs.ensureDir(calea, desiredMode, err => {
+                    if(err === null){
+                        // console.log("[upload.js] #A-dir-creeat Încă nu am directorul în care să scriu fișierul. Urmează!!!");
+                        cb(null, calea); // scrie fișierul aici!                   
+                    } else {
+                        // console.error("[upload.js] #A-eroare-toata-linia Nu am putut scrie fișierul cu următoarele detalii ale erorii", err);
+                        return next(err);
+                    }
+                });
+            } else {
+                /* === SCRIE DEJA ÎN DIRECTORUL EXISTENT === */
+                // console.log("[upload.js] #B Directorul există și poți scrie liniștit în el!!!");
+                // păstrează spațiile fișierului original dacă acestea le avea. La întoarcere în client, va fi un path rupt de spații.
+                cb(null, calea);
+            }
+        });
     }
 
     var objConf = {
@@ -267,11 +208,10 @@ module.exports = function uploader (io) {
         limits: {
             files: 5, // permite încărcarea doar a 5 fișiere odată
             fieldSize: 50 * 1024 * 1024,
-            fileSize: 50 * 1024 * 1024  // limitarea dimensiunii fișierelor la 5MB
-            // fileSize: process.env.FILE_LIMIT_UPL_RES
+            // fileSize: 50 * 1024 * 1024  // limitarea dimensiunii fișierelor la 50MB
+            fileSize: process.env.FILE_LIMIT_UPL_RES
         }        
-    }); // multer() inițializează pachetul
-
+    });
     /* === GESTIONAREA rutei /upload === */
     router.post('/',  UserPassport.ensureAuthenticated, upload.any(), function (req, res) {        
         // console.log('Detaliile lui files: ', req.files);
