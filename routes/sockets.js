@@ -77,10 +77,10 @@ async function commitAll (calea, autori, email, message) {
                 email: `${email}`
             }
         });
-        console.log(sha); // E neapărat!!! Altfel nu se face commit-ul!
+        console.log("[sockets.js] Vezi `let sha`", sha); // E neapărat!!! Altfel nu se face commit-ul!
     } catch (error) {
         if (error) {
-            console.error(error);
+            console.error("[sockets.js] Eroare de commit în fn `commitAll`: ", error);
         }
     }
 }
@@ -159,17 +159,17 @@ module.exports = function sockets (io) {
 
         // === ERORI === ::Ascultă erorile din server
         socket.on('error', (reason) => {
-            console.log(reason);
+            console.log("[sockets.js::error] Acesta este motivul de eroare: ", reason);
         });
 
         // === TEST CONNECTION === ::Vezi dacă e conectat și upgradat
-        socket.on('testconn', function cbMesaje (mesaj) {
-            console.log('Serverul a primit următorul mesaj: ', mesaj);
-        });
+        // socket.on('testconn', function cbMesaje (mesaj) {
+        //     console.log('Serverul a primit următorul mesaj: ', mesaj);
+        // });
 
         // === MESAJE === ::Ascultă mesajele
         socket.on('mesaje', function cbMesaje (mesaj) {
-            console.log('Serverul a primit următorul mesaj: ', mesaj);
+            console.log('[sockets.js::mesaje] Serverul a primit următorul mesaj: ', mesaj);
         });
 
         // === COMPETENȚELE SPECIFICE ===
@@ -234,6 +234,9 @@ module.exports = function sockets (io) {
                 fs.ensureDir(existPath, desiredMode, err => {
                     if(err === null){
                         // console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
+                    } else {
+                        console.log("[sockets.js::'resursa'::cu uuid] Eroare cu următoarele detalii: ", err);
+                        throw err;
                     }
 
                     // reactualizează referința către Bag. Verifică dacă cu cumva funcționează fără.
@@ -262,7 +265,7 @@ module.exports = function sockets (io) {
                     /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
                     fs.access(localF, fs.F_OK, (err) => {
                         if (err) {
-                            console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ",err);
+                            console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ", err);
                             socket.emit('resursa', responseObj);
                         }
                         // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
@@ -339,10 +342,11 @@ module.exports = function sockets (io) {
                         if (error) throw error;
                     });
                 }).catch(error => {
-                    console.log(error);
+                    if (error) throw error;
                 });
             }).catch(error => {
-                console.log(error);
+                console.log("[socket.js::createtempver] Eroare cu următoarele detalii: ", error);
+                if (error) throw error;
             });
 
             // Transformarea Buffer-ului primit într-un stream `Readable`
@@ -460,7 +464,7 @@ module.exports = function sockets (io) {
                     // TODO: scrie logica de ștergere a directorului în cazul în care a eșuat crearea înregistrării în MongoDB.
                     await fs.remove(`${process.env.REPO_REL_PATH}${RED.idContributor}/${RED.uuid}/`);
                 }).then(() => {
-                    console.log('Am șters directorul în urma operațiunii eșuate de creare a înregistrării în MongoDB.');
+                    console.log('[socket.js::red] Am șters directorul în urma operațiunii eșuate de creare a înregistrării în MongoDB.');
                 }).catch(error => {
                     console.error(JSON.stringify(error.body, null, 2));
                 });
@@ -523,8 +527,8 @@ module.exports = function sockets (io) {
                         }
                         socket.emit('deldir', true);
                     });
-                }).catch(err => {
-                    console.log(err);
+                }).catch(error => {
+                    console.log("[sockets.js::'deldir'] Eroare cu următoarele detalii: ", error);
                 });
         });
 
@@ -553,12 +557,11 @@ module.exports = function sockets (io) {
                     // constituie arhiva!                   
                     archive.pipe(output);
                     // WARNINGS
-                    archive.on('warning', function(err) {
+                    archive.on('warning', function(error) {
                         if (err.code === 'ENOENT') {
-                            // log warning
-                            console.log('Atenție, la arhivare a dat warning Error NO ENTry', err);
+                            console.warn("[sockets.js::'delresid'] Atenție, la arhivare a dat warning Error NO ENTry", error);
                         } else {
-                            throw err;
+                            throw error;
                         }
                     });
                     // ERRORS
@@ -574,7 +577,7 @@ module.exports = function sockets (io) {
                         /* === Șterge din MONGODB și din Elasticsearch === */
                         Resursa.findOneAndDelete({_id: resource.id}, (err, doc) => {       
                             if (err) {
-                                console.log(err);
+                                console.log("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", err);
                             }
 
                             if (doc) {
@@ -588,12 +591,13 @@ module.exports = function sockets (io) {
                                 fs.ensureDir(dirPath, 0o2775).then(function clbkFsExists () {
                                     fs.remove(dirPath, function clbkDirFolder (error) {
                                         if (error) {
-                                            console.error(error);
+                                            console.error("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", error);
                                         }
                                         socket.emit('delresid', true);
                                     });
                                 }).catch(err => {
-                                    console.log(err);
+                                    console.log("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", error);
+                                    throw error;
                                 });
                             }
                         });
@@ -602,10 +606,12 @@ module.exports = function sockets (io) {
                     /* === FINALIZEAZĂ ARHIVAREA === */
                     archive.finalize();
                 }).catch(error => {
-                    console.log(error);
+                    console.log("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", error);
+                    throw error;
                 });
             }).catch(error => {
-                console.log(error);
+                console.log("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", error);
+                throw error;
             });
         });
 
@@ -616,17 +622,24 @@ module.exports = function sockets (io) {
             let docUser = UserModel.findOne({_id: userSet.id}, 'admin');
             if (userSet.admin == true) {                
                 docUser.exec(function clbkSetAdmTrue(error, doc) {
-                    if (error) console.log(error);
+                    if (error) {
+                        console.log("[sockets.js::'mkAdmin'] Eroare cu următoarele detalii: ", error);
+                        throw error;
+                    }
                     doc.roles.admin = true;
                     doc.save().then(() => {
                         rre('mesaje', 'Felicitări, ai devenit administrator!');
-                    }).catch(err => {
-                        if (err) throw err;
+                    }).catch(error => {
+                        console.log("[sockets.js::'mkAdmin'] Eroare cu următoarele detalii: ", error);
+                        if (err) throw error;
                     });
                 });
             } else {
                 docUser.exec(function clbkSetAdmFalse(error, doc) {
-                    if (error) console.log(error);
+                    if (error) {
+                        console.log("[sockets.js::'mkAdmin'] Eroare cu următoarele detalii: ", error);
+                        throw error;
+                    }
                     doc.roles.admin = false;
                     doc.save().then(() => {
                         rre('mesaje', 'Ai luat dreptul de administrare!');
@@ -643,7 +656,9 @@ module.exports = function sockets (io) {
             let docUser = UserModel.findOne({_id: newRoles.id}, 'roles');
             // dacă vreunul din rolurile trimise nu există deja în array-ul din profilul utilizatorului, acesta va fi adăugat.
             docUser.exec(function clbkAddRole (error, doc) {
-                if (error) console.log(error);
+                if (error) {
+                    console.log("[sockets.js::'addRole'] Eroare cu următoarele detalii: ", error);
+                }
                 newRoles.roles.map( rol => {                    
                     if (!doc.roles.rolInCRED.includes(rol)) {
                         doc.roles.rolInCRED.push(rol);
@@ -664,7 +679,9 @@ module.exports = function sockets (io) {
             let docUser = UserModel.findById(newUnits.id);
 
             docUser.exec(function clbkAddArrUnit (error, doc) {
-                if (error) console.log(error);
+                if (error) {
+                    console.log("[sockets.js::'addUnit'] Eroare cu următoarele detalii: ", error);
+                }
 
                 newUnits.units.map( unit => {
                     unit = unit.trim();
@@ -725,7 +742,7 @@ module.exports = function sockets (io) {
                         },
                         refresh: true
                     }).then(result => {
-                        console.log(result.body.result);
+                        console.log("[sockets.js::'setPubRes'] Am setat resursa ca fiind publică. Înregistrarea: ", result.body.result);
                     }).catch(err => console.error);
                 }).catch(err => {
                     if (err) throw err;
@@ -763,7 +780,9 @@ module.exports = function sockets (io) {
                 const rezProm = findInIdx(query.index, trimmedQ, query.fields);
                 rezProm.then(r => {              
                     socket.emit('searchres', r.body.hits.hits);
-                }).catch(e => console.log(e));
+                }).catch(error => {
+                    console.log("[sockets.js::'searchres'] Înregistrarea userului nu există. Detalii: ", error);
+                });
             } else {
                 rre('mesaje', "Nu am primit niciun termen de căutare...");
             }
@@ -813,10 +832,10 @@ module.exports = function sockets (io) {
                                     type: 'user',
                                     id: user._id
                                 }).then((res) => {
-                                    console.log(res);
+                                    console.log("[sockets.js::'person'] Înregistrarea userului nu există. Detalii: ", res);
                                     socket.emit('mesaje', `Pentru că documentul nu mai există în baza de date, l-am șters și de la indexare cu detaliile: ${res}`);
                                 }).catch((error)=>{
-                                    console.log(error);
+                                    console.log("[sockets.js::'person'] Eroare la aducerea unui user cu următoarele detalii: ", error);
                                 });
                             } else {
                                 // dacă utilizatorul există și în MongoDB, dar și în ES7, trimite datele în client
@@ -864,12 +883,12 @@ module.exports = function sockets (io) {
                     socket.emit('mesaje', `Am căutat în index fără succes. Pur și simplu nu există înregistrări sau trebuie să schimbi cheia de căutare nițel`);
                 }
             } catch (error) {
-                console.log(error);
+                console.log("[sockets.js::'person'] Eroare la aducerea unui user cu următoarele detalii: ", error);
                 socket.emit('mesaje', `Din nefericire, căutarea utilizatorului a eșuat cu următoarele detalii: ${error}`);
 
                 // CAZUL index_not_found_exception
                 if (error.body.error.type == "index_not_found_exception") {
-                    console.error("Nu am gîsit indexul utilizatorilor!!! Vezi dacă serverul de Elasticsearch este pornit.");
+                    console.error("[sockets.js::'person'] Nu am găsit indexul utilizatorilor!!! Vezi dacă serverul de Elasticsearch este pornit.");
                 } else if(error.body.error.type != "index_not_found_exception") {
                     console.error("Este o eroare pe care nu pot să o apreciez. Detalii: ", error);
                 }
@@ -883,7 +902,7 @@ module.exports = function sockets (io) {
             const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
             UserModel.findById(id, function clbkFindById (error, user) {
                 if (error) {
-                    console.error(error);
+                    console.error("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
                     socket.emit('mesaje', 'A dat eroare căutarea...');
                 }
                 // setează opțiunile pentru căutare
@@ -900,7 +919,7 @@ module.exports = function sockets (io) {
                 // Populează modelul!
                 UserModel.populate(user, opts, function clbkExecPopUser (error, res) {
                     if (error) {
-                        console.log(error);
+                        console.log("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
                         // socket.emit('mesaje', 'A dat eroare căutarea...');
                     }
                     // console.log('Din sockets.js[on(personrecord)] -> după populare: ', res);
@@ -922,7 +941,7 @@ module.exports = function sockets (io) {
                     if (descriptor === 'reds') {
                         const TotalREDs = Resursa.estimatedDocumentCount({}, function clbkResTotal (error, result) {
                             if (error) {
-                                console.log(error);
+                                console.log("[sockets.js::'stats'] Eroare la aducerea statisticilor cu următoarele detalii: ", error);
                             } else {
                                 // console.log(result);
                                 socket.emit('stats', {reds: result});
@@ -935,7 +954,7 @@ module.exports = function sockets (io) {
                         const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
                         const TotalUsers = UserModel.estimatedDocumentCount({}, function clbkUsersTotal (error, result) {
                             if (error) {
-                                console.log(error);
+                                console.log("[sockets.js::'stats'] Eroare la aducerea statisticilor cu următoarele detalii: ", error);
                             } else {
                                 socket.emit('stats', {users: result});
                                 return result;
@@ -953,7 +972,7 @@ module.exports = function sockets (io) {
             Resursa.find({}).exec().then(allRes => {
                 socket.emit('allRes', allRes);
             }).catch(error => {
-                console.log(error);
+                console.log("[sockets.js::'allRes'] Eroare la aducerea tuturor resurselor cu următoarele detalii: ", error);
             });
         });
 
@@ -967,7 +986,7 @@ module.exports = function sockets (io) {
                 // console.log('[sockets] Datele aduse din Mongoo', data);
                 socket.emit('pagedRes', data);
             }).catch(error => {
-                console.log(error);
+                console.log("[sockets.js::'pagedRes'] Eroare la aducerea resurselor paginate cu următoarele detalii: ", error);
             });
         });
 
@@ -976,7 +995,7 @@ module.exports = function sockets (io) {
             Resursa.find({idContributor: id}).exec().then(pRes => {
                 socket.emit('usrRes', pRes);
             }).catch(error => {
-                console.log(error);
+                console.log("[sockets.js::'usrRes'] Eroare la aducerea utilizatorului cu următoarele detalii: ", error);
             });
         });
 
@@ -986,7 +1005,7 @@ module.exports = function sockets (io) {
             UserModel.find({}).exec().then(allUsers => {
                 socket.emit('allUsers', allUsers);
             }).catch(error => {
-                console.log(error);
+                console.log("[sockets.js::'allUsers'] Eroare la aducerea utilizatorilor cu următoarele detalii: ", error);
             });
         });
     });

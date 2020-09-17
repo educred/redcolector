@@ -199,6 +199,12 @@ exports.describeResource = function describeResource (req, res, next) {
     // console.log("Sesiunea de la /resurse/adaugă arată așa: ", req.session);
     // pentru evitarea dependițelor din CDN-uri, se vor încărca dinamic scripturile necesare generării editorului
     let scripts = [
+        // JQuery
+        // {script: '/lib/npm/jquery.min.js'},
+        // Toast
+        // {script: '/lib/npm/jquery.toast.min.js'},
+        // Bootstrap 4
+        {script: '/lib/npm/bootstrap.bundle.min.js'},
         // Datatables
         {script: '/lib/npm/jquery.dataTables.min.js'},
         {script: '/lib/npm/dataTables.bootstrap4.min.js'},
@@ -224,6 +230,10 @@ exports.describeResource = function describeResource (req, res, next) {
         {module: '/lib/editorjs/table.js'},
         {module: '/lib/editorjs/attaches.js'},
         {module: '/lib/editorjs/ajax.js'},
+        // JQuery
+        {module: '/lib/npm/jquery.min.js'},
+        // Toast
+        {module: '/lib/npm/jquery.toast.min.js'},
         // MOTORUL FORM-ULUI
         {module: '/js/custom.js'},
         {module: '/js/uploader.mjs'},

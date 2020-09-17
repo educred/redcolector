@@ -522,7 +522,7 @@ import {AttachesToolPlus} from './uploader.mjs';
     function creeazaTitluAlternativ () {
         // creează aceleași elemente de formular responsabile cu generarea unui titlu
         let insertie = document.querySelector('#langAlternative');  // punct de aclanșare în DOM pentru elementele generate dinamic
-        let primulTitlu = document.querySelector('#titluRes').id;   // extrage id-ul primului titlu pe baza căruia se vor construi restul în cele alternative
+        let primulTitlu = document.querySelector('#titlu-res').id;   // extrage id-ul primului titlu pe baza căruia se vor construi restul în cele alternative
         let arrAlternative = document.querySelectorAll('#langAlternative > div'); // selectează toate elementele din titlurile alternative (dacă există)
 
         // verifică dacă există elemente ca titluri alternative
@@ -3103,8 +3103,6 @@ import {AttachesToolPlus} from './uploader.mjs';
         });
         // console.log('[form01] Valorile care pleaca in server', values);
 
-        pubComm.emit('mesaje', 'Din disciplineBifate');
-
         // ori de câte ori va fi apăsată o disciplină, se emite apel socket către baza de date și extrage conform selecției, un subset  (ex: [ "matexpmed2", "comlbrom2" ]). 
         pubComm.emit('csuri', values);
 
@@ -3154,7 +3152,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                 heading: 'Curricula',
                 text: "Alege aria curriculară. Este un element absolut necesar!!!",
                 position: 'top-center',
-                showHideTransition: 'fade',
+                // showHideTransition: 'fade',
                 icon: 'error'
             });
         }
@@ -3192,8 +3190,19 @@ import {AttachesToolPlus} from './uploader.mjs';
             $('#doi').show();
             $('#unu').hide();
             // incrementează width-ul bar-ului care indică progresul
-            $('#progressBar').css("width", "50%");
-            $('#progressText').text('Pasul 2');
+            // $('#progressBar').css("width", "50%");
+            // $('#progressText1').addClass(function clbkAddClsPas1 (index, currentClass) {
+            //     if (currentClass === 'progressText lead') {
+            //         return currentClass + 'active';
+            //     }
+            // });
+            $('#progressText1').removeClass('active');
+            $('#progressText2').addClass(function clbkAddClsPas1 (index, currentClass) {
+                if (currentClass === 'progressText lead') {
+                    return currentClass + ' active';
+                }
+            });
+            // $('#progressText').text('Pasul 2');
         }
     });
 
@@ -3464,6 +3473,8 @@ import {AttachesToolPlus} from './uploader.mjs';
             tagsElems.appendChild(btnCloseWrapper);
         });
     }
+
+
 
     /* Rolul funcției este să permită ștergerea de etichete care nu sunt considerate utile sau care au for introduse greșit*/
     function removeTags () {
