@@ -731,7 +731,7 @@ a[class$="8"], label[class$="8"] {
 }
 
 /* Styles for Plugin icon in Toolbar */
-.ce-header__icon {}
+/* .ce-header__icon {} */
 
 .ce-header[contentEditable=true][data-placeholder]::before{
     position: absolute;
@@ -796,7 +796,7 @@ a[class$="8"], label[class$="8"] {
     margin-bottom: 10px;
 }
 
-.cdx-quote__caption {}
+/* .cdx-quote__caption {} */
 
 .cdx-quote [contentEditable=true][data-placeholder]::before{
     position: absolute;
