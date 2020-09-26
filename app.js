@@ -204,8 +204,6 @@ app.engine('hbs', hbs.express4({
 app.set('views', __dirname + '/views'); // cu app.set se vor seta valori globale pentru aplicație
 app.set('view engine', 'hbs');
 
-
-
 // === COMPRESIE ===
 function shouldCompress (req, res) {
     if (req.headers['x-no-compression']) {
@@ -270,6 +268,13 @@ app.use('*', function (req, res, next) {
     });
 });
 
+/* === SETAREA MODULUI DE RULARE === */
+app.set('env', 'development'); // `preview`, `production`, `test`, `stage`
+// vezi http://expressjs.com/api.html#app.locals
+// app.locals({
+//     'PROD_MODE': 'production' === app.get('env')
+// });
+
 // colectarea erorilor de pe toate middleware-urile
 app.use(function catchAllMiddleware (err, req, res, next) {
     console.error(err.stack);
@@ -303,19 +308,14 @@ const detalii = {
 
 console.log("Memoria RAM alocată la pornire este de: ", detalii.RAM);
 
-// vezi http://expressjs.com/api.html#app.locals
-// app.locals({
-//     'PROD_MODE': 'production' === app.get('env')
-// });
-
-// Pornește serverul!
+/* === Pornește serverul! === */
 let port = process.env.PORT || 8080;
 var server = http.listen(port, '127.0.0.1', function cbConnection () {
     console.log('RED Colector ', process.env.APP_VER);
     console.log('Server pornit pe 8080 -> binded pe 127.0.0.1. Proces no: ', process.pid);
 });
 
-// === GESTIONAREA evenimentelor pe `process` și a SEMNALELOR ===
+/* === GESTIONAREA evenimentelor pe `process` și a SEMNALELOR === */
 
 // gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
 process.on('uncaughtException', (err) => {
@@ -346,4 +346,3 @@ function shutdownserver () {
         process.exit(1);
     });
 }
-// FIXME: How an importer router can acces app variables?

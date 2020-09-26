@@ -3159,6 +3159,16 @@ import {AttachesToolPlus} from './uploader.mjs';
     }
 
     /* === MECANISMUL DE AVANS AL FORMULARULUI */
+
+    let progressTxt1 = document.querySelector('#progressText1');
+    let progressTxt2 = document.querySelector('#progressText2');
+    let progressTxt3 = document.querySelector('#progressText3');
+    let progressTxt4 = document.querySelector('#progressText4');
+    let clsTxt1 = progressTxt1.classList;
+    let clsTxt2 = progressTxt2.classList;
+    let clsTxt3 = progressTxt3.classList;
+    let clsTxt4 = progressTxt4.classList;
+
     // Avans către pasul doi al formularului
     $('#next-1').click(function (e) {
         e.preventDefault();
@@ -3189,20 +3199,13 @@ import {AttachesToolPlus} from './uploader.mjs';
             // arată divul cu id-ul `doi` și ascunde div-ul primului pas din formular `unu`
             $('#doi').show();
             $('#unu').hide();
-            // incrementează width-ul bar-ului care indică progresul
-            // $('#progressBar').css("width", "50%");
-            // $('#progressText1').addClass(function clbkAddClsPas1 (index, currentClass) {
-            //     if (currentClass === 'progressText lead') {
-            //         return currentClass + 'active';
-            //     }
-            // });
-            $('#progressText1').removeClass('active');
-            $('#progressText2').addClass(function clbkAddClsPas1 (index, currentClass) {
-                if (currentClass === 'progressText lead') {
-                    return currentClass + ' active';
-                }
-            });
-            // $('#progressText').text('Pasul 2');
+
+            // setarea avansului indicatorului vizual [->pas2]
+            let resTxt1 = clsTxt1.toggle('active'); // avansul la pasul 2 scoate clasa => `resTxt1` = `false`
+            // dacă a fost scoasă clasa, activeaz-o în pasul doi
+            if (!resTxt1) {
+                let resTxt2 = clsTxt2.toggle('active');
+            }
         }
     });
 
@@ -3214,9 +3217,12 @@ import {AttachesToolPlus} from './uploader.mjs';
         // ascunde divul cu id-ul `doi și arată-l pe cel cu id-ul `unu`
         $('#doi').hide();
         $('#unu').show();
-        // decrementează width-ul bar-ului care indică progresul
-        $('#progressBar').css("width", "25%");
-        $('#progressText').text('Pasul 1');
+
+        // setarea avansului indicatorului vizual [pas1 <-]
+        let resTxt1 = clsTxt1.toggle('active');
+        if (resTxt1) {
+            clsTxt2.toggle('active');
+        }
     });
 
     // Avansează la pasul trei al formularului -> Validarea selectului cu arii curiculare l-am trecut direct în form01adres.js
@@ -3227,9 +3233,12 @@ import {AttachesToolPlus} from './uploader.mjs';
         // ascunde divul cu id-ul `doi și arată-l pe cel cu id-ul `trei`
         $('#doi').hide();
         $('#trei').show();
-        // decrementează width-ul bar-ului care indică progresul
-        $('#progressBar').css("width", "75%");
-        $('#progressText').text('Pasul 3');
+
+        // setarea avansului indicatorului vizual [-> pas3]
+        let resTxt3 = clsTxt3.toggle('active');
+        if (resTxt3) {
+            clsTxt2.toggle('active');
+        }
     });
 
     /* ===PAS 3 Formular === */
@@ -3238,9 +3247,15 @@ import {AttachesToolPlus} from './uploader.mjs';
         // ascunde divul cu id-ul `trei și arată-l pe cel cu id-ul `doi`
         $('#trei').hide();
         $('#doi').show();
-        // decrementează width-ul bar-ului care indică progresul
-        $('#progressBar').css("width", "50%");
-        $('#progressText').text('Pasul 2');
+
+        // setarea avansului indicatorului vizual [pas2 <-]
+        let clsTxt2 = progressTxt2.classList;
+        let resTxt2 = clsTxt2.toggle('active');
+
+        let clsTxt3 = progressTxt3.classList;
+        if (resTxt2) {
+            clsTxt3.toggle('active');
+        }
     });
 
     //Mergi la pasul patru al formularului
@@ -3250,9 +3265,14 @@ import {AttachesToolPlus} from './uploader.mjs';
         // ascunde divul cu id-ul `trei și arată-l pe cel cu id-ul `patru`
         $('#trei').hide();
         $('#patru').show();
-        // incrementează width-ul bar-ului care indică progresul
-        $('#progressBar').css("width", "100%");
-        $('#progressText').text('Pasul 4'); 
+
+        // setarea avansului indicatorului vizual [-> pas4]
+        let clsTxt3 = progressTxt3.classList;
+        let clsTxt4 = progressTxt4.classList;
+        let resTxt4 = clsTxt4.toggle('active');
+        if (resTxt4) {
+            clsTxt3.toggle('active');
+        }
     });
 
     //Mergi înapoi la pasul trei al formularului
@@ -3260,9 +3280,15 @@ import {AttachesToolPlus} from './uploader.mjs';
         // ascunde divul cu id-ul `patru și arată-l pe cel cu id-ul `trei`
         $('#patru').hide();
         $('#trei').show();
-        // decrementează width-ul bar-ului care indică progresul
-        $('#progressBar').css("width", "75%");
-        $('#progressText').text('Pasul 3');
+
+        // setarea avansului indicatorului vizual [pas3 <-]
+        let clsTxt3 = progressTxt3.classList;
+        let resTxt3 = clsTxt3.toggle('active');
+
+        let clsTxt4 = progressTxt4.classList;
+        if (resTxt3) {
+            clsTxt4.toggle('active');
+        }        
     });
 
     /* === COLECTAREA DATELOR DIN FORM === */
@@ -3473,8 +3499,6 @@ import {AttachesToolPlus} from './uploader.mjs';
             tagsElems.appendChild(btnCloseWrapper);
         });
     }
-
-
 
     /* Rolul funcției este să permită ștergerea de etichete care nu sunt considerate utile sau care au for introduse greșit*/
     function removeTags () {
