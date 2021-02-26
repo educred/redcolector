@@ -6,6 +6,7 @@ const LivresqConnect = require('../../models/livresq-connect').LivresqConnect;
 
 /* === DEPENDINȚE === */
 const moment = require('moment');
+const redisClient = require('../../redis.config');
 /* === MODELE === */
 const Resursa = require('../../models/resursa-red'); // Adu modelul resursei
 /* === HELPERE === */
@@ -19,11 +20,17 @@ let cookieHelper  = require('./cookie2obj.helper');
 
 /* === AFIȘAREA RESURSELOR :: /resurse === */
 exports.loadRootResources = function loadRootResources (req, res, next) {
-    // Indexul de căutare
-    let idxRes = process.env.RES_IDX_ALS;
-
     // ACL
     let roles = ["user", "validator", "cred"];
+
+    // Verifică dacă indexul de căutare există
+    let idxRes = redisClient.get("RES_IDX_ALS", (err, reply) => {
+        if (err) {
+            console.error(error.message);
+        }
+        console.log("resurse.ctrl::idxRes ", reply);
+        return reply; // ar trebui să fie: "resedus"
+    });
 
     // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles); 
@@ -124,8 +131,7 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
 
                 // resursa._doc.content = editorJs2html(resursa.content);
                 let localizat = moment(obi.date).locale('ro').format('LLL');
-                // resursa._doc.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
-                obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.            
+                obi.dataRo = `${localizat}`; // formatarea datei pentru limba română.            
 
                 // Array-ul activităților modificat
                 let activitatiRehashed = obi.activitati.map((elem) => {
@@ -138,10 +144,10 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
                 obi.activitati = activitatiRehashed;
                 return obi;
             } else {
-                console.log(`Nu a putut fi adusă resursa!`);
+                return `<p>Între timp ceva s-a petrecut cu datele de la server... nu am putut aduce conținutul. Încearcă reload!</p>`;
             }
-            return Object.assign({}, resursa._doc);// Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-        }).then(result => {
+            // return Object.assign({}, resursa._doc);// Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
+        }).then((result) => {
             let scripts = [
                 // MOMENT.JS
                 {script: '/lib/npm/moment-with-locales.min.js'},
@@ -174,7 +180,7 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
             };            
 
             res.render('resursa-cred', {                
-                title:     "RED in CRED",
+                title:     result.title,
                 user:      req.user,
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",

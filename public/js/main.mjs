@@ -1,17 +1,36 @@
-var csrfToken = '';
+var csrfToken = '',
+    socket    = null,
+    pubComm   = null;
 
-if(document.getElementsByName('_csrf')[0].value) {
+globalThis.socket = socket;
+globalThis.pubComm = pubComm;
+
+// var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+if (document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
+    socket = io({
+        query: {
+            ['_csrf']: csrfToken
+        },
+        transports: [ "websocket", "polling" ]
+    });
+
+    // socket.on("connect", (data) => {
+    //     console.log(socket.id);
+    // });
+
+    pubComm = io('/redcol', {
+        withCredentials: true,
+        extraHeaders: {
+            "_csrf": csrfToken
+        },
+        query: {
+            ['_csrf']: csrfToken
+        },
+        transports: [ "websocket", "polling" ]
+    });
 }
-
-var socket = io({
-    query: {['_csrf']: csrfToken}
-});
-
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
-
 
 // === MANAGEMENTUL COMUNICĂRII pe socketuri ===
 // pubComm.on('mesaje', (mess) => {

@@ -6,8 +6,18 @@ const moment  = require('moment');
 const Resursa = require('../models/resursa-red'); // Adu modelul resursei
 var content2html = require('./controllers/editorJs2HTML');
 
+const redisClient = require('../redis.config');
+// INDECȘII ES7
+const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
+const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
 // Indexul de căutare
-let idxRes = process.env.RES_IDX_ALS;
+let idxRes = RES_IDX_ALS;
 
 // === RESURSE PUBLICE ===
 router.get('/', (req, res) => {

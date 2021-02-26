@@ -8,54 +8,73 @@
 {{/each}}
 
 <div id="content">
-    <h1>Bine ai venit în zona de administrare!</h1>
+    <h1>Zona de administrare</h1>
     {{!-- <div id="foci">
         <button id="allUsers" type="button" class="btn btn-primary">Toți utilizatorii</button>
         <button id="allUnits" type="button" class="btn btn-primary">Unități</button>
         <button id="allComps" type="button" class="btn btn-primary">Competențe specifice</button>    
     </div> --}}
     {{!-- <br> --}}
-    <section class="container-fluid" id="userres">
-        {{!-- Statisticile care conduc la rezultate --}}
-        <div id="restats">
-            {{!-- Rezultatul compilării template-ului cu date statistice va fi introdus aici --}}
-        </div>
-
-        {{!-- Va încărca resursele compilate cu ajutorul template-ului --}}
-        <div id="contributii" class="">
-            {{!-- Background video --}}
-            <div class="bg-video">
-                <video class="bg-video__content" autoplay muted loop>
-                    {{!-- https://coverr.co/videos/modem-lights-u4MPlcF4EE --}}
-                    <source src="img/coverr-typing-in-laptop-1578678668153.mp4" type="video/mp4">
-                    Browserul tău nu are support pentru caracteristicile web moderne. Actualizează-l!
-                </video>
-            </div>
-            
-            {{!-- Formularul câmpului de căutare --}}
-            <form id="searchU">
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="useremail">@educred.ro</span>
-                    </div>
-                    <input type="text" id="findUserField" class="form-control" placeholder="Caută un utilizator, fie după email, fie după nume" aria-label="useremail" aria-describedby="useremail">
-                    <div class="input-group-append">
-                        <button id="findUserBtn" class="btn btn-outline-secondary" type="button">Caută</button>
-                    </div>
-                </div>
-            </form>
-
-            {{!-- UTILIZATORII GĂSIȚI ÎN ELASTICSEARCH --}}
-            <div id="showusers" class="">                
-                {{!-- Va fi inserat rezultatul compilării aici! --}}
-            </div>
-
-            {{!-- DETALIILE PENTRU UN UTILIZATOR SELECTAT --}}
-            <div id="showusrdetails" class="">
-                {{!-- Va fi inserat rezultatul compilării aici! --}}
-            </div>
-        </div>
+    <section class="container-fluid" id="adm-nav">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="userres-tab" data-toggle="tab" href="#userres" role="tab" aria-controls="userres" aria-selected="true">Utilizatori</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="elk-tab" data-toggle="tab" href="#system-elk" role="tab" aria-controls="system-elk" aria-selected="false">Stare ELK</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="mgdb-tab" data-toggle="tab" href="#system-mgdb" role="tab" aria-controls="system-mgdb" aria-selected="false">Stare MongoDB</a>
+            </li>
+        </ul>        
     </section>
+
+    <div class="tab-content" id="adm-nav-content">
+        <section class="container-fluid tab-pane fade show active" id="userres" role="tabpanel" aria-labelledby="userres-tab">
+            {{!-- Statisticile care conduc la rezultate --}}
+            <div id="restats">
+                {{!-- Rezultatul compilării template-ului cu date statistice va fi introdus aici --}}
+            </div>
+
+            {{!-- Va încărca resursele compilate cu ajutorul template-ului --}}
+            <div id="contributii" class="">
+                {{!-- Background video --}}
+                <div class="bg-video">
+                    <video class="bg-video__content" autoplay muted loop>
+                        {{!-- https://coverr.co/videos/modem-lights-u4MPlcF4EE --}}
+                        <source src="img/coverr-typing-in-laptop-1578678668153.mp4" type="video/mp4">
+                        Browserul tău nu are support pentru caracteristicile web moderne. Actualizează-l!
+                    </video>
+                </div>
+                
+                {{!-- Formularul câmpului de căutare --}}
+                <form id="searchU" onsubmit="return false">
+                    <div id="findUser" class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="useremail">@educred.ro</span>
+                        </div>
+                        <input type="text" id="findUserField" class="form-control" placeholder="Caută un utilizator, fie după email, fie după nume" aria-label="useremail" aria-describedby="useremail">
+                        <div class="input-group-append">
+                            <button id="findUserBtn" class="btn btn-outline-secondary" type="button">Caută</button>
+                        </div>
+                    </div>
+                </form>
+
+                {{!-- UTILIZATORII GĂSIȚI ÎN ELASTICSEARCH --}}
+                <div id="showusers" class="">                
+                    {{!-- Va fi inserat rezultatul compilării aici! --}}
+                </div>
+
+                {{!-- DETALIILE PENTRU UN UTILIZATOR SELECTAT --}}
+                <div id="showusrdetails" class="">
+                    {{!-- Va fi inserat rezultatul compilării aici! --}}
+                </div>
+            </div>
+        </section>
+
+        <section class="container-fluid tab-pane fade" id="system-elk" role="tabpanel" aria-labelledby="elk-tab"></section>
+        <section class="container-fluid tab-pane fade" id="system-mgdb" role="tabpanel" aria-labelledby="mgdb-tab"></section>
+    </div>
 
     {{!-- TEMPLATE STATISTIC --}}
     <template id="statstpl">
@@ -141,6 +160,52 @@
     {{!-- Tabelul resurselor personale --}}
     <template id="userResTbl">
         <div id="resurseTab" class="tableDisplay"></div>
+    </template>
+
+    {{!-- Template afișare statistici Elasticsearch 7 --}}
+    <template id="es7tpl">
+        <div id="es7healthdetails" class="container m-3">
+        </div>
+        <div class="container">
+            <table id= "es7idxstbl" class="table table-hover m-4">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Acțiuni</th>
+                        <th>index</th>
+                        <th>uuid</th>
+                        <th>Nr. doc.</th>
+                        <th>Doc. șterse</th>
+                        <th>Dimensiune</th>
+                    </tr>
+                </thead>
+                <tbody id="idxcol">
+                </tbody>
+            </table>
+        </div>
+    </template>
+
+    {{!-- Template pentru afișarea unui modal --}}
+    <template id="mdl">
+        {{!-- <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true"> --}}
+        <div class="modal fade" data-backdrop="false" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="false">&times;</span>
+                        </button>
+                    </div>
+                <div class="modal-body">
+
+                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"></button>
+                        <button type="button" class="btn btn-primary"></button>
+                    </div>
+                </div>
+            </div>
+        </div>        
     </template>
 
     {{#each scripts}}

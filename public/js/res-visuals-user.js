@@ -28,13 +28,16 @@ var user_id = visuals.dataset.usrid;
 
 pubComm.emit('usrRes', user_id); // emite cerere de date
 pubComm.on('usrRes', (resurse) => {
-    // console.log(resurse);
+    
     
     let newResultArr = []; // noul array al obiectelor resursă
     resurse.map(function clbkMapResult (obi) {
         obi.dataRo = moment(obi.date).locale('ro').format('LLL');
         newResultArr.push(obi);
     });
+
+    console.log(newResultArr);
+
     // RANDEAZĂ TABELUL
     // https://datatables.net/manual/data/orthogonal-data
     $('.userResTbl').DataTable({

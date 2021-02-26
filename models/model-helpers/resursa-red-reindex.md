@@ -1,5 +1,13 @@
 # Procedura de reindexare
 
+## Verificare indexurilor existente
+
+Petru a vedea numele și detaliile indexurilor care sunt deja create, se aplică următoarea comandă.
+
+```bash
+curl -XGET "http://localhost:9200/_cat/indices/*,-.*?v"
+```
+
 Creezi indexul și alias-ul de mână din terminal. În directorul curent ai la îndemână JSON-ul de mapare deja preparat.
 
 ```bash
@@ -7,7 +15,7 @@ curl -XPUT "http://localhost:9200/resurse" -H 'Content-Type: application/json' -
 
 ```
 
-În loc de numele puse pentru exemplificare `resurse_test` și alias-ul său `resurse_test_als1`, pune ceea ce ai hotărât să fie în `process.env.RES_IDX_ES7` și aliasul la `process.env.RES_IDX_ALS`.
+În loc de numele puse pentru exemplificare `resurse_test` și alias-ul său `resurse_test_als1`, pune ceea ce ai hotărât să fie în `RES_IDX_ES7` și aliasul la `RES_IDX_ALS`.
 
 Verifică dacă s-a creat indexul și alias-ul
 

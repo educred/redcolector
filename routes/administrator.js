@@ -1,14 +1,26 @@
-const esClient= require('../elasticsearch.config');
-const moment  = require('moment');
-const router  = require('express').Router();
-const Resursa = require('../models/resursa-red');
-const pubComm = require('./sockets');
+require('dotenv').config();
+const redisClient = require('../redis.config');
+const esClient    = require('../elasticsearch.config');
+const moment      = require('moment');
+const router      = require('express').Router();
+const Resursa     = require('../models/resursa-red');
+const pubComm     = require('./sockets');
 
 // HELPERI
-const ES7Helper  = require('../models/model-helpers/es7-helper');
-const schema     = require('../models/resursa-red-es7');
+const ES7Helper   = require('../models/model-helpers/es7-helper');
+const schema      = require('../models/resursa-red-es7');
 // let content2html = require('./controllers/editorJs2HTML');
-let editorJs2TXT = require('./controllers/editorJs2TXT');
+let editorJs2TXT  = require('./controllers/editorJs2TXT');
+
+// INDECȘII RES pe ES7
+const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
+const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
 
 // === VERIFICAREA ROLURILOR ===
 let checkRole = require('./controllers/checkRole.helper');
@@ -190,7 +202,7 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
 
                 // Dacă nu este indexată în Elasticsearch deja, indexează aici!
                 esClient.exists({
-                    index: process.env.RES_IDX_ALS,
+                    index: RES_IDX_ES7,
                     id: req.params.id
                 }).then(resFromIdx => {
                     /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
@@ -236,21 +248,7 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                             expertCheck:      obi.expertCheck
                         };
 
-                        ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
-                        //FIXME: EROAREA care apare în consolă 
-                        // {
-                        //     "error": {
-                        //       "root_cause": [
-                        //         {
-                        //           "type": "cluster_block_exception",
-                        //           "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
-                        //         }
-                        //       ],
-                        //       "type": "cluster_block_exception",
-                        //       "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
-                        //     },
-                        //     "status": 429
-                        //   }
+                        ES7Helper.searchIdxAlCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
                     }
                     return resFromIdx;
                 }).catch(err => {
@@ -328,16 +326,15 @@ router.get('/users', function clbkAdmUsr (req, res) {
         let scripts = admScripts.concat(scriptsArr); // injectează în array-ul `scripts`
 
         res.render('users-data-visuals', {
-            title:   "Utilizatorii",
-            user:    req.user,
-            logoimg: "/img/red-logo-small30.png",
-            credlogo: "../img/CREDlogo.jpg",
+            title:     "Utilizatorii",
+            user:      req.user,
+            logoimg:   "/img/red-logo-small30.png",
+            credlogo:  "../img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
             scripts,
             styles,
             activeAdmLnk: true
         });
-    // Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public
     } else {
         res.redirect('/401');
     }

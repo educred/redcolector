@@ -3,10 +3,21 @@ const mongoose      = require('mongoose');
 const Schema        = mongoose.Schema;
 const CompetentaS   = require('./competenta-specifica');
 const esClient      = require('../elasticsearch.config');
+const redisClient   = require('../redis.config');
 const schema        = require('./resursa-red-es7');
 const editorJs2TXT  = require('../routes/controllers/editorJs2TXT'); 
 const ES7Helper     = require('./model-helpers/es7-helper');
 const globby        = require('globby');
+
+// INDECȘII ES7
+const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
+const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
 
 var softwareSchema = new mongoose.Schema({
     nume:     {
@@ -172,148 +183,146 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
         expertCheck:      obi.expertCheck
     };
 
-    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
+    ES7Helper.searchIdxAlCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
     next();
 });
 
+//FIXME:
 // Adăugare middleware pe `post` pentru toate operațiunile `find`
-ResursaSchema.post(/^find/, async function clbkResFindPostHookREDschema (doc, next) {
-    // Când se face căutarea unei resurse folosindu-se metodele`find`, `findOne`, `findOneAndUpdate`, vezi dacă a fost indexat. Dacă nu, indexează-l!
+// ResursaSchema.post(/^find/, async function clbkResFindPostHookREDschema (doc, next) {
+//     // Când se face căutarea unei resurse folosindu-se metodele`find`, `findOne`, `findOneAndUpdate`, vezi dacă a fost indexat. Dacă nu, indexează-l!
 
-    // cazul `find` când rezultatele sunt multiple într-un array.
-    if (Array.isArray(doc)){
-        doc.map(function (res) {
-            try {                
-                // verifică dacă înregistrarea din Mongo există în ES?
-                ES7Helper.recExists(res._id, process.env.RES_IDX_ALS).then(e => {
-                    if (e === false) {
-                        let obi = Object.assign({}, res._doc);
-                        // verifică dacă există conținut
-                        var content2txt = '';
-                        if ('content' in obi) {
-                            content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                        }
-                        // indexează documentul
-                        const data = {
-                            id:               obi._id,
-                            date:             obi.date,
-                            idContributor:    obi.idContributor,
-                            emailContrib:     obi.emailContrib,
-                            uuid:             obi.uuid,
-                            autori:           obi.autori,
-                            langRED:          obi.langRED,
-                            title:            obi.title,
-                            titleI18n:        obi.titleI18n,
-                            arieCurriculara:  obi.arieCurriculara,
-                            level:            obi.level,
-                            discipline:       obi.discipline,
-                            disciplinePropuse:obi.disciplinePropuse,
-                            competenteGen:    obi.competenteGen,
-                            rol:              obi.rol,
-                            abilitati:        obi.abilitati,
-                            materiale:        obi.materiale,
-                            grupuri:          obi.grupuri,
-                            domeniu:          obi.demersuri,
-                            spatii:           obi.spatii,
-                            invatarea:        obi.invatarea,
-                            description:      obi.description,
-                            dependinte:       obi.dependinte,
-                            coperta:          obi.coperta,
-                            content:          content2txt,
-                            bibliografie:     obi.bibliografie,
-                            contorAcces:      obi.contorAcces,
-                            generalPublic:    obi.generalPublic,
-                            contorDescarcare: obi.contorDescarcare,
-                            etichete:         obi.etichete,
-                            utilMie:          obi.utilMie,
-                            expertCheck:      obi.expertCheck
-                        };
-    
-                        ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
-                    }   
-                }).catch((error) => {
-                    console.error(JSON.stringify(error, null, 2));
-                    next(error);
-                });            
-            } catch (error) {
-                console.error(JSON.stringify(error, null, 2));
-                next(error);
-            }
-        });
-    } else {
-        // console.log("De pe hook-ul `post` metoda ^find, ramura unui singur document: ", doc.title);
-        try {
-            // verifică dacă înregistrarea din Mongo există în ES?
-            // console.log("[Scheme::resursa-red.js] Documentul nu este array și este de forma: ", doc);
-            ES7Helper.recExists(doc._id, process.env.RES_IDX_ALS).then(function (e) {                
-                if (e === false) {
-                    let obi = Object.assign({}, doc); // recast la înregistrare pentru a elimina artefacte Mongoose document
+//     // cazul `find` când rezultatele sunt multiple într-un array.
+//     if (Array.isArray(doc)){
+//         doc.map(function (res) {
+//             console.log('resursa-res::Ptr cazul cu mai multe, indexul este ', RES_IDX_ALS, 'iar documentul este ', res.title);
+//             // verifică dacă înregistrarea din Mongo există în ES?
+//             ES7Helper.recExists(res._id, RES_IDX_ALS).then((e) => {
+//                 // console.log("resursa-red::test daca exista in ES", e);
+//                 if (e === false) {
+//                     let obi = Object.assign({}, res._doc);
+//                     // verifică dacă există conținut
+//                     var content2txt = '';
+//                     if ('content' in obi) {
+//                         content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+//                     }
+//                     // indexează documentul
+//                     const data = {
+//                         id:               obi._id,
+//                         date:             obi.date,
+//                         idContributor:    obi.idContributor,
+//                         emailContrib:     obi.emailContrib,
+//                         uuid:             obi.uuid,
+//                         autori:           obi.autori,
+//                         langRED:          obi.langRED,
+//                         title:            obi.title,
+//                         titleI18n:        obi.titleI18n,
+//                         arieCurriculara:  obi.arieCurriculara,
+//                         level:            obi.level,
+//                         discipline:       obi.discipline,
+//                         disciplinePropuse:obi.disciplinePropuse,
+//                         competenteGen:    obi.competenteGen,
+//                         rol:              obi.rol,
+//                         abilitati:        obi.abilitati,
+//                         materiale:        obi.materiale,
+//                         grupuri:          obi.grupuri,
+//                         domeniu:          obi.demersuri,
+//                         spatii:           obi.spatii,
+//                         invatarea:        obi.invatarea,
+//                         description:      obi.description,
+//                         dependinte:       obi.dependinte,
+//                         coperta:          obi.coperta,
+//                         content:          content2txt,
+//                         bibliografie:     obi.bibliografie,
+//                         contorAcces:      obi.contorAcces,
+//                         generalPublic:    obi.generalPublic,
+//                         contorDescarcare: obi.contorDescarcare,
+//                         etichete:         obi.etichete,
+//                         utilMie:          obi.utilMie,
+//                         expertCheck:      obi.expertCheck
+//                     };
 
-                    // verifică dacă există conținut
-                    var content2txt = '';
-                    if ('content' in obi) {
-                        content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                    }
-                    // indexează documentul
-                    const data = {
-                        id:               obi._id,
-                        date:             obi.date,
-                        idContributor:    obi.idContributor,
-                        emailContrib:     obi.emailContrib,
-                        uuid:             obi.uuid,
-                        autori:           obi.autori,
-                        langRED:          obi.langRED,
-                        title:            obi.title,
-                        titleI18n:        obi.titleI18n,
-                        arieCurriculara:  obi.arieCurriculara,
-                        level:            obi.level,
-                        discipline:       obi.discipline,
-                        disciplinePropuse:obi.disciplinePropuse,
-                        competenteGen:    obi.competenteGen,
-                        rol:              obi.rol,
-                        abilitati:        obi.abilitati,
-                        materiale:        obi.materiale,
-                        grupuri:          obi.grupuri,
-                        domeniu:          obi.demersuri,
-                        spatii:           obi.spatii,
-                        invatarea:        obi.invatarea,
-                        description:      obi.description,
-                        dependinte:       obi.dependinte,
-                        coperta:          obi.coperta,
-                        content:          content2txt,
-                        bibliografie:     obi.bibliografie,
-                        contorAcces:      obi.contorAcces,
-                        generalPublic:    obi.generalPublic,
-                        contorDescarcare: obi.contorDescarcare,
-                        etichete:         obi.etichete,
-                        utilMie:          obi.utilMie,
-                        expertCheck:      obi.expertCheck
-                    };
+//                     ES7Helper.searchIdxAlCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
+//                 }   
+//             }).catch((error) => {
+//                 console.error(JSON.stringify(error, null, 2));
+//                 next(error);
+//             });
+//         });
+//     } else if(doc._id) {
+//         console.log("De pe hook-ul `post` metoda ^find, ramura unui singur document: ", doc.title);
+//         // verifică dacă înregistrarea din Mongo există în ES?
+//         // console.log("[Scheme::resursa-red.js] Documentul nu este array și este de forma: ", doc);
+//         ES7Helper.recExists(doc._id, RES_IDX_ALS).then((e) => {                
+//             if (e === false) {
+//                 console.log("resursa-red::test daca exista in ES", e);
 
-                    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
-                }
-                /* TODO: === REINDEXARE ÎN BAZA HASHULUI DE CONȚINUT :: componentă a REEDITĂRII de resursă === */
-                // else {
-                    //  version conflict, document already exists (statusCode === 409)
-                    // Aici va fi tratat cazul în care documentul există, dar conținutul a fost actualizat și ca urmare este necesară reindexare
-                    // Verifică dacă nu cumva documentul deja există în index
-                    // const {body} = await esClient.exists({
-                    //     index: aliasidx,
-                    //     id:    data.id
-                    // });
-                    // Compară HASH-ul conținutului existent al lui `body` in ES cu hash-ul documentului curent
-                    // În cazul în care diferă, REINDEXEAZĂ DOCUMENT!!!
-                // } 
-            }).catch((error) => {
-                console.error(JSON.stringify(error, null, 2));
-                next(error);
-            });   
-        } catch (error) {
-            console.error(JSON.stringify(error, null, 2));
-            next(error);
-        }
-    }
-    next();
-});
+//                 //FIXME: Nu este tratat cazul în care resursa este stearsă!!!
+
+//                 let obi = Object.assign({}, doc); // recast la înregistrare pentru a elimina artefacte Mongoose document
+
+//                 // verifică dacă există conținut
+//                 var content2txt = '';
+//                 if ('content' in obi) {
+//                     content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+//                 }
+//                 // indexează documentul
+//                 const data = {
+//                     id:               obi._id,
+//                     date:             obi.date,
+//                     idContributor:    obi.idContributor,
+//                     emailContrib:     obi.emailContrib,
+//                     uuid:             obi.uuid,
+//                     autori:           obi.autori,
+//                     langRED:          obi.langRED,
+//                     title:            obi.title,
+//                     titleI18n:        obi.titleI18n,
+//                     arieCurriculara:  obi.arieCurriculara,
+//                     level:            obi.level,
+//                     discipline:       obi.discipline,
+//                     disciplinePropuse:obi.disciplinePropuse,
+//                     competenteGen:    obi.competenteGen,
+//                     rol:              obi.rol,
+//                     abilitati:        obi.abilitati,
+//                     materiale:        obi.materiale,
+//                     grupuri:          obi.grupuri,
+//                     domeniu:          obi.demersuri,
+//                     spatii:           obi.spatii,
+//                     invatarea:        obi.invatarea,
+//                     description:      obi.description,
+//                     dependinte:       obi.dependinte,
+//                     coperta:          obi.coperta,
+//                     content:          content2txt,
+//                     bibliografie:     obi.bibliografie,
+//                     contorAcces:      obi.contorAcces,
+//                     generalPublic:    obi.generalPublic,
+//                     contorDescarcare: obi.contorDescarcare,
+//                     etichete:         obi.etichete,
+//                     utilMie:          obi.utilMie,
+//                     expertCheck:      obi.expertCheck
+//                 };
+
+//                 ES7Helper.searchIdxAlCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
+//             }
+//             /* TODO: === REINDEXARE ÎN BAZA HASHULUI DE CONȚINUT :: componentă a REEDITĂRII de resursă === */
+//             // else {
+//                 //  version conflict, document already exists (statusCode === 409)
+//                 // Aici va fi tratat cazul în care documentul există, dar conținutul a fost actualizat și ca urmare este necesară reindexare
+//                 // Verifică dacă nu cumva documentul deja există în index
+//                 // const {body} = await esClient.exists({
+//                 //     index: aliasidx,
+//                 //     id:    data.id
+//                 // });
+//                 // Compară HASH-ul conținutului existent al lui `body` in ES cu hash-ul documentului curent
+//                 // În cazul în care diferă, REINDEXEAZĂ DOCUMENT!!!
+//             // } 
+//         }).catch((error) => {
+//             console.error(JSON.stringify(error, null, 2));
+//             next(error);
+//         });
+//     } else {
+//         next();
+//     }
+// });
 
 module.exports = mongoose.model(process.env.MONGO_REDS, ResursaSchema);

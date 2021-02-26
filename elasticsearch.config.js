@@ -1,14 +1,12 @@
 require('dotenv').config();
-
-//FIXME: Clientul de Elasticsearch se va schimba (vezi `npm install @elastic/elasticsearch` 
-// https://www.elastic.co/blog/announcing-the-new-elasticsearch-javascript-client-rc1 și https://www.elastic.co/blog/new-elasticsearch-javascript-client-released)
-// Încep readaptarea clientului și în aplicație
 const { Client } = require('@elastic/elasticsearch');
 const client = new Client({
     node: process.env.ELASTIC_URL,
     maxRetries: 5,
-    requestTimeout: 60000,
+    requestTimeout: 2000    ,
+    sniffInterval: 500,
     sniffOnStart: true,
+    sniffOnConnectionFault: true,
     log: 'trace'
 });
 
@@ -16,9 +14,18 @@ client.info((err, info) => {
     if (err) {
         console.log(err);
     } else if (info.statusCode === 200) {
-        console.log("Conectare reușită la Elasticsearch pe clusterul cu numele: ", info.body.cluster_name);
+        // console.log("Conectare reușită la Elasticsearch pe clusterul cu numele: ", info.body.cluster_name);
+        client.info().then((r) => {
+            console.log("Conectare reușită la Elasticsearch ", r.body.version.number, " Stare: ", r.meta.connection.status, "Clusterul: ", info.body.cluster_name);
+        }).catch(e => console.error);
     }
 });
-// https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
-// module.exports = esClient;
+
+client.on('sniff', (err, req) => {
+    // console.log('ES7 sniff: ', err ? err.message : '', `${JSON.stringify(req.meta.sniff)}`);
+    console.log('ES7 sniff: ', err ? err.message : 'Nicio problemă detectată la inițializare!!! All norminal 👌');
+});
+
+// client.cluster.health().then(r => console.log(r)).catch(e => console.error);
+// client.info().then(r => console.log(r)).catch(e => console.error);
 module.exports = client;

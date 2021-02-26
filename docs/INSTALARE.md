@@ -211,7 +211,7 @@ Pentru a vedea ce opțiuni îți oferă sistemul privind Java Virtual Machines, 
 
 Pentru a verifica, rulează comanda `echo $JAVA_HOME`.
 
-Mai trebuile adăugat directorul binarelor Java la căile de sistem. Vom face acest lucru beneficiind de faptul că am setat variabila de sistem `$JAVA_HOME`. Astfel, în consolă executăm `export PATH=$PATH:$JAVA_HOME/bin`.
+Mai trebuie adăugat directorul binarelor Java la căile de sistem. Vom face acest lucru beneficiind de faptul că am setat variabila de sistem `$JAVA_HOME`. Astfel, în consolă executăm `export PATH=$PATH:$JAVA_HOME/bin`.
 
 Verifică dacă a fost adăugată calea către binare rulând `echo $PATH`. Rulând comanda `java -version` ar trebui să reflecte versiunea de Java dorită.
 
@@ -257,7 +257,7 @@ git checkout master
 
 Imediat după aducerea resurselor de pe Github, este indicată instalarea din consola serverului a dependințelor externe necesare. Se va executa `npm install`.
 
-Toate dependințele necesare specificate în fișierul `assets.js` din rădăcină, vor trebui copiate în `public/lib/npm`. Acest lucru se face prin rularea comenzii `npm run build` din rădăcina proiectului după ce s-au instalat toate pachetele.
+Toate dependințele necesare specificate în fișierul `assets.js` din rădăcină, vor trebui copiate în `public/lib/npm`. Acest lucru se face prin rularea comenzii `npm run copy` din rădăcina proiectului după ce s-au instalat toate pachetele.
 
 #### Dependințe 
 

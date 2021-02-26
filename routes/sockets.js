@@ -9,19 +9,46 @@ const {v4: uuidv4}= require('uuid'); // https://github.com/uuidjs/uuid#deep-requ
 const {Readable, pipeline} = require('stream');
 const mongoose    = require('mongoose');
 const validator   = require('validator');
+const redisClient = require('../redis.config');
 const esClient    = require('../elasticsearch.config');
-const Resursa     = require('../models/resursa-red'); // Adu modelul resursei
-const UserSchema  = require('../models/user'); // Adu schema unui user
-const Log         = require('../models/logentry');
+const Resursa     = require('../models/resursa-red');           // Adu modelul resursei
+const UserSchema  = require('../models/user');                  // Adu schema unui user
+const Log         = require('../models/logentry');              // Asu modelul unui articol de blog
+const Competente  = require('../models/competenta-specifica');  // Adu modelul competenței
 const editorJs2HTML= require('../routes/controllers/editorJs2HTML');
 // necesare pentru constituirea și gestionarea repo-ului de git
 const globby      = require('globby');
 const git         = require('isomorphic-git');
+const logger      = require('../util/logger');
+
+// INDECȘII ES7
+let RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
+let RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
+let USR_IDX_ES7 = redisClient.get("USR_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
+let USR_IDX_ALS = redisClient.get("USR_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
 
 // funcțiile de căutare
 const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
 // căutare resurse în Mongo prin Mongoose
 const {pagination} = require('./controllers/pagination.ctrl');
+// funcții de indexare și reindexare în Elasticsearch 7
+const {reidx, deleteIndex, reidxincr} = require('../models/model-helpers/es7-helper');
+const { get, set } = require('../redis.config');
+const { error } = require('../util/logger');
+// funcții de raportare date statistice în MongoDB
+// const {statsmgdb} = require('../models/model-helpers/mgdb4-helper');
 
 /**
  * Funcția are rolul de a face staging la tot ce există în parametrul `calea` urmat de commit
@@ -87,27 +114,19 @@ async function commitAll (calea, autori, email, message) {
 
 // EXPORTĂ TOATE SOCKET-urile în app.js
 module.exports = function sockets (io) {
-    
-    // io.on('connection', socket => {
-    //     console.log("Id-ul conectat este: ", socket.id);
-    //     socket.on('testconn', function cbMesaje (mesaj) {
-    //         const detaliiConn = pubComm.server.eio.clients[socket.id]; // obține detaliile de conexiune individuale
-    //         console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
-    //     });
+
+    // io.on('connect', socket => {
+        // console.log("Id-ul conectat este: ", socket.id);
+        // console.log(socket.handshake);
+        // // console.log(socket.handshake.query._csrf);
+        // socket.on('testconn', function cbMesaje (mesaj) {
+        //     const detaliiConn = pubComm.server.eio.clients[socket.id]; // obține detaliile de conexiune individuale
+        //     console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
+        // });
     // });
 
-    var main = io.of('/');
     var pubComm = io.of('/redcol'); // creează obiectul `Namespace` pentru comunicare în afara administrării
-    var adminNs = io.of('/admin'); //creează obiectul `Namespace` pentru administrare
-
-    // main.on('connection', socket => {
-
-    //     // === TEST CONNECTION === ::Vezi dacă e conectat și upgradat
-    //     socket.on('testconn', function cbMesaje (mesaj) {
-    //         const detaliiConn = pubComm.server.eio.clients[socket.id]; // obține detaliile de conexiune individuale
-    //         console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
-    //     });
-    // });
+    var adminNs = io.of('/admin');  //creează obiectul `Namespace` pentru administrare
 
     // Testează dacă primești socket format
     // console.info('Server socket sniff: ', {
@@ -233,9 +252,9 @@ module.exports = function sockets (io) {
                 /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
                 fs.ensureDir(existPath, desiredMode, err => {
                     if(err === null){
-                        // console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
+                        console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
                     } else {
-                        console.log("[sockets.js::'resursa'::cu uuid] Eroare cu următoarele detalii: ", err);
+                        console.log("[sockets.js::'resursa'::cu uuid] Eroare la verificare/crearea subdirectorului cu următoarele detalii: ", err);
                         throw err;
                     }
 
@@ -252,7 +271,7 @@ module.exports = function sockets (io) {
                             console.error("[sockets.js::'resursa'::cu uuid] Nu s-a reușit scrierea fișierului în Bag", error);
                             next(error);
                         }
-                        // console.log('[sockets.js::resursa] Am primit următoarea valoare de pe streamul destination ', val);
+                        console.log('[sockets.js::resursa] Am primit următoarea valoare de pe streamul destination ', val);
                     });
 
                     // construiește obiectul de răspuns.
@@ -266,7 +285,7 @@ module.exports = function sockets (io) {
                     fs.access(localF, fs.F_OK, (err) => {
                         if (err) {
                             console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ", err);
-                            socket.emit('resursa', responseObj);
+                            socket.emit('resursa', responseObj4AddedFile);
                         }
                         // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
                         responseObj4AddedFile.success = 1;
@@ -533,85 +552,165 @@ module.exports = function sockets (io) {
         });
 
         // === DELRESID === ::Ștergerea unei resurse
-        socket.on('delresid', (resource) => {            
-            let dirPath = path.join(`${process.env.REPO_REL_PATH}`, `${resource.content.idContributor}`, `${resource.content.uuid}`);
+        socket.on('delresid', (resource) => {
+            /*
+                content: {titleI18n: Array(0), arieCurriculara: Array(1), level: Array(1), discipline: Array(1), disciplinePropuse: Array(0), …}
+                contribuitor: "5e9832fcf052494338584d92"
+                id: "5f50c7c65e8d30559601bf76"
+                nameUser: ""
+                uuid: "5c7d042a-3694-4419-89e1-c8e1be836a43"
+                versioned: false
+            */
+            // Șterge din MongoDB, din Elasticsearch, precum și de pe hard FIXME: bagă callback-ul în resource-ops.js
             
-            // Șterge din MongoDB, din Elasticsearch, precum și de pe hard
-            fs.ensureDir(dirPath, 0o2775).then(function clbkSubdirExists () {
+            //FIXME: Se sterge resursa, dar este o promisiune care da o eroare si este netratată!!!
+
+            let dirPath      = path.join(`${process.env.REPO_REL_PATH}`, `${resource.contribuitor}`, `${resource.uuid}`),
+                path2deleted = path.join(`${process.env.REPO_REL_PATH}`, `${resource.contribuitor}`, 'deleted'),
+                path2deres   = `${path2deleted}/${resource.uuid}`; // constituie calea către viitoarea arhivă din deleted.          
+
+            console.info("Căile formate sunt: ", dirPath, path2deleted, path2deres);
+            // Căile formate sunt:  
+            // repo/5e9832fcf052494338584d92/5c7d042a-3694-4419-89e1-c8e1be836a43 
+            // repo/5e9832fcf052494338584d92/deleted 
+            // repo/5e9832fcf052494338584d92/deleted/5c7d042a-3694-4419-89e1-c8e1be836a43
+
+            // Verifică dacă în rădăcina userului există subdirectorul `deleted`. Dacă nu, creează-l!!!
+            fs.ensureDir(path2deleted, 0o2775).then(function clbkDeletedExist () {
                 /* === ARHIVEAZĂ === */
-                // Verifică dacă în rădăcina userului există subdirectorul `deleted`. Dacă nu, creează-l!!!
-                var path2deleted = path.join(`${process.env.REPO_REL_PATH}`, `${resource.content.idContributor}`, 'deleted');
-                // Procedura de ștergere cu arhivare
-                fs.ensureDir(path2deleted, 0o2775).then(function clbkDeletedExist () {
-                    // Vezi dacă există un subdirector al resursei, iar dacă există șterge tot conținutul său [https://github.com/jprichardson/node-fs-extra/blob/HEAD/docs/emptyDir.md#emptydirdir-callback]
-                    var path2deres = `${path2deleted}/${resource.content.identifier}`;
-                    // console.log('Fac arhiva pe calea: ', path2deres);
+                let output  = fs.createWriteStream(path2deres + `${resource.uuid}.zip`),
+                    archive = archiver('zip', { zlib: { level: 9 } });
 
-                    // dacă directorul a fost constituit și este gol, să punem arhiva resursei șterse
-                    var output = fs.createWriteStream(path2deres + `${resource.content.identifier}.zip`);
-                    var archive = archiver('zip', {
-                        zlib: { level: 9 } // Sets the compression level.
-                    });
-                    // generează arhiva din subdirectorul resursei în subdirectorul țintă din deleted
-                    archive.directory(dirPath, path2deres);
-                    // constituie arhiva!                   
-                    archive.pipe(output);
-                    // WARNINGS
-                    archive.on('warning', function(error) {
-                        if (err.code === 'ENOENT') {
-                            console.warn("[sockets.js::'delresid'] Atenție, la arhivare a dat warning Error NO ENTry", error);
-                        } else {
-                            throw error;
+                // generează arhiva din subdirectorul resursei în subdirectorul țintă din deleted
+                archive.directory(dirPath, path2deres);
+                // constituie arhiva!                   
+                archive.pipe(output);
+                // WARNINGS
+                archive.on('warning', function archiveMakingWarning (warning) {
+                    if (err.code === 'ENOENT') {
+                        console.warn("[sockets.js::'delresid'] Atenție, la arhivare a dat warning Error NO ENTry", warning);
+                    } else {
+                        console.error("[sockets.js::'delresid'] La crearea arhivei a apărut un avertisment!", warning);
+                        // throw error;
+                    }
+                });
+                // ERRORS
+                archive.on('error', function(err) {
+                    console.error("[sockets.js::'delresid'] La crearea arhivei a apărut eroarea!", err);
+                    logger.error(`[sockets.js::'delresid'] În timpul arhivării după ștergere a apărut eroarea ${err}`);
+                    // throw err;
+                });
+
+                /* === Când se încheie procesul de arhivare === */
+                output.on('close', function clbkFinalArhivare () {
+                    // rre('mesaje', 'Resursa a intrat în conservare!');
+                    // rre('delresid', {bytes: archive.pointer()});
+
+                    console.log('Acest id am să incerc să-l șterg. Acum îl caut în Mongoose: ', resource.id);
+
+                    /* === Șterge din MONGODB și din Elasticsearch === */
+                    Resursa.findOneAndDelete({_id: resource.id}, (err, doc) => {       
+                        if (err) {
+                            console.log("[sockets.js::'delresid'] În timpul ștergerii din MongoDB a apărut eroarea: ", err);
+                            logger.error(`În timpul ștergerii din MongoDB a apărut eroarea ${err}`);
                         }
-                    });
-                    // ERRORS
-                    archive.on('error', function(err) {
-                        throw err;
-                    });
 
-                    /* === Când se încheie procesul de arhivare === */
-                    output.on('close', function clbkFinalArhivare () {
-                        // rre('mesaje', 'Resursa a intrat în conservare!');
-                        // rre('delresid', {bytes: archive.pointer()});
+                        if (doc) {
 
-                        /* === Șterge din MONGODB și din Elasticsearch === */
-                        Resursa.findOneAndDelete({_id: resource.id}, (err, doc) => {       
-                            if (err) {
-                                console.log("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", err);
+                            console.log('Documentul adus din bază este ', doc);
+
+                            // Șterge înregistrarea din Elasticsearch dacă ștergerea din bază a reușit
+                            // FIXME: De aici provin promisiunile netratate? Verifică!!!
+                            /* Verifică dacă are valoare RES_IDX_ALS !!! 
+                            DĂ EROARE LA STERGERE PENTRU CĂ NU-L GĂSEȘTE IN INDEX
+                            */
+                            console.log("Indexul din ES pe care încerc să caut este ", RES_IDX_ALS); // FIXME: Vezi de ce obțin `false`. Aici este cheia!!!
+                            // TODO: Caută mai întâi dacă există înregistrarea în index. Dacă există, șterge-o!!
+                            esClient.delete({
+                                id: doc.id,
+                                index: RES_IDX_ALS,
+                                refresh: true
+                            }, function (err, response, status) {
+                                if (err) {
+                                    console.error(`În timpul ștergerii din Elasticsearch, a apărut eroarea ${err}`);
+                                    logger.error(`În timpul ștergerii din Elasticsearch, a apărut eroarea ${err}`);
+                                }
+                                console.log(`Starea operațiunii asupra Elasticsearch este `, status);
+                                console.log(`Avem răspunsul din partea lui Elasticsearch `, response);
+                            });
+
+                            /*
+                            Indexul din ES pe care încerc să caut este  false
+                            ES7 sniff:  Nicio problemă detectată la inițializare!!! All norminal 👌
+                            În timpul ștergerii din Elasticsearch, a apărut eroarea ResponseError: Response Error
+                            [25-02-2021 18:38:15] [error] [undefined]: 	În timpul ștergerii din Elasticsearch, a apărut eroarea ResponseError: Response Error
+                            [25-02-2021 18:38:15] [error] [undefined]: 	În timpul ștergerii din Elasticsearch, a apărut eroarea ResponseError: Response Error
+                            Starea operațiunii asupra Elasticsearch este  undefined
+                            Avem răspunsul din partea lui Elasticsearch  {
+                            body: {
+                                _index: 'false',
+                                _type: '_doc',
+                                _id: '5f54bf795b631d3d2e0a99fe',
+                                _version: 1,
+                                result: 'not_found',
+                                forced_refresh: true,
+                                _shards: { total: 3, successful: 1, failed: 0 },
+                                _seq_no: 4,
+                                _primary_term: 31
+                            },
+                            statusCode: 404,
+                            headers: {
+                                'content-type': 'application/json; charset=UTF-8',
+                                'content-length': '201'
+                            },
+                            meta: {
+                                context: null,
+                                request: { params: [Object], options: {}, id: 7 },
+                                name: 'elasticsearch-js',
+                                connection: {
+                                url: 'http://127.0.0.1:9200/',
+                                id: 'VExS2n4DS8KpqxkqKr_njg',
+                                headers: {},
+                                deadCount: 0,
+                                resurrectTimeout: 0,
+                                _openRequests: 0,
+                                status: 'alive',
+                                roles: [Object]
+                                },
+                                attempts: 0,
+                                aborted: false
+                            }
                             }
 
-                            if (doc) {
-                                // Șterge înregistrarea din Elasticsearch dacă ștergerea din bază a reușit
-                                esClient.delete({
-                                    id: doc._id,
-                                    index: process.env.RES_IDX_ALS,
-                                    refresh: true
-                                });                                
-                                /* === ȘTERGE SUBDIRECTOR === */
-                                fs.ensureDir(dirPath, 0o2775).then(function clbkFsExists () {
+                            */
+
+
+                            /* === ȘTERGE SUBDIRECTOR === */
+                            // fs.ensureDir(dirPath, 0o2775).then(function clbkFsExists () {
+                            fs.pathExists(dirPath).then(function clbkFsExists (response) {
+                                if (response === true) {
                                     fs.remove(dirPath, function clbkDirFolder (error) {
                                         if (error) {
-                                            console.error("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", error);
+                                            console.error("[sockets.js::'delresid'] În timpul ștergerii subdirectorului, a apărut eroarea: ", error);
+                                            logger.error(`În timpul ștergerii subdirectorului, a apărut eroarea ${error}`);
                                         }
-                                        socket.emit('delresid', true);
+                                        socket.emit('delresid', doc); // trimite în frontend obiectul ce reprezinta resursa stearsă pentru o confirmare frumoasă.
                                     });
-                                }).catch(err => {
-                                    console.log("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", error);
-                                    throw error;
-                                });
-                            }
-                        });
+                                }
+                            }).catch((err) => {
+                                console.log("[sockets.js::'delresid'] În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea: ", err);
+                                logger.error(`În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea ${err}`);
+                                // throw error;
+                            });
+                        }
                     });
-
-                    /* === FINALIZEAZĂ ARHIVAREA === */
-                    archive.finalize();
-                }).catch(error => {
-                    console.log("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", error);
-                    throw error;
                 });
+
+                /* === FINALIZEAZĂ ARHIVAREA === */
+                archive.finalize();
             }).catch(error => {
-                console.log("[sockets.js::'delresid'] Eroare cu următoarele detalii: ", error);
-                throw error;
+                console.log("[sockets.js::'delresid'] Întreaga operațiune de arhivare și ștergere a subdirectorului resursei a eșuat cu eroarea: ", error);
+                logger.error(`Întreaga operațiune de arhivare și ștergere a subdirectorului resursei a eșuat cu eroarea: ${err}`);
             });
         });
 
@@ -709,7 +808,7 @@ module.exports = function sockets (io) {
                     socket.emit('validateRes', {expertCheck: newdoc.expertCheck});
                     // Introdu upsert-ul pentru a actualiza și înregistrarea din Elasticsearch
                     esClient.update({
-                        index: process.env.RES_IDX_ALS,
+                        index: RES_IDX_ALS,
                         id: queryObj._id,
                         body: {
                             script: 'ctx._source.expertCheck = ' + queryObj.expertCheck
@@ -735,7 +834,7 @@ module.exports = function sockets (io) {
 
                     // Introdu upsert-ul pentru a actualiza și înregistrarea din Elasticsearch
                     esClient.update({
-                        index: process.env.RES_IDX_ALS,
+                        index: RES_IDX_ALS,
                         id: queryObj._id,
                         body: {
                             script: 'ctx._source.generalPublic = ' + queryObj.generalPublic
@@ -796,7 +895,7 @@ module.exports = function sockets (io) {
 
         // === PERSON === ::căutarea unui utilizator și reglarea înregistrărilor dintre ES și MONGODB
         socket.on('person', async function searchUserInES (queryString) {
-            // console.log("Stringul de interogare din socket.on(person) este următorul: ", queryString);
+            console.log("Stringul de interogare din socket.on(person) este următorul: ", queryString);
             
             // FIXME: Sanetizează inputul care vine prin `queryString`!!! E posibil să fie flood. Taie dimensiunea la un singur cuvânt!!!
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
@@ -814,10 +913,10 @@ module.exports = function sockets (io) {
             // Atenție, folosesc driverul nou conform: https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/introduction.html E suuuuperfast! :D
             try {
                 const {body} = await esClient.search({
-                    index: process.env.USR_IDX_ALS, 
-                    body: searchqry
+                    index: USR_IDX_ALS, 
+                    body:  searchqry
                 });
-                // console.log("Pe evenimentul person am următorul corp", body);
+                console.log("Pe evenimentul person am următorul rezultat ", body.hits.hits.length);
                 
                 // DACĂ AM ÎNREGISTRĂRI ÎN INDEX-ul Elasticsearch
                 if (body.hits.hits.length > 0) {               
@@ -966,6 +1065,74 @@ module.exports = function sockets (io) {
                 console.log('Nu știu ce se de date să constitui. NU am primit descriptori');
             }            
         });
+
+        // === STATS::ELK ===
+        socket.on('elkstat', () => {
+
+            let stats = esClient.indices.stats({
+                index: "*,-.*",
+                level: "indices"
+            });
+
+            let health = esClient.cat.health({
+                format: "json",
+                v: true
+            });
+
+            Promise.all([stats, health]).then((r) => {
+                let data = {};
+                for (obi of r) {
+                    if (obi.body.indices) {
+                        data.indices = obi.body.indices;
+                    }
+                    data.health = obi.body;
+                }
+                socket.emit('elkstat', data);
+            }).catch((err) => {
+                console.log('[routes::administrator] a apărut eroarea ', err.message);
+            });
+
+            // socket.emit('elkstat', {data: data});
+        });
+
+        // === REINDEXARE ES7 ===
+        socket.on('es7reidx', reidxincr);
+        
+        // === DEL ES7 INDEX ===
+        socket.on('es7delidx', deleteIndex);
+
+        // === STATS::MONGODB ===
+        socket.on('mgdbstat', () => {
+            mongoose.connection.db.listCollections().toArray(statDataMgdb);
+        });
+        function statDataMgdb (err, names) {
+            if (err) console.error;
+
+
+            // FIXME: caută cea mai bună metodă de a obține date statistice din MongoDB! @kosson
+
+            let x = names.map((entity) => {                
+                switch (entity.name) {
+                    case "resursedus":
+                        return Resursa.estimatedDocumentCount().exec();
+                        break;
+                    case "users":
+                        const UserModel = mongoose.model('user', UserSchema);
+                        return UserModel.estimatedDocumentCount().exec();
+                        break;
+                    case "logentries":
+                        return Log.estimatedDocumentCount().exec();
+                        break;
+                    case "competentaspecificas":
+                        return Competente.estimatedDocumentCount().exec();
+                        break;
+                };
+            });
+            
+            Promise.all(x).then((r) => {
+                console.log(r);
+            }).catch(e => console.error);
+        };
 
         // === ALLRES === ::TOATE RESURSELE
         socket.on('allRes', () => {

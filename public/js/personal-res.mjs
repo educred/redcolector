@@ -7,9 +7,7 @@ if(document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
 }
 
-// obiectul io este deja disponibil de la încărcarea paginii
 var pubComm = io('/redcol', {
-    upgrade: true,
     query: {['_csrf']: csrfToken}
 });
 
@@ -24,13 +22,16 @@ pubComm.on('connect', () => {
 function clbkDOMContentLoaded () {
 
     /* === OBIECTUL RESURSA din `data-content` === */
-    let dataRes = document.querySelector('.resursa').dataset || {};
+    let data = document.querySelector('.resursa').dataset;
+    let dataRes = JSON.parse(JSON.stringify(data)) || null;
+    let content = JSON.parse(dataRes.content) || null;    
 
     /* === RED === */
     var resObi = {
         id: dataRes.id, 
-        contribuitor: dataRes.contributor,
-        content: JSON.parse(dataRes.content)
+        contribuitor: dataRes.contribuitor,
+        uuid: content.uuid,
+        content
     };
 
     /* === AUTORI și AUTORUL PRINCIPAL === */
@@ -513,14 +514,16 @@ function clbkDOMContentLoaded () {
      */
     function deleteRes () {
         pubComm.emit('delresid', resObi);
-        // console.log('Am trimis obiectul: ', resObi);
+        // console.log('Am trimis obiectul::content: ', resObi);
         pubComm.on('delresid', (res) => {
-            // alert(res);
+            alert("Am șters: ", res.title);
             if (res) {
-                window.location = '/profile/' + dataRes.id;
+                // window.location = '/profile/' + dataRes.id;
+                window.location = '/profile/resurse';
             }
         });
     }
+    globalThis.deleteRes = deleteRes;
 
     var resursa          = document.getElementById(resObi.id);
     var validateCheckbox = document.getElementById('valid');
