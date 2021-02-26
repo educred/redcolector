@@ -4,7 +4,7 @@
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
 
 <div id="content">
-    <h1>Accesarea tuturor administratorilor:</h1>
+    <div class="title"><h1>Utilizatorii</h1></div>
     <section class="container-fluid" id="res-visuals">
         {{!-- Va încărca resursele compilate cu ajutorul template-ului --}}
         <div id="visuals" class="tableDisplay">
@@ -21,7 +21,7 @@
 </div>
 
 {{!-- Tabelul resurselor personale --}}
-<template id="userResTbl" data-order='[[ 1, "asc" ]]'>
+<template id="userResTbl">
     <div id="resurseTab" class=""></div>
 </template>
 

@@ -21,9 +21,12 @@
         <meta name="csrf-token" content="{{csrfToken}}">
         
         {{!-- SOCKET --}}
-        {{!-- <script type="application/javascript" src="/socket.io/socket.io.js"></script> --}}
+        {{!-- <script src="https://cdn.socket.io/3.1.1/socket.io.min.js" integrity="sha384-gDaozqUvc4HTgo8iZjwth73C6dDDeOJsAgpxBcMpZYztUfjHXpzrpdrHRdVp8ySO" crossorigin="anonymous"></script> --}}
+        {{!-- <script type="application/javascript" src="/socket.io/socket.io.js" charset="utf-8" crossorigin="anonymous"></script> --}}
+        {{!-- <script type="text/html" src="/socket.io/socket.io.js" charset="utf-8" crossorigin="anonymous"></script> --}}
+        {{!-- <script type="application/javascript" src="/socket.io/socket.io.js" charset="utf-8" crossorigin="anonymous"></script> --}}
         {{!-- În cazul în care sunt probleme cu browserele, activează încărcarea scriptului în mod direct --}}
-        <script type="application/javascript" src="/lib/npm/socket.io.slim.js"></script>
+        <script type="application/javascript" src="/lib/npm/socket.io.min.js"></script>
         
         {{!-- ES6 SHIM --}}
         <script type="application/javascript" src="/lib/es6-shim/es6-shim.min.js"></script>

@@ -1,7 +1,9 @@
 require('dotenv').config();
+// const config = require("config");
 
 const path           = require('path');
-const logger         = require('morgan');
+const devlog         = require('morgan');
+const logger         = require('./util/logger');
 const compression    = require('compression');
 const express        = require('express');
 const cookies        = require('cookie-parser');
@@ -37,13 +39,41 @@ i18n.configure({
 /* === MONGOOSE === */
 const mongoose = require('./mongoose.config');
 
-/* === LOGGER === */
-app.use(logger('dev', {
-    skip: function (req, res) {
-        return res.statusCode < 400;
+/* === ELASTICSEARCH env === */
+const esClient = require('./elasticsearch.config');
+/* Setează în Redis numele indecșilor;
+ accesează și actualizează ori de câte ori se 
+ reindexează prin incrementarea valorii de după nume */
+
+esClient.indices.stats({
+    index: "*,-.*",
+    level: "indices"
+}).then((r) => {
+    // console.log("Datele despre indici sunt ", r.body.indices);
+    if (r.body.indices) {
+        for (d in r.body.indices) {
+            // let vs = d[0].slice(d[0].search(/\d{1,}/g));
+            let alsr = d.slice(0, d.search(/\d{1,}/g));
+            // setează valorile în Redis
+            switch (alsr) {
+                case "users":
+                    redisClient.set("USR_IDX_ES7", d);
+                    redisClient.set("USR_IDX_ALS", alsr);
+                    break;
+                case "resedus":
+                    redisClient.set("RES_IDX_ES7", d);
+                    redisClient.set("RES_IDX_ALS", alsr);
+                    break;
+            }
+        }
     }
-})); // TODO: Creează un mecanism de rotire a logurilor. ('combined')
-// app.use(logger('dev')); // Activează doar atunci când faci dezvoltare...
+}).catch((err) => {
+    console.log('[app::ELASTICSEARCH] a apărut eroarea ', err.message);
+});
+
+// process.report.writeReport('./report.json');
+
+// FIXME: https://stackoverflow.com/questions/52746384/what-is-the-best-way-to-store-node-js-site-settings
 
 /* === FIȘIERELE statice === */
 app.use(express.static(path.join(__dirname, '/public'), {
@@ -57,7 +87,9 @@ app.use('/repo', express.static(path.join(__dirname, 'repo')));
 app.use(favicon(path.join(__dirname,  'public', 'favicon.ico')));
 
 /* === HELMET === */
-app.use(helmet()); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
+app.use(helmet({
+    contentSecurityPolicy: false
+})); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
 // https://helmetjs.github.io/docs/dont-sniff-mimetype/
 
 /* === CORS === */
@@ -92,7 +124,7 @@ let sessionMiddleware = session({
         return uuidv1(); // use UUIDs for session IDs
     },
     store: new RedisStore({client: redisClient}),
-    unref: true,
+    unref:  true,
 	proxy:  true,
     resave: false, 
     saveUninitialized: true,
@@ -132,7 +164,15 @@ app.use(passport.session()); // restaurează starea sesiunii dacă aceasta exist
 
 /* === SERVER SOCKETURI === */
 // #1 Creează server prin atașarea celui existent
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+    cors: {
+        origin: "http://" + process.env.DOMAIN,
+        methods: ["GET", "POST"],
+        allowedHeaders: ["_csrf"],
+        credentials: true
+    },
+    transports: [ "websocket", "polling" ]
+});
 // #2 Creează un wrapper de middleware Express pentru Socket.io
 function wrap (middleware) {
     return function matcher (socket, next) {
@@ -155,6 +195,7 @@ let upload = require('./routes/upload')(io);
 app.use('/upload', upload);
 // SIGNUP
 app.use('/signup', signupLoco); // SIGNUP!!!
+
 // LOGIN
 const UserSchema = require('./models/user');
 const { shutdown, server_info } = require('./redis.config');
@@ -166,6 +207,9 @@ passport.serializeUser(UserDetails.serializeUser());
 passport.deserializeUser(UserDetails.deserializeUser());
 app.use('/login', login);
 
+/* LOGGING CU MORGAN */
+app.use(devlog('dev'));
+
 /* === CSRF - Cross Site Request Forgery - expressjs.com/en/resources/middleware/csurf.html === */
 const csurfProtection = csurf({
     cookie: {
@@ -176,14 +220,18 @@ const csurfProtection = csurf({
         signed: false, // în caz de signed cookies, setează la true
         sameSite: 'strict', // https://www.owaspsafar.org/index.php/SameSite
         maxAge: 24 * 60 * 60 * 1000, // 24 ore
-    }
+    },
+    ignoreMethods: ['GET', 'HEAD', 'OPTIONS']
 });
+
 app.use(csurfProtection); // activarea protecției la CSRF
+// tratează erorile apărute
 app.use(function (err, req, res, next) {
     if (err.code !== 'EBADCSRFTOKEN') return next(err);
     // gestionarea erorilor CSRF token:
     res.status(403).send('Sockets.io nu trimite înapoi tokenul!!!');
 });
+
 //https://github.com/expressjs/csurf/issues/21
 // app.use(function (req, res, next) {
 //     if (req.url === '/repo') return next();
@@ -228,7 +276,6 @@ let log            = require('./routes/log');
 let resursepublice = require('./routes/resursepublice');
 let profile        = require('./routes/profile');
 let tags           = require('./routes/tags');
-let tools          = require('./routes/tools');
 let help           = require('./routes/help');
 let apiv1          = require('./routes/apiV1');
 
@@ -246,7 +293,6 @@ app.use('/resurse',        csurfProtection, UserPassport.ensureAuthenticated, re
 app.use('/log',            csurfProtection, UserPassport.ensureAuthenticated, log);
 app.use('/profile',        csurfProtection, profile);
 app.use('/tags',           csurfProtection, tags);
-app.use('/tools',          csurfProtection, tools);
 
 // === 401 - NEPERMIS ===
 app.get('/401', function(req, res){
@@ -293,15 +339,12 @@ function formatBytes (bytes) {
 
     return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
 } 
-// citește detaliile de alocare a procesului
-let alocareProces = process.memoryUsage();
-const detalii = {
-    RAM: formatBytes(alocareProces.rss)
-};
 
-console.info("Memoria RAM alocată la pornire este de: ", detalii.RAM);
-if(process.env.NODE_ENV === 'production') {
-    console.info("Aplicația rulează în modul de producție");
+console.info("Memoria RAM alocată la pornire este de: ", formatBytes(process.memoryUsage().rss));
+if( process.env.NODE_ENV === 'production') {
+    console.info("Aplicația rulează în modul", app.get("env"));
+} else if (process.env.NODE_ENV === 'development') {
+    console.info("Aplicația rulează în modul ", app.get("env"));
 }
 
 /* === Pornește serverul! === */
@@ -316,29 +359,67 @@ var server = http.listen(port, '127.0.0.1', function cbConnection () {
 // gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
 process.on('uncaughtException', (err) => {
     console.log('[app.js] A apărul un uncaughtException cu detaliile ', err.message);
+    logger.error(`${err.stack}`);
     // process.kill(process.pid, 'SIGTERM');
-    console.error(err.stack); // afișează stiva la momentul închidere
-    process.nextTick(function() {
+    process.nextTick( function exitProcess () {
+        mongoose.disconnect(() => {
+            console.log('Am închis conexiunea la MongoDb!');
+        });
         process.exit(1);
     });
 });
 
-process.on('SIGINT', function onSiginit () {
-    console.info('Am prins un SIGINT (ctr+c). Închid procesul! Data: ', new Date().toISOString());
-    shutdownserver();
+// tratarea promisiunilor respinse
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('[app.js] O promisiune a fost respinsă fără a fi tratată respingerea', promise, ` având motivul ${reason}`);
+    logger.error(`${promise} ${reason}`);
+    process.nextTick( function exitProcess () {
+        mongoose.disconnect(() => {
+            console.log('Am închis conexiunea la MongoDb!');
+        });
+        process.exit(1);
+    });
+});
+
+process.on('SIGINT', function onSiginit (signal) {
+    mongoose.disconnect(() => {
+        console.log('Am închis conexiunea la MongoDb!');
+    });
+    console.info(`Procesul a fost întrerupt (CTRL+C). Închid procesul ${process.pid}! Data: `, new Date().toISOString());
+    process.exit(0);
 });
 
 process.on('SIGTERM', function onSiginit () {
+    mongoose.disconnect(() => {
+        console.log('Am închis conexiunea la MongoDb!');
+    });
     console.info('Am prins un SIGTERM (stop). Închid procesul! Data: ', new Date().toISOString());
+    // FIXME: Închide conexiunile la MongoDB și Elasticsearch
     shutdownserver();
+});
+
+process.on('exit', code => {
+    console.log(`Procesul a fost încheiat având codul: `, code);
 });
 
 function shutdownserver () {
     server.close(function onServerClosed (err) {
         if (err) {
+            logger.error(err.message);
             console.error(err.message, err.stack);
             process.exitCode = 1;            
         }
+        // FIXME: Închide conexiunile la MongoDB și Elasticsearch
         process.exit(1);
     });
 }
+
+
+
+/* === LOGGER MORGAN === */
+// app.use(devlog('dev', {
+//     skip: function (req, res) {
+//         return res.statusCode < 400;
+//     }
+// }));
+// app.use(devlog('dev')); // Activează doar atunci când faci dezvoltare...

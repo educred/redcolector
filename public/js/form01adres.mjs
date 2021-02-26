@@ -1,4 +1,4 @@
-import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+import {socket, pubComm, createElement, decodeCharEntities, datasetToObject} from './main.mjs';
 import {AttachesToolPlus} from './uploader.mjs';
 
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
@@ -7,7 +7,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     var uuid    = document.querySelector("meta[property='uuid']").getAttribute("content") || '',
         RED     = {},
         csrfToken = '',
-        pubComm = null,
         sync    = false,     // variabila ține evidența tranzacționării uuid-ului cu serverul. În cazul în care uuid-ul este setat, nu se va mai emite mai jos la prima modificare a editorului (onchange editor.js)
         imagini = new Set(), // un `Set` cu toate imaginile care au fost introduse în document.
         fileRes = new Set(); // un `Set` care unifică fișierele, fie imagini, fie atașamente.
@@ -16,12 +15,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     if(document.getElementsByName('_csrf')[0].value) {
         csrfToken = document.getElementsByName('_csrf')[0].value;
     }
-
-    // trebuie recreat pentru fiecare cale în parte [specific prin inperecherea cu csrf-ul]
-    pubComm = io('/redcol', {
-        allowUpgrades: true,
-        query: {['_csrf']: csrfToken}
-    });
     
     /* === Obiectul RED - valori din oficiu === */
     RED.expertCheck     = false;

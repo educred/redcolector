@@ -5,7 +5,8 @@ const express  = require('express');
 const router   = express.Router();
 const mongoose = require('mongoose');
 const moment   = require('moment');
-// const redisClient = require('../redis.config');
+const redisClient = require('../redis.config');
+
 // Încarcă mecanismele de verificare ale rolurilor
 let makeSureLoggedIn = require('connect-ensure-login');
 let checkRole        = require('./controllers/checkRole.helper');
@@ -17,6 +18,16 @@ const esClient   = require('../elasticsearch.config');
 const schema     = require('../models/resursa-red-es7');
 const ES7Helper  = require('../models/model-helpers/es7-helper');
 let editorJs2TXT = require('./controllers/editorJs2TXT');
+
+// INDECȘII ES7
+const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
+const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
 
 /* === PROFILUL PROPRIU === */
 router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, res) {
@@ -122,11 +133,11 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         {module: '/lib/editorjs/inlinecode.js'},
         {module: '/lib/editorjs/table.js'},
         {module: '/lib/editorjs/attaches.js'},
-        {module: '/lib/editorjs/ajax.js'},        
+        {module: '/lib/editorjs/ajax.js'},
+        // MAIN
+        {module: '/js/main.mjs'},
         // REEDIT RES
         {module: '/js/personal-res.mjs'},
-        // MAIN
-        {module: '/js/main.mjs'}
     ];
 
     let styles = [
@@ -144,7 +155,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
     // caută resursa în bază
     const query = Resursa.findById(req.params.idres).populate({path: 'competenteS'});    
     // reformatare obiect resursă și căutarea corespondentului în Elasticsearch cu reindexare, dacă nu există în bază, șterge ghost-ul din ES
-    query.then(resursa => {   
+    query.then((resursa) => {   
         /* === Resursa încă există în MongoDB === */
         if (resursa.id !== null) {
             // transformă obiectul document de Mongoose într-un obiect normal.
@@ -174,7 +185,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
 
             // Dacă nu este indexată în Elasticsearch deja, indexează aici!
             esClient.exists({
-                index: process.env.RES_IDX_ALS,
+                index: RES_IDX_ALS,
                 id: req.params.idres
             }).then(resFromIdx => {
                 /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
@@ -220,21 +231,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                         expertCheck:      obi.expertCheck
                     };
 
-                    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS); // https://stackoverflow.com/questions/50609417/elasticsearch-error-cluster-block-exception-forbidden-12-index-read-only-all
-                    //FIXME: EROAREA care apare în consolă 
-                    // {
-                    //     "error": {
-                    //       "root_cause": [
-                    //         {
-                    //           "type": "cluster_block_exception",
-                    //           "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
-                    //         }
-                    //       ],
-                    //       "type": "cluster_block_exception",
-                    //       "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
-                    //     },
-                    //     "status": 429
-                    //   }                    
+                    ES7Helper.searchIdxAlCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS); // https://stackoverflow.com/questions/50609417/elasticsearch-error-cluster-block-exception-forbidden-12-index-read-only-all                  
                 }
                 return resFromIdx;
             }).catch(err => {
@@ -244,14 +241,14 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         } else {
             // Caută resursa și în Elasticsearch. Dacă există indexată, dar a fost ștearsă din MongoDB, șterge-o din indexare, altfel va apărea la căutare
             esClient.exists({
-                index: process.env.RES_IDX_ALS,
+                index: RES_IDX_ALS,
                 id: req.params.idres
             }).then(resFromIdx => {
                 // console.log(resFromIdx);
                 if(resFromIdx.statusCode !== 404){
                     esClient.delete({
                         id: req.params.idres,
-                        index: process.env.RES_IDX_ALS
+                        index: RES_IDX_ALS
                     }).then(dead => {
                         // console.log(dead);
                         // rre('mesaje', `Resursa era încă indexată și am șters-o acum.`);
@@ -261,13 +258,13 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 }
                 return resFromIdx;
             }).catch(err => {
-                console.error(err);
+                console.error(JSON.stringify(error, null, 2));
             });
-            return Promise.reject('Resursa nu mai există!'); // Rejectează promisiunea!
+            return null;
         }
-    }).then(resursa => {
+    }).then((resursa) => {
         /* === ADMIN === */
-        if(req.session.passport.user.roles.admin){
+        if(resursa !== null && req.session.passport.user.roles.admin) {
             // Adaugă checkbox de validare
             if (resursa.expertCheck) {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck" checked>`;
@@ -283,7 +280,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             // Setul de date va fi disponibil în `data-content` ca string JSON. Este trimis cu helperul `hbs.registerHelper('json', cb)` definit în app.js
             // Acest lucru este necesar pentru a reedita resursa în client.
             res.render('resursa-admin', {
-                title:     "Administrator",
+                title:     "RED",
                 user:      req.user,                
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",

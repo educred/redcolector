@@ -43,7 +43,7 @@ const userES7 = {
         }
     },
     aliases: {
-        users0: {}
+        users: {}
     }
 };
 

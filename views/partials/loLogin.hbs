@@ -1,51 +1,31 @@
-<div class="container">
+<div id="localogin" class="container">
+    {{!-- <h2>{{errorMessage}}</h2>     --}}
     {{!-- AFIȘEAZĂ UN MODAL --}}
-    <div id="authblock" class="modal">
-        <span class="close cursor" onclick="closeModal()">&times;</span>
-        <div class="modal-content">
-                        {{!-- <button type="" class="btn">Google</button> --}}
-            {{!-- <p>Dacă ai cont EDUCRED, te rog, autentifică-te apăsând logo-ul</p>
-            <a href="/auth/google">
-                <img src="{{credlogo}}" alt="" srcset="" width="150">
-            </a> --}}
-
-            <form class="form-signin">
-                <h3>Dacă ai cont EDUCRED (nume@educred.ro), te rog, autentifică-te apăsând logo-ul</h3>
+    <div id="authblock" class="d-flex justify-content-center row">
+        {{!-- <div class="col-md-8 justify-content-center">
+            <form action="/login" method="post">
+                <input type="hidden" name="_csrf" value="{{csrfToken}}">
+                {{#if errorMessage}}
+                    <p class="errfrm">{{errorMessage}}</p>
+                {{/if}}
+                <h3 class="h3 mb-3 font-weight-normal">Dacă ai cont local</h1>
+                <label for="inputEmail" class="sr-only">Adresa email</label>
+                <input type="email" name="username" id="inputEmail" class="form-control" placeholder="Email address" autocomplete="off" required>
+                <label for="inputPassword" class="sr-only">Parola</label>
+                <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password" autocomplete="off" required>
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+                <p>Vrei să-ți faci cont?
+                    <a href="/signup">Înscrie-te!</a>
+                </p>
+            </form>
+        </div> --}}
+        <div class="col-md-8">
+            <div class="form-signin row justify-content-center">
+                <h3>Autentifică-te folosind contul Educred apăsând pe logo.</h3>
                 <a href="/auth/google">
                     <img src="{{credlogo}}" alt="Acesta este logo-ul proiectului CRED în Educație">
                 </a>
-            </form>
-            {{!-- <form action="/login" method="post">
-                <h3 class="h3 mb-3 font-weight-normal">Dacă ai cont pe platfoma RED Colector</h1>
-                <label for="inputEmail" class="sr-only">Adresa email</label>
-                <input type="email" name="username" id="inputEmail" class="form-control" placeholder="Email address" required>
-                <label for="inputPassword" class="sr-only">Parola</label>
-                <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password" required>
-                <button class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
-                <p>Vrei să-ți faci cont?
-                    <a href="/signup">Signup</a>
-                </p>
-                <p>Sau mergi la
-                    <a href="/">prima pagină</a>.
-                </p>
-                <label id="error-message"></label>
-            </form> --}}
+            </div>
         </div>
     </div>
-    <script>
-        // deschide modalul
-        function openModal() {
-            document.getElementById("authblock").style.display = "block";
-        }
-        openModal();
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const info = urlParams.get('info');
-
-        if(info) {
-            const errorMessage = document.getElementById("error-message");
-            errorMessage.innerText = info;
-            errorMessage.style.display = "block";
-        }
-    </script>
 </div>

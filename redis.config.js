@@ -8,7 +8,7 @@ let redisClient = redis.createClient({
 });
 
 redisClient.on('ready', function clbkRedReady () {
-    console.log('Conectare la REDIS ok!');
+    console.log('Conectare la REDIS', redisClient.server_info.redis_version, ', ok!');
 })
 
 redisClient.on('reconnecting', function clbkRedReady () {
