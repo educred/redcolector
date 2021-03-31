@@ -1,4 +1,4 @@
-import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+import {createElement, pubComm, decodeCharEntities, datasetToObject} from './main.mjs';
 import {AttachesToolPlus} from './uploader.mjs';
 
 var csrfToken = '';
@@ -7,13 +7,9 @@ if(document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
 }
 
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
-
-pubComm.on('connect', () => {
-    // console.log(pubComm.id); // indică id-ul de conectare
-});
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
 
 /**
  * Funcția joacă rol de callback și va fi executată de îndată ce DOM-ul este încărcat

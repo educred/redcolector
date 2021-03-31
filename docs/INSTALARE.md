@@ -287,10 +287,6 @@ BASE_URL=http://localhost:8080
 NAME_OF_REPO_DIR=repo
 REPO_REL_PATH=./repo/
 FILE_LIMIT_UPL_RES=5242880
-USR_IDX_ES7=users
-USR_IDX_ALS=users0
-RES_IDX_ES7=resedus
-RES_IDX_ALS=resedus0
 LIVRESQ_TOKEN = 'gasrwe54333m'
 LIVRESQ_TOKEN_PLAN = '1dafsdfsb2b'
 LIVRESQ_HOSTNAME = 'livresq.com'
@@ -301,7 +297,6 @@ APP_VER=0.9.2
 
 Câmpurile `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET` sunt proprii administratorului care face instalarea.
 Câmpurile `MONGO_USER` și `MONGO_PASSWD` se vor completa cu datele necesare autorizării la serverul bazei de date MongoDB, care a fost securizat în prealabil.
-Pentru `USR_IDX_ES7` trebuie ales numele indexului care va fi creat în Elasticsearch, urmat apoi de numele indexului alias `URS_IDX_ALS`.
 
 ### Instalare NGINX
 

@@ -1,3 +1,215 @@
+Am instalat eslint
+
+eslint --init
+✔ How would you like to use ESLint? · problems
+✔ What type of modules does your project use? · esm
+✔ Which framework does your project use? · none
+✔ Does your project use TypeScript? · No / Yes
+✔ Where does your code run? · browser
+✔ What format do you want your config file to be in? · JSON
+Successfully created .eslintrc.json file in /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector
+
+
+
+Eroare apărută la ștergerea de un utilizator simplu (video@educred.ro) a unei resurse:
+
+Căile formate sunt:  repo/5eb10e121891c80a029c42c0/433ce46c-1afd-404c-878b-f72a8c8961fa repo/5eb10e121891c80a029c42c0/deleted repo/5eb10e121891c80a029c42c0/deleted/433ce46c-1afd-404c-878b-f72a8c8961fa
+Acest id am să incerc să-l șterg. Acum îl caut în Mongoose:  60476a3b59b46c33ae5a5c74
+
+ES7 sniff:  Nicio problemă detectată la inițializare!!! All norminal 👌
+
+[sockets.js::'delresid'] În timpul ștergerii din Elasticsearch, a apărut eroarea ResponseError: illegal_argument_exception
+
+
+[app.js] A apărul un uncaughtException cu detaliile  index is not defined
+[09-03-2021 14:49:08] [error] [undefined]:      ReferenceError: index is not defined
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:637:158
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:335:9)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:260:11)
+    at IncomingMessage.emit (node:events:391:22)
+    at endReadableNT (node:internal/streams/readable:1307:12)
+    at processTicksAndRejections (node:internal/process/task_queues:81:21)
+[09-03-2021 14:49:08] [error] [undefined]:      ReferenceError: index is not defined
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:637:158
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:335:9)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:260:11)
+    at IncomingMessage.emit (node:events:391:22)
+    at endReadableNT (node:internal/streams/readable:1307:12)
+    at processTicksAndRejections (node:internal/process/task_queues:81:21)
+Procesul a fost încheiat având codul:  1
+
+
+
+[08-03-2021 13:12:00] [error] [undefined]:      [/util::backupMongo] A apărut o eroare la comanda de ștergerea backup-ului MongoDB  Command failed: mongodump --host localhost --port 27017 --db redcolector --username kosson --password acid77burn --out /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/util/backup-mongodump-2021-3-8
+2021-03-08T13:12:00.117+0200    Failed: can't create session: could not connect to server: connection() : auth error: sasl conversation error: unable to authenticate using mechanism "SCRAM-SHA-1": (AuthenticationFailed) Authentication failed.
+
+[08-03-2021 13:12:00] [error] [undefined]:      [/util::backupMongo] A apărut o eroare la comanda de ștergerea backup-ului MongoDB  Command failed: mongodump --host localhost --port 27017 --db redcolector --username kosson --password acid77burn --out /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/util/backup-mongodump-2021-3-8
+2021-03-08T13:12:00.117+0200    Failed: can't create session: could not connect to server: connection() : auth error: sasl conversation error: unable to authenticate using mechanism "SCRAM-SHA-1": (AuthenticationFailed) Authentication failed.
+
+^CProcesul a fost întrerupt (CTRL+C). Închid procesul 12759! Data:  2021-03-08T11:33:30.105Z
+
+
+
+
+npm-check -u
+? Choose which packages to update. (Press <space> to select)
+  
+ Patch Update Backwards-compatible bug fixes.
+❯◯ bcrypt               5.0.0    ❯  5.0.1    https://github.com/kelektiv/node.bcrypt.js#readme
+ ◯ mocha                8.3.0    ❯  8.3.1    https://mochajs.org/
+ ◯ mongoose             5.11.13  ❯  5.11.19  https://mongoosejs.com
+ ◯ socket.io            3.1.1    ❯  3.1.2    https://github.com/socketio/socket.io#readme
+ ◯ socket.io-client     3.1.1    ❯  3.1.2    https://github.com/socketio/socket.io-client#readme
+ ◯ autocannon devDep    7.0.4    ❯  7.0.5    https://github.com/mcollina/autocannon#readme
+ ◯ autoprefixer devDep  10.2.4   ❯  10.2.5   https://github.com/postcss/autoprefixer#readme
+ ◯ webpack devDep       5.24.0   ❯  5.24.3   https://github.com/webpack/webpack
+  
+ Minor Update New backwards-compatible features.
+ ◯ archiver  5.2.0  ❯  5.3.0  https://github.com/archiverjs/node-archiver
+ ◯ jquery    3.5.1  ❯  3.6.0  https://jquery.com
+  
+ Major Update Potentially breaking API changes. Use caution.
+ ◯ copy-webpack-plugin devDep  7.0.0  ❯  8.0.0  https://github.com/webpack-contrib/copy-webpack-plugin
+
+După actualizarea lui mongoose la versiunea 5.11.19, problemele nu au dispărut. Am procedat la reinstalarea versiunii 5.11.13.
+
+
+Actualizare pm2
+
+npm audit
+# npm audit report
+
+systeminformation  <5.3.1
+Severity: moderate
+Command Injection - https://npmjs.com/advisories/1628
+fix available via `npm audit fix`
+node_modules/systeminformation
+  pm2  4.0.0 - 4.5.4
+  Depends on vulnerable versions of systeminformation
+  node_modules/pm2
+
+2 moderate severity vulnerabilities
+
+
+
+
+Realizarea unui backup automat și la comandă
+
+Am instalat npm install node-cron --save
+
+
+https://zaiste.net/posts/nodejs-child-process-spawn-exec-fork-async-await/
+https://nodejs.org/en/knowledge/child-processes/how-to-spawn-a-child-process/
+https://docs.bitnami.com/ibm/apps/lets-chat/administration/backup-restore-mongodb/
+https://dev.to/yasseryka/how-to-backup-mongodb-every-night-in-nodejs-257o
+https://levelup.gitconnected.com/how-to-set-up-scheduled-mongodb-backups-with-a-bit-of-node-js-b81abebfa20
+
+
+[app.js] O promisiune a fost respinsă fără a fi tratată respingerea Promise {
+  <rejected> ConfigurationError: Missing required parameter: index
+      at Client.existsApi [as exists] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/api/api/exists.js:38:17)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/user.js:83:47
+      at Array.map (<anonymous>)
+      at model.Query.clbkUsrFind (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/user.js:82:17)
+      at callMiddlewareFunction (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:483:23)
+      at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:194:9)
+      at Kareem.execPost (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:218:3)
+      at _cb (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:308:15)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:4435:12
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/helpers/query/completeMany.js:35:39
+      at processTicksAndRejections (node:internal/process/task_queues:76:11)
+}  având motivul ConfigurationError: Missing required parameter: index
+[04-03-2021 14:21:37] [error] [undefined]:      [object Promise] ConfigurationError: Missing required parameter: index
+[04-03-2021 14:21:37] [error] [undefined]:      [object Promise] ConfigurationError: Missing required parameter: index
+
+
+[app.js] O promisiune a fost respinsă fără a fi tratată respingerea Promise {
+  <rejected> ConfigurationError: Missing required parameter: index
+      at Client.existsApi [as exists] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/api/api/exists.js:38:17)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/user.js:83:47
+      at Array.map (<anonymous>)
+      at model.Query.clbkUsrFind (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/user.js:82:17)
+      at callMiddlewareFunction (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:483:23)
+      at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:194:9)
+      at Kareem.execPost (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:218:3)
+      at _cb (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:308:15)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:4435:12
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/helpers/query/completeMany.js:35:39
+      at processTicksAndRejections (node:internal/process/task_queues:76:11)
+}  având motivul ConfigurationError: Missing required parameter: index
+[04-03-2021 14:21:37] [error] [undefined]:      [object Promise] ConfigurationError: Missing required parameter: index
+[04-03-2021 14:21:37] [error] [undefined]:      [object Promise] ConfigurationError: Missing required parameter: index
+[app.js] O promisiune a fost respinsă fără a fi tratată respingerea Promise {
+  <rejected> ConfigurationError: Missing required parameter: index
+      at Client.existsApi [as exists] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/api/api/exists.js:38:17)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/user.js:83:47
+      at Array.map (<anonymous>)
+      at model.Query.clbkUsrFind (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/user.js:82:17)
+      at callMiddlewareFunction (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:483:23)
+      at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:194:9)
+      at Kareem.execPost (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:218:3)
+      at _cb (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:308:15)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:4435:12
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/helpers/query/completeMany.js:35:39
+      at processTicksAndRejections (node:internal/process/task_queues:76:11)
+}  având motivul ConfigurationError: Missing required parameter: index
+[04-03-2021 14:21:37] [error] [undefined]:      [object Promise] ConfigurationError: Missing required parameter: index
+[04-03-2021 14:21:37] [error] [undefined]:      [object Promise] ConfigurationError: Missing required parameter: index
+[app.js] O promisiune a fost respinsă fără a fi tratată respingerea Promise {
+  <rejected> ConfigurationError: Missing required parameter: index
+      at Client.existsApi [as exists] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/api/api/exists.js:38:17)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/user.js:83:47
+      at Array.map (<anonymous>)
+      at model.Query.clbkUsrFind (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/user.js:82:17)
+      at callMiddlewareFunction (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:483:23)
+      at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:194:9)
+      at Kareem.execPost (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:218:3)
+      at _cb (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:308:15)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:4435:12
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/helpers/query/completeMany.js:35:39
+      at processTicksAndRejections (node:internal/process/task_queues:76:11)
+}  având motivul ConfigurationError: Missing required parameter: index
+[04-03-2021 14:21:37] [error] [undefined]:      [object Promise] ConfigurationError: Missing required parameter: index
+[04-03-2021 14:21:37] [error] [undefined]:      [object Promise] ConfigurationError: Missing required parameter: index
+Procesul a fost încheiat având codul:  1
+
+
+
+
+
+
+
+
+Update-uri și probleme februarie
+
+ Patch Update Backwards-compatible bug fixes.
+ ◉ handlebars           4.7.6    ❯  4.7.7    http://www.handlebarsjs.com/
+❯◯ isomorphic-git       1.8.0    ❯  1.8.1    https://isomorphic-git.org/
+ ◯ mongoose             5.11.13  ❯  5.11.17  https://mongoosejs.com
+ ◯ pm2                  4.5.1    ❯  4.5.4    http://pm2.keymetrics.io/
+ ◯ socket.io            3.1.0    ❯  3.1.1    https://github.com/socketio/socket.io#readme
+ ◯ socket.io-client     3.1.0    ❯  3.1.1    https://github.com/socketio/socket.io-client#readme
+ ◯ autocannon devDep    7.0.3    ❯  7.0.4    https://github.com/mcollina/autocannon#readme
+ ◯ autoprefixer devDep  10.2.3   ❯  10.2.4   https://github.com/postcss/autoprefixer#readme
+  
+ Minor Update New backwards-compatible features.
+ ◯ @elastic/elasticsearch  7.10.0  ❯  7.11.0  http://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
+ ◯ connect-redis           5.0.0   ❯  5.1.0   https://github.com/visionmedia/connect-redis#readme
+ ◯ mocha                   8.2.1   ❯  8.3.0   https://mochajs.org/
+ ◯ webpack devDep          5.18.0  ❯  5.24.0  https://github.com/webpack/webpack
+ ◯ webpack-cli devDep      4.4.0   ❯  4.5.0   https://github.com/webpack/webpack-cli#readme
+ 
+  Non-Semver Versions less than 1.0.0, caution.
+❯◉ querystring  0.2.0  ❯  0.2.1  https://github.com/Gozala/querystring#readme
+
+
+Update-ul la mongoose 5.11.13  ❯  5.11.17  https://mongoosejs.com introoduce: (node:19593) Warning: Accessing non-existent property 'MongoError' of module exports inside circular dependency.
+Am revenit la versiunea anterioară 5.11.13. Vezi: https://github.com/Automattic/mongoose/issues/9900
+
+
+
+
+
 Pentru că sistemul avea nevoie de managementul detașat al stării în contextul operării cu mai multe instanțe, am detașat configurări Redis-ului. Astfel, setările imuabile privind indecșii Elasticsearch au fost trecuți din process.env au în Redis. Acest lucru a fost dictat de necesitatea de a putea modifica numele indexului atunci când se face reindexare din panoul de administrare dedicat. Punctele afectate:
 
 - /routes/controllers/resurse.ctrl.js `let idxRes = process.env.RES_IDX_ALS;` --> `redisClient.get("RES_IDX_ALS", (err, reply) => {...}` (line 24);
@@ -115,7 +327,7 @@ Detalii de migrare aici: https://socket.io/docs/v3/migrating-from-2-x-to-3-0/
 
 Sunt probleme!!!
 Am instalat pachetele recomandate: npm install --save-optional bufferutil utf-8-validate
-De aprofundat: https://www.nginx.com/blog/nginx-nodejs-websockets-socketio/. Când va fi la serverul Nginx, o posibbilă configurare ar putea fi
+De aprofundat: https://www.nginx.com/blog/nginx-nodejs-websockets-socketio/. Când va fi la serverul Nginx, o posibilă configurare ar putea fi
 server {
     listen 80;
     server_name YOURDOMAIN.COM;
@@ -129,14 +341,13 @@ server {
     }
 }
 
-Helmet introduce un nou nivel de protecție: Content Security Policy.
-
+Helmet introduce un nou nivel de protecție: Content Security Policy. Pentru versiunea noă, acest nivel nu va fi implementat pentru că browserele au comportament diferit.
 
 DataTables warning: table id=DataTables_Table_0 - 
 Requested unknown parameter 'googleProfile.name' for row 3, column 5. For more information about this error, please see http://datatables.net/tn/4
 
 
-
+Probleme de indexare
 
 curl -X PUT "localhost:9200/resedus0/_settings?pretty" -H 'Content-Type: application/json' -d '
 {

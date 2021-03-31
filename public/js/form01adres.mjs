@@ -1,4 +1,4 @@
-import {socket, pubComm, createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+import {socket, pubComm, createElement, check4url, decodeCharEntities, datasetToObject} from './main.mjs';
 import {AttachesToolPlus} from './uploader.mjs';
 
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
@@ -514,15 +514,15 @@ import {AttachesToolPlus} from './uploader.mjs';
      */
     function creeazaTitluAlternativ () {
         // creează aceleași elemente de formular responsabile cu generarea unui titlu
-        let insertie = document.querySelector('#langAlternative');  // punct de aclanșare în DOM pentru elementele generate dinamic
-        let primulTitlu = document.querySelector('#titlu-res').id;   // extrage id-ul primului titlu pe baza căruia se vor construi restul în cele alternative
+        let insertie = document.querySelector('#langAlternative');                // punct de aclanșare în DOM pentru elementele generate dinamic
+        let primulTitlu = document.querySelector('#titlu-res').id;                // extrage id-ul primului titlu pe baza căruia se vor construi restul în cele alternative
         let arrAlternative = document.querySelectorAll('#langAlternative > div'); // selectează toate elementele din titlurile alternative (dacă există)
 
         // verifică dacă există elemente ca titluri alternative
         if (arrAlternative.length !== 0) {
             let lastAlternativeTitle = Array.from(arrAlternative).slice(-1); // fă o referință către ultimul introdus în alternative
-            let idOfLastElem = lastAlternativeTitle[0].id;  // extrage id-ul acelui element
-            let contorIdxIds = parseInt(idOfLastElem.slice(-1)); // din id, extrage numarul de incrementare (pentru primul element adăugat în alternative este 1).
+            let idOfLastElem = lastAlternativeTitle[0].id;                   // extrage id-ul acelui element
+            let contorIdxIds = parseInt(idOfLastElem.slice(-1));             // din id, extrage numarul de incrementare (pentru primul element adăugat în alternative este 1).
 
             creeazaTitluAlternativHelper(`${primulTitlu}-${++contorIdxIds}`, insertie); // adaugă titluri alternative după primul alternativ existent!!!
             

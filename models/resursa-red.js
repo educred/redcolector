@@ -8,16 +8,27 @@ const schema        = require('./resursa-red-es7');
 const editorJs2TXT  = require('../routes/controllers/editorJs2TXT'); 
 const ES7Helper     = require('./model-helpers/es7-helper');
 const globby        = require('globby');
+const logger        = require('../util/logger');
 
 // INDECȘII ES7
-const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+redisClient.get("RES_IDX_ES7", (err, reply) => {
     if (err) console.error;
-    return reply;
+    RES_IDX_ES7 = reply;
 });
-const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+redisClient.get("RES_IDX_ALS", (err, reply) => {
     if (err) console.error;
-    return reply;
+    RES_IDX_ALS = reply;
 });
+redisClient.get("USR_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    USR_IDX_ES7 = reply;
+});
+redisClient.get("USR_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    USR_IDX_ALS = reply;
+});
+
 
 var softwareSchema = new mongoose.Schema({
     nume:     {
@@ -32,12 +43,12 @@ var softwareSchema = new mongoose.Schema({
     logoUri:  String
 });
 
-var recomSchema = new mongoose.Schema({
+var recomSchema = Schema({
     contorRecom: Number, // este numărul recomandării
     continut:    String, // este conținutul recomandării
 });
 
-var ResursaSchema = new mongoose.Schema({
+var ResursaSchema = Schema({
     _id: Schema.Types.ObjectId,
 
     // #1. INIȚIALIZARE ÎNREGISTRARE
@@ -65,8 +76,8 @@ var ResursaSchema = new mongoose.Schema({
     disciplinePropuse: [],    // Aici vor intra sugestiile publicului. I se va oferi un câmp de introducere etichete, cu autocompletare primele sugestii fiind disciplinele din vocabularul controlat. Codurile acestora devin automat etichete
     competenteGen:     [],    // Va fi un array de id-uri ale competențelor generale
     competenteS:       [{     // Va fi un array de id-uri ale competențelor specifice.
-        type: mongoose.Schema.Types.ObjectId, // va lua id-uri din altă colecție
-        ref: 'competentaspecifica' // este numele modelului de competență specifică, în cazul de față (ceea ce exporți din modul)
+        type: Schema.Types.ObjectId, // va lua id-uri din altă colecție
+        ref: "competentaspecifica" // este numele modelului de competență specifică, în cazul de față (ceea ce exporți din modul)
     }],
     activitati:    [], // sunt activitățile selectate de contribuitor și/sau adăugate de acesta suplimentar.
     prerequisite:  [], // sunt toate competențele necesare celui care accesează resursa. Gândește-te la nivelurile de cunoaștere ale unei limbi (A1, B2, etc). Aici va sta valoarea sau valorile pentru limba primară în care au fost introduse informațiile. La un moment dat este posibilă o interfațare cu Open Badges ca prerequisite în scop de gamificare.
@@ -116,14 +127,16 @@ var ResursaSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'badge'
     }],
-}, {
-    toJSON: {
-        virtuals: true
-    },
-    toObject: {
-        virtuals: true
-    }
-});
+}
+// , {
+//     toJSON: {
+//         virtuals: true
+//     },
+//     toObject: {
+//         virtuals: true
+//     }
+// }
+);
 
 /* === HOOKS === */
 // PRE
@@ -325,4 +338,4 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
 //     }
 // });
 
-module.exports = mongoose.model(process.env.MONGO_REDS, ResursaSchema);
+module.exports = mongoose.model('resursedu', ResursaSchema);

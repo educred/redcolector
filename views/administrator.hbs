@@ -184,6 +184,25 @@
         </div>
     </template>
 
+    {{!-- Template afișare statistici MongoDB --}}
+    <template id="mongo4tpl">
+        <div class="container">
+            <table id= "mongo4idxstbl" class="table table-hover m-4">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Acțiuni</th>
+                        <th>colecție</th>
+                        <th>nr. doc.</th>
+                        <th>Nume index ES7</th>
+                        <th>nr. doc. index/deleted</th>
+                    </tr>
+                </thead>
+                <tbody id="idxcol">
+                </tbody>
+            </table>
+        </div>
+    </template>
+
     {{!-- Template pentru afișarea unui modal --}}
     <template id="mdl">
         {{!-- <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true"> --}}

@@ -40,12 +40,38 @@
 
 /* GENERAL */
 .footer {
-    /* display: flex;
-    z-index: 10;
-    flex-wrap: wrap;
-    align-items: center; */
+    display: flex;
+    flex-wrap: nowrap;
     position: relative;
-    text-align: center;
+    margin-top: .4rem;
+    padding: .3rem;
+    font-size: smaller;
+    color: rgb(255,255,255);
+    background-color: #275382;
+}
+
+#projectdescr, #license {
+    padding: .2rem;
+}
+
+#projectdescr {
+    width: 25%;
+}
+
+#projectdescr img {
+    flex-grow: 1;
+    width: 50px;
+    height: auto;
+}
+
+#license {
+    width: 20%;
+    flex-grow: 1;
+    text-align: right;
+}
+
+#fmisc {
+    flex-grow: 4;
 }
 
 .avatar {
@@ -704,7 +730,7 @@ a[class$="8"], label[class$="8"] {
 }
 
 /* TABEL RESURSE PENTRU UN USER */
-#resurseTab {
+#resurseTab, #compsTab {
     background-color: rgba(255, 255, 255, .6);
     border-radius: .4em;
     padding: 1rem;
@@ -872,7 +898,7 @@ a[class$="8"], label[class$="8"] {
 }
 
 #content .title {
-    color: white;
+    /* color: white; */
     margin-top: 1rem;
     margin-left: 3rem;
 }
@@ -1027,7 +1053,6 @@ a[class$="8"], label[class$="8"] {
     cursor: pointer;
     border-radius: 5px;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.3);
-
 }
 
 .disctag:active,

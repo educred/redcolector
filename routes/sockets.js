@@ -20,24 +20,29 @@ const editorJs2HTML= require('../routes/controllers/editorJs2HTML');
 const globby      = require('globby');
 const git         = require('isomorphic-git');
 const logger      = require('../util/logger');
+const objectsOps  = require('../util/objectsOps');
 
 // INDECȘII ES7
-let RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+redisClient.get("RES_IDX_ES7", (err, reply) => {
     if (err) console.error;
-    return reply;
+    RES_IDX_ES7 = reply;
 });
-let RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+redisClient.get("RES_IDX_ALS", (err, reply) => {
     if (err) console.error;
-    return reply;
+    RES_IDX_ALS = reply;
 });
-let USR_IDX_ES7 = redisClient.get("USR_IDX_ES7", (err, reply) => {
+redisClient.get("USR_IDX_ES7", (err, reply) => {
     if (err) console.error;
-    return reply;
+    USR_IDX_ES7 = reply;
 });
-let USR_IDX_ALS = redisClient.get("USR_IDX_ALS", (err, reply) => {
+redisClient.get("USR_IDX_ALS", (err, reply) => {
     if (err) console.error;
-    return reply;
+    USR_IDX_ALS = reply;
 });
+
+
+
 
 // funcțiile de căutare
 const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
@@ -576,7 +581,7 @@ module.exports = function sockets (io) {
             // repo/5e9832fcf052494338584d92/deleted/5c7d042a-3694-4419-89e1-c8e1be836a43
 
             // Verifică dacă în rădăcina userului există subdirectorul `deleted`. Dacă nu, creează-l!!!
-            fs.ensureDir(path2deleted, 0o2775).then(function clbkDeletedExist () {
+            fs.ensureDir(path2deleted, 0o2775).then(function clbkArchiveAndDel () {
                 /* === ARHIVEAZĂ === */
                 let output  = fs.createWriteStream(path2deres + `${resource.uuid}.zip`),
                     archive = archiver('zip', { zlib: { level: 9 } });
@@ -587,131 +592,82 @@ module.exports = function sockets (io) {
                 archive.pipe(output);
                 // WARNINGS
                 archive.on('warning', function archiveMakingWarning (warning) {
-                    if (err.code === 'ENOENT') {
-                        console.warn("[sockets.js::'delresid'] Atenție, la arhivare a dat warning Error NO ENTry", warning);
-                    } else {
-                        console.error("[sockets.js::'delresid'] La crearea arhivei a apărut un avertisment!", warning);
-                        // throw error;
-                    }
+                    console.warn("[sockets.js::'delresid'] Atenție, la arhivare a dat warning", warning);
                 });
                 // ERRORS
-                archive.on('error', function(err) {
+                archive.on('error', function manageErrorOnArchiving (err) {
                     console.error("[sockets.js::'delresid'] La crearea arhivei a apărut eroarea!", err);
-                    logger.error(`[sockets.js::'delresid'] În timpul arhivării după ștergere a apărut eroarea ${err}`);
+                    logger.error(`[sockets.js::'delresid'] În timpul arhivării după ștergere a apărut eroarea ${err.message}`);
                     // throw err;
                 });
 
                 /* === Când se încheie procesul de arhivare === */
-                output.on('close', function clbkFinalArhivare () {
-                    // rre('mesaje', 'Resursa a intrat în conservare!');
-                    // rre('delresid', {bytes: archive.pointer()});
-
-                    console.log('Acest id am să incerc să-l șterg. Acum îl caut în Mongoose: ', resource.id);
-
-                    /* === Șterge din MONGODB și din Elasticsearch === */
-                    Resursa.findOneAndDelete({_id: resource.id}, (err, doc) => {       
-                        if (err) {
-                            console.log("[sockets.js::'delresid'] În timpul ștergerii din MongoDB a apărut eroarea: ", err);
-                            logger.error(`În timpul ștergerii din MongoDB a apărut eroarea ${err}`);
-                        }
-
-                        if (doc) {
-
-                            console.log('Documentul adus din bază este ', doc);
-
-                            // Șterge înregistrarea din Elasticsearch dacă ștergerea din bază a reușit
-                            // FIXME: De aici provin promisiunile netratate? Verifică!!!
-                            /* Verifică dacă are valoare RES_IDX_ALS !!! 
-                            DĂ EROARE LA STERGERE PENTRU CĂ NU-L GĂSEȘTE IN INDEX
-                            */
-                            console.log("Indexul din ES pe care încerc să caut este ", RES_IDX_ALS); // FIXME: Vezi de ce obțin `false`. Aici este cheia!!!
-                            // TODO: Caută mai întâi dacă există înregistrarea în index. Dacă există, șterge-o!!
-                            esClient.delete({
-                                id: doc.id,
-                                index: RES_IDX_ALS,
-                                refresh: true
-                            }, function (err, response, status) {
-                                if (err) {
-                                    console.error(`În timpul ștergerii din Elasticsearch, a apărut eroarea ${err}`);
-                                    logger.error(`În timpul ștergerii din Elasticsearch, a apărut eroarea ${err}`);
-                                }
-                                console.log(`Starea operațiunii asupra Elasticsearch este `, status);
-                                console.log(`Avem răspunsul din partea lui Elasticsearch `, response);
-                            });
-
-                            /*
-                            Indexul din ES pe care încerc să caut este  false
-                            ES7 sniff:  Nicio problemă detectată la inițializare!!! All norminal 👌
-                            În timpul ștergerii din Elasticsearch, a apărut eroarea ResponseError: Response Error
-                            [25-02-2021 18:38:15] [error] [undefined]: 	În timpul ștergerii din Elasticsearch, a apărut eroarea ResponseError: Response Error
-                            [25-02-2021 18:38:15] [error] [undefined]: 	În timpul ștergerii din Elasticsearch, a apărut eroarea ResponseError: Response Error
-                            Starea operațiunii asupra Elasticsearch este  undefined
-                            Avem răspunsul din partea lui Elasticsearch  {
-                            body: {
-                                _index: 'false',
-                                _type: '_doc',
-                                _id: '5f54bf795b631d3d2e0a99fe',
-                                _version: 1,
-                                result: 'not_found',
-                                forced_refresh: true,
-                                _shards: { total: 3, successful: 1, failed: 0 },
-                                _seq_no: 4,
-                                _primary_term: 31
-                            },
-                            statusCode: 404,
-                            headers: {
-                                'content-type': 'application/json; charset=UTF-8',
-                                'content-length': '201'
-                            },
-                            meta: {
-                                context: null,
-                                request: { params: [Object], options: {}, id: 7 },
-                                name: 'elasticsearch-js',
-                                connection: {
-                                url: 'http://127.0.0.1:9200/',
-                                id: 'VExS2n4DS8KpqxkqKr_njg',
-                                headers: {},
-                                deadCount: 0,
-                                resurrectTimeout: 0,
-                                _openRequests: 0,
-                                status: 'alive',
-                                roles: [Object]
-                                },
-                                attempts: 0,
-                                aborted: false
-                            }
-                            }
-
-                            */
-
-
-                            /* === ȘTERGE SUBDIRECTOR === */
-                            // fs.ensureDir(dirPath, 0o2775).then(function clbkFsExists () {
-                            fs.pathExists(dirPath).then(function clbkFsExists (response) {
-                                if (response === true) {
-                                    fs.remove(dirPath, function clbkDirFolder (error) {
-                                        if (error) {
-                                            console.error("[sockets.js::'delresid'] În timpul ștergerii subdirectorului, a apărut eroarea: ", error);
-                                            logger.error(`În timpul ștergerii subdirectorului, a apărut eroarea ${error}`);
-                                        }
-                                        socket.emit('delresid', doc); // trimite în frontend obiectul ce reprezinta resursa stearsă pentru o confirmare frumoasă.
-                                    });
-                                }
-                            }).catch((err) => {
-                                console.log("[sockets.js::'delresid'] În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea: ", err);
-                                logger.error(`În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea ${err}`);
-                                // throw error;
-                            });
-                        }
-                    });
-                });
+                output.on('close', clbkDelfromMgEs7);
 
                 /* === FINALIZEAZĂ ARHIVAREA === */
                 archive.finalize();
             }).catch(error => {
                 console.log("[sockets.js::'delresid'] Întreaga operațiune de arhivare și ștergere a subdirectorului resursei a eșuat cu eroarea: ", error);
-                logger.error(`Întreaga operațiune de arhivare și ștergere a subdirectorului resursei a eșuat cu eroarea: ${err}`);
+                logger.error(`Întreaga operațiune de arhivare și ștergere a subdirectorului resursei a eșuat cu eroarea: ${error.message}`);
             });
+
+            /**
+             * Funcția este callback pentru evenimentul `close` 
+             * emis la momentul în care se închide stream-ul ce creează arhiva
+             */
+            function clbkDelfromMgEs7 () {
+                // rre('mesaje', 'Resursa a intrat în conservare!');
+                // rre('delresid', {bytes: archive.pointer()});
+
+                console.log("[sockets.js::'delresid'] Acest id am să incerc să-l șterg. Acum îl caut în Mongoose: ", resource.id);
+
+                /* === Șterge din MONGODB și din Elasticsearch === */
+                Resursa.findOneAndDelete({_id: resource.id}, (err, doc) => {       
+                    if (err) {
+                        console.log("[sockets.js::'delresid'] În timpul ștergerii din MongoDB a apărut eroarea: ", err);
+                        logger.error(err);
+                    }
+
+                    if (doc.id) {
+                        // console.log('Documentul adus din bază este ', doc);
+
+                        if (RES_IDX_ALS) {
+                            // Șterge înregistrarea din Elasticsearch, dacă ștergerea din bază a reușit                        
+                            esClient.delete({
+                                id: doc.id,
+                                index: RES_IDX_ES7,
+                                refresh: true
+                            }, function (err, response, status) {
+                                if (err) {
+                                    console.error(`[sockets.js::'delresid'] În timpul ștergerii din Elasticsearch, a apărut eroarea pentru ${doc.id} la indexul ${index}, având eroarea: ${err.message}`, `reason`, response.body.error.reason, 'status: ', status);
+                                    logger.error(err);
+                                }
+                                // console.log(`[sockets.js::'delresid'] Starea operațiunii asupra Elasticsearch este `, status);
+                                // console.log(`[sockets.js::'delresid'] Avem răspunsul din partea lui Elasticsearch `, response);
+                            });
+                        }
+                        // reason: 'no write index is defined for alias [resedus]. The write index may be explicitly disabled using is_write_index=false or the alias points to multiple indices without one being designated as a write index'
+
+                        /* === ȘTERGE SUBDIRECTOR === */
+                        // fs.ensureDir(dirPath, 0o2775).then(function clbkFsExists () {
+                        fs.stat(dirPath).then(function clbkFsStat (response) {
+                            if (response.isDirectory() === true) {
+                                fs.remove(dirPath, function clbkDirRemove (error) {
+                                    if (error) {
+                                        console.error("[sockets.js::'delresid'] În timpul ștergerii subdirectorului, a apărut eroarea: ", error);
+                                        logger.error(`[sockets.js::'delresid'] În timpul ștergerii subdirectorului, a apărut eroarea ${error}`);
+                                    }
+                                    socket.emit('delresid', doc); // trimite în frontend obiectul ce reprezinta resursa stearsă pentru o confirmare frumoasă.
+                                });
+                            }
+                        }).catch((err) => {
+                            console.log("[sockets.js::'delresid'] În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea: ", err);
+                            logger.error(`[sockets.js::'delresid'] În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea ${err}`);
+                            // throw error;
+                        });
+                    }
+                });
+            }
         });
 
         // === MKADMIN === ::Aducerea fișei unui singur id (email) și trimiterea în client
@@ -1032,22 +988,51 @@ module.exports = function sockets (io) {
         // === STATS === ::STATS GENERAL
         socket.on('stats', (projectionObj) => {
             if (projectionObj) {
-                // pentru fiecare dintre descriptori adu un set de date pe care-l trimiți în frontend
+                // pentru fiecare dintre descriptori adu un set de date din MongoDB pe care-l trimiți în frontend
                 projectionObj.descriptors.map(function clbkTreatDecr (descriptor) {
                     // pentru fiecare set de date extras, voi emite înapoi pentru a fi creat element în pagină
+                    switch (descriptor) {
+                        case 'reds':
+                            Resursa.estimatedDocumentCount({}, function clbkResTotal (error, result) {
+                                if (error) {
+                                    console.log("[sockets.js::'stats'] Eroare la aducerea statisticilor cu următoarele detalii: ", error);
+                                    logger.error(`[sockets.js::'stats'] Eroare la aducerea setului de RED-uri: ${error}`)
+                                }
+                                socket.emit('stats', {reds: result});
+                                return result;                   
+                            });
+                        case 'users':
+                            const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
+                            UserModel.estimatedDocumentCount({}, function clbkUsersTotal (error, result) {
+                                if (error) {
+                                    console.log("[sockets.js::'stats'] Eroare la aducerea statisticilor cu următoarele detalii: ", error);
+                                    logger.error(`[sockets.js::'stats'] Eroare la aducerea setului de useri: ${error}`);
+                                }
+                                socket.emit('stats', {users: result});
+                                return result;    
+                            });
+                        case 'compets':
+                            Competente.estimatedDocumentCount({}, function clbkCompetsTotal (error, result) {
+                                if (error) {
+                                    console.log("[sockets.js::'stats'] Eroare la aducerea numarului de competențe: ", error);
+                                    logger.error(`[sockets.js::'stats'] Eroare la aducerea numărului de competențe: ${error}`)
+                                }
+                                socket.emit('stats', {compets: result});
+                                return result;    
+                            }); 
+                        default:
+                            return undefined;
+                    }
 
                     // testează după valoarea descriptorului
                     if (descriptor === 'reds') {
                         const TotalREDs = Resursa.estimatedDocumentCount({}, function clbkResTotal (error, result) {
                             if (error) {
                                 console.log("[sockets.js::'stats'] Eroare la aducerea statisticilor cu următoarele detalii: ", error);
-                            } else {
-                                // console.log(result);
-                                socket.emit('stats', {reds: result});
-
-                                return result;
-                                // TODO: aici caută să compari printr-o funcție dacă numărul red-urilor indexate este același cu cel din bază
-                            }                    
+                                logger.error(`[sockets.js::'stats'] Eroare la aducerea setului de RED-uri: ${error}`)
+                            }
+                            socket.emit('stats', {reds: result});
+                            return result;                   
                         });
                     } else if (descriptor === 'users') {
                         const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
@@ -1089,10 +1074,8 @@ module.exports = function sockets (io) {
                 }
                 socket.emit('elkstat', data);
             }).catch((err) => {
-                console.log('[routes::administrator] a apărut eroarea ', err.message);
+                console.log('[sockets::elkstat] a apărut eroarea ', err.message);
             });
-
-            // socket.emit('elkstat', {data: data});
         });
 
         // === REINDEXARE ES7 ===
@@ -1105,55 +1088,151 @@ module.exports = function sockets (io) {
         socket.on('mgdbstat', () => {
             mongoose.connection.db.listCollections().toArray(statDataMgdb);
         });
-        function statDataMgdb (err, names) {
-            if (err) console.error;
 
+        /**
+         * Funcția `es7stats` are rolul de a returna o promisiune 
+         * care odata rezolvată va oferi date statistice despre indecșii existenți în ES7
+         * Este folosită de funcția `statDataMgdb`.
+         * @returns Promise
+         */
+        function es7stats () {
+            return esClient.indices.stats({
+                index: "*,-.*",
+                level: "indices"
+            });
+        }
 
-            // FIXME: caută cea mai bună metodă de a obține date statistice din MongoDB! @kosson
+        /**
+         * Funcția `statDataMgdb` joacă rol de callback pentru 
+         * `mongoose.connection.db.listCollections().toArray(statDataMgdb)`
+         * Are rolul de a oferi clientului date privind numele colecțiilor
+         * din MongoDB, indexul corespondent din Elasticseach și numărul documentelor fiecărora
+         * <- `objectsOps` -> `searchOne()` face parte din setul de utilitare `/util/objectsOps.js`
+         * <- `objectsOps` -> `pathOfProps` face parte din setul de utilitare `/util/objectsOps.js`
+         * @param {Array} names reprezintă toate colecțiile bazei aplicației din MongoDB
+         */
+        async function statDataMgdb (err, names) {
+            if (err) {
+                logger.error(`[socket::mgdbstat::statDataMgdb()] A apărut eroarea: ${err}`);
+            };
 
-            let x = names.map((entity) => {                
+            // populează un array cu date despre indecșii din ES7,
+            let data = JSON.parse(JSON.stringify(await es7stats())),
+                nameCols = names.reduce((ac, nxt, idx) => {
+                    if (ac.length === 0) {
+                        ac[idx] = nxt.name
+                    } else {
+                        ac.push(nxt.name);
+                    };                    
+                    return ac;
+                }, []); // iar din obiectul colecțiilor, extrage un array doar cu numele lor :: [ 'users', 'resursedus', 'logentries', 'competentaspecificas' ]
+
+            /* 
+            NOTE:
+                Pentru fiecare nume de colecție din `nameCols`, cauta în `indicesES7` daca exista un index corespondent
+                Dacă există, cauta o cheie cu același nume în `names` și îmbogățește obiectul pe acea ramură
+            */
+            let indicesES7 = Object.entries(data.body.indices); // constituie un array de array-uri
+            // console.log('In array-ul de array-uri an ', indicesES7);
+
+            // Augmentez obiectul prin îmbogațirea cu informații despre cale.
+            let colAugObject = objectsOps.pathOfProps(names); // augmentează obiectul!!!
+            // console.log('Colectiile din MongoDB ca obiect augmentat are: ', colAugObject);
+            indicesES7.forEach(([key, value]) => {
+                // Acoperă cazul în care alias-ul a fost numit gresit cu versiune in coadă. NOTE: motive istorice
+                if ((/(\d{1,})+/g).test(key)) {
+
+                    // taie fragmentul de nume până la cifra care indică versiunea
+                    let aliasES7 = key.slice(0, key.search(/(\d{1,})+/g));
+
+                    // dacă nu, înseamnă că din motive istorice avem nevoie să lucrăm cu două seturi diferite de nume ( FIXME: )
+                    switch(aliasES7){
+                        case 'resedus':
+                            let foundES7Idx =  objectsOps.searchOne('resursedus', colAugObject);
+                            names[foundES7Idx.idxDataSet]['es7name'] = key;
+                            names[foundES7Idx.idxDataSet]['noEs7Docs'] = value.total.docs;
+                        break;
+                    }
+                }
+
+                // cazul în care indexul de ES7 are echivalent același nume între colecțiile MongoDB
+                if (nameCols.includes(key)) {
+                    let foundES7Idx =  objectsOps.searchOne(key, colAugObject);
+                    names[foundES7Idx.idxDataSet]['es7name'] = key;
+                    names[foundES7Idx.idxDataSet]['noEs7Docs'] = value.total.docs;
+                }
+            });
+
+            // creează un array al promisiunilor pentru a rezolva numărul documentelor
+            let proms = names.map(async (entity) => {
+
+                // obiectul șablon pentru fiecare înregistare (ajunge în client)
+                let collection = {
+                    name: '',
+                    no: '',
+                    es7name: '',
+                    noEs7Docs: ''
+                };
+
+                // constituirea unui obiect cu datele pentru fiecare colecție în parte
                 switch (entity.name) {
                     case "resursedus":
-                        return Resursa.estimatedDocumentCount().exec();
+                        collection.name      = 'resursedus';
+                        collection.no        = await Resursa.estimatedDocumentCount();
+                        collection.es7name   = entity.es7name;
+                        collection.noEs7Docs = entity.noEs7Docs;                        
+                        return collection;
                         break;
                     case "users":
-                        const UserModel = mongoose.model('user', UserSchema);
-                        return UserModel.estimatedDocumentCount().exec();
+                        const UserModel      = mongoose.model('user', UserSchema);
+                        collection.name      = 'users';                      
+                        collection.no        = await UserModel.estimatedDocumentCount();
+                        collection.es7name   = entity.es7name;
+                        collection.noEs7Docs = entity.noEs7Docs;                          
+                        return collection;
                         break;
                     case "logentries":
-                        return Log.estimatedDocumentCount().exec();
+                        collection.name      = 'logentries';                        
+                        collection.no        = await Log.estimatedDocumentCount();
+                        collection.es7name   = entity.es7name;
+                        collection.noEs7Docs = entity.noEs7Docs;                        
+                        return collection;
                         break;
                     case "competentaspecificas":
-                        return Competente.estimatedDocumentCount().exec();
+                        collection.name      = 'competentaspecificas';
+                        collection.no        = await Competente.estimatedDocumentCount();
+                        collection.es7name   = entity.es7name;
+                        collection.noEs7Docs = entity.noEs7Docs;                           
+                        return collection;
                         break;
                 };
             });
-            
-            Promise.all(x).then((r) => {
-                console.log(r);
-            }).catch(e => console.error);
+            // revolvă promisiunile și trimite datele în client
+            Promise.all(proms).then((r) => {
+                socket.emit("mgdbstat", r);
+            }).catch((err) => {
+                logger.error(`[socket::mgdbstat::statDataMgdb()]A apărut eroarea ${err}`);
+            });
         };
 
         // === ALLRES === ::TOATE RESURSELE
         socket.on('allRes', () => {
+            // FIXME: La un moment dat, când vei cere allRes, vor fi zeci de mii!!! Trebuie trimis un subset. Fă un bucketing pe MongoDB și adu agregate pe user!
             Resursa.find({}).exec().then(allRes => {
                 socket.emit('allRes', allRes);
-            }).catch(error => {
-                console.log("[sockets.js::'allRes'] Eroare la aducerea tuturor resurselor cu următoarele detalii: ", error);
+            }).catch((err) => {
+                logger.error(`[sockets.js::'allRes'] Eroare la aducerea tuturor resurselor cu următoarele detalii: ${err}`);
             });
         });
 
         // === PAGEDRES === :: RESURSELE PAGINATE
         socket.on('pagedRes', (data) => {
             // TODO: modelează acest eveniment pentru resursele paginate necesare clientului
-            // console.log("[sockets] Din client au venit datele: ", data);
-
             let dataPromise = pagination(data, Resursa);
             dataPromise.then( data => {
-                // console.log('[sockets] Datele aduse din Mongoo', data);
                 socket.emit('pagedRes', data);
-            }).catch(error => {
-                console.log("[sockets.js::'pagedRes'] Eroare la aducerea resurselor paginate cu următoarele detalii: ", error);
+            }).catch((err) => {
+                logger.error(`[sockets.js::'pagedRes'] Eroare la aducerea resurselor paginate cu următoarele detalii: ${err}`);
             });
         });
 
@@ -1161,8 +1240,8 @@ module.exports = function sockets (io) {
         socket.on('usrRes', (id) => {
             Resursa.find({idContributor: id}).exec().then(pRes => {
                 socket.emit('usrRes', pRes);
-            }).catch(error => {
-                console.log("[sockets.js::'usrRes'] Eroare la aducerea utilizatorului cu următoarele detalii: ", error);
+            }).catch((err) => {
+                logger.error(`[sockets.js::'usrRes'] Eroare la aducerea utilizatorului cu următoarele detalii: ${err}`);
             });
         });
 
@@ -1171,8 +1250,18 @@ module.exports = function sockets (io) {
             const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
             UserModel.find({}).exec().then(allUsers => {
                 socket.emit('allUsers', allUsers);
-            }).catch(error => {
-                console.log("[sockets.js::'allUsers'] Eroare la aducerea utilizatorilor cu următoarele detalii: ", error);
+            }).catch((err) => {
+                logger.error(`[sockets.js::'allUsers'] Eroare la aducerea utilizatorilor cu următoarele detalii: ${err}`);
+            });
+        });
+
+        // === ALLCOMPS === ::TOATE COMPETENȚELE SPECIFICE
+        socket.on('allComps', () => {
+            Competente.find().populate('nrREDuri').exec()
+            .then((allComps) => {
+                socket.emit('allComps', allComps);
+            }).catch((err) => {
+                logger.error(`[sockets.js::'allComps'] Eroare la aducerea tuturor competențelor specifice: ${err}`);
             });
         });
     });

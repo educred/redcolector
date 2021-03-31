@@ -1,0 +1,60 @@
+{{!< layout}}
+{{> nav-administrator}}
+{{> messages}}
+<input type="hidden" name="_csrf" value="{{this.csrfToken}}">
+
+<div id="content">
+    <div class="title"><h1>Competența specifică</h1></div>
+    <section class="container" id="comps-form">
+        {{!-- Va încărca detaliile competenței specifice cu ajutorul template-ului --}}
+        <div id="competenta" class="">
+            {{!-- <p contenteditable="true">{{comp.nume}} {{cod}} {{activitati}} {{disciplina}}</p> --}}
+
+            <form class="">
+                <div class="form-group">
+                    <label for="denumire">Denumire</label>
+                    <input type="text" class="form-control" name="denumire" value="{{comp.nume}}" id="denumire" placeholder="">
+                </div>
+
+                <div class="form-group">
+                    <label for="ids">ID document oficial</label>
+                    <input type="text" class="form-control" name="ids" value="{{comp.ids}}" id="ids" placeholder="">
+                </div>
+
+                <div class="form-group">
+                    <label for="cod">Cod</label>
+                    <input type="text" class="form-control" name="cod" value="{{comp.cod}}" id="cod" placeholder="">
+                </div>
+
+                <div class="form-group">
+                    {{#each comp.activitati}}
+                        <label for="activitate-{{@index}}">Activitate {{@index}}</label>
+                        <input type="text" class="form-control" name="activitate-{{@index}}" value="{{this}}" id="activitate-{{@index}}" placeholder="">
+                    {{/each}}
+                </div>
+
+                <div id="addactivitati"></div>
+
+                <div class="form-group">
+                    <label for="disciplina">Disciplină</label>
+                    <input type="text" class="form-control" name="disciplina" value="{{comp.disciplina}}" id="disciplina" placeholder="">
+                </div>
+
+                <div class="form-group">
+                    <label for="coddisc">Cod disciplină</label>
+                    <input type="text" class="form-control" name="coddisc" value="{{comp.disciplina}}" id="coddisc" placeholder="">
+                </div>
+
+                <div class="form-group">
+                    <label for="clasa">Clasa</label>
+                    <input type="text" class="form-control" name="clasa" value="{{comp.disciplina}}" id="clasa" placeholder="">
+                </div>
+            </form>
+
+        </div>
+    </section>
+</div>
+
+{{#each scripts}}
+    <script defer type="application/javascript" src="{{script}}"></script>
+{{/each}}

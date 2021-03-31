@@ -1,12 +1,14 @@
-var csrfToken = '';
+import {pubComm} from './main.mjs';
 
-if(document.getElementsByName('_csrf')[0].value) {
-    csrfToken = document.getElementsByName('_csrf')[0].value;
-}
+// var csrfToken = '';
 
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
+// if(document.getElementsByName('_csrf')[0].value) {
+//     csrfToken = document.getElementsByName('_csrf')[0].value;
+// }
+
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
 
 // TESTAREA CONEXIUNII
 // setInterval(() => {
@@ -101,21 +103,21 @@ var tmlOptions = {
     zoom_sequence: 5,
     scale_factor: 2
 }; // opțiuni necesare obiectului Timeline
-TimelineObj = {
-    // scale: "human",
-    title: {
-        media: {
-            url: '',
-            caption: '',
-            credit: ''
-        },
-        text: {
-            headline: '',
-            text: ''
-        }
-    },
-    events: [],
-};
+// TimelineObj = {
+//     // scale: "human",
+//     title: {
+//         media: {
+//             url: '',
+//             caption: '',
+//             credit: ''
+//         },
+//         text: {
+//             headline: '',
+//             text: ''
+//         }
+//     },
+//     events: [],
+// };
 
 // Primirea detaliilor privind utilizatorul ales
 pubComm.on('personrecord', function clblPersReds (resurse) {
@@ -274,7 +276,7 @@ function showUserDetails (descriere) {
     } else if (descriere.avatar) {
         userAvatar.src = descriere.avatar;
     } else {
-        userAvatar.src = ''; // FIXME: Generează ceva aleatoriu sau ia de pe net ramdom o imagine, ceva
+        userAvatar.src = ''; // FIXME: Generează ceva aleatoriu sau ia de pe net random o imagine, ceva
     }
     descriere.googleProfile ? userAvatar.alt = descriere.googleProfile.name : descriere.username;      // cazul localului
 
@@ -453,9 +455,8 @@ pubComm.on('addRole', (resurce) => {
     console.log(resurce);
 });
 
-
 // DATELE STATISTICE
-pubComm.emit('stats', {descriptors: ['reds', 'users']}); // Se pasează descriptorii pentru care se dorește aducerea datelor corespondente. Prin convenție, fiecare descriptor înseamnă un set de date.
+pubComm.emit('stats', {descriptors: ['reds', 'users', 'compets']}); // Se pasează descriptorii pentru care se dorește aducerea datelor corespondente. Prin convenție, fiecare descriptor înseamnă un set de date.
 // la primirea datelor statistice, se generează articole.
 pubComm.on('stats', (stats) => {
     restatsEntry = document.querySelector('#restats');
@@ -463,17 +464,24 @@ pubComm.on('stats', (stats) => {
     if (stats.hasOwnProperty('reds')) {
         const resObi = {
             descriptor: 'reds',
-            categorie: 'Resurse Educaționale Deschise',
-            figure: stats.reds
+            categorie:  'Resurse Educaționale Deschise',
+            figure:     stats.reds
         };
         populateStatisticArticle(resObi);
     } else if (stats.hasOwnProperty('users')) {
         const userObi = {
             descriptor: 'users',
-            categorie: 'Conturi utilizatori existente',
-            figure: stats.users
+            categorie:  'Conturi utilizatori existente',
+            figure:     stats.users
         };
         populateStatisticArticle(userObi);
+    } else if (stats.hasOwnProperty('compets')) {
+        const competsObi = {
+            descriptor: 'compets',
+            categorie:  'Competențe specifice',
+            figure:     stats.compets
+        };
+        populateStatisticArticle(competsObi);
     }
 });
 
@@ -523,39 +531,42 @@ function bytesToSize(bytes) {
     return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
 }
 
-var es7StatsTmpl = document.querySelector('#es7tpl'); // ref către template-ul de afișare a statisticilor Elasticsearch 7
-var systemElk = document.querySelector('#system-elk');// ref către locul de inserție al template-ului
-var elkTab = document.querySelector('#elk-tab');      // ref buton tab din meniu (Elasticsearch 7)
-var mdlTmpl = document.querySelector("#mdl");         // ref către template-ul de afișare al modalului
-var systemMgdb = document.querySelector('#system-mgdb'); // ref către template-ul de afișare a statisticilor MongoDB
-var mgdbTab = document.querySelector('#mgdb-tab');    // ref buton tab meniu (MongoDB 4)
+/** REFERINȚE DOM NECESARE INSERȚIEI DATELOR STATISTICE */
+var es7StatsTmpl = document.querySelector('#es7tpl'),    // ref către template-ul de afișare a statisticilor Elasticsearch 7
+    systemElk = document.querySelector('#system-elk'),   // ref către locul de inserție al template-ului `es7StatsTmpl`
+    elkTab = document.querySelector('#elk-tab'),         // ref buton tab din meniu (Elasticsearch 7)
 
-/* === Listener pentru buton tab Elasticsearch 7 ====*/
+    mdb4StatsTmpl = document.querySelector('#mongo4tpl'),// ref către template-ul de afișare a statisticilor MongoDB
+    systemMgdb = document.querySelector('#system-mgdb'), // ref către locul de inserție al template-ului `mdb4StatsTmpl`
+    mgdbTab = document.querySelector('#mgdb-tab'),       // ref buton tab meniu (MongoDB 4)
+
+    mdlTmpl = document.querySelector("#mdl");            // ref către template-ul de afișare al modalului
+
+/* === Listener pentru buton tab Elasticsearch 7 ==== */
 elkTab.addEventListener('click', (event) => {
-    
+    // Emite event de interogare Elasticsearch
     pubComm.emit('elkstat', '');
+    // Tratează datele primite
     pubComm.on('elkstat', (data = {}) => {
         systemElk.innerHTML = ''; // clear tab!!!
-        // console.log("Toate datele ", data);
 
-        var es7statsTmpl = es7StatsTmpl.content;              // ref la template statses7
-        var cloneEs7statsTmpl = es7statsTmpl.cloneNode(true); // clonează template-ul
-        var mdl = mdlTmpl.content;          // ref la conținut template modal
-        // var cloneMdl = mdl.cloneNode(true); // clonează template-ul
-        
+        let es7statsTmpl      = es7StatsTmpl.content,                                 // ref la template statses7
+            cloneEs7statsTmpl = es7statsTmpl.cloneNode(true),                         // clonează template-ul
+            mdl               = mdlTmpl.content,                                      // ref la conținut template modal
+            hdet              = cloneEs7statsTmpl.querySelector('#es7healthdetails'), // Starea clusterului
+            dh;
 
-        // Starea clusterului
-        let hdet = cloneEs7statsTmpl.querySelector('#es7healthdetails');
+        // Încarcă datele generale despre starea clusterul ES7
         for (dh of data.health) {
-            let pdet = document.createElement('p');
-            // introdu numele clusterului
-            let span1 = document.createElement('span');
+            let pdet = document.createElement('p');                     // creează un paragraf gazdă
+            
+            let span1 = document.createElement('span');                 // introdu numele clusterului
             span1.textContent = 'Nume cluster: ' + dh.cluster + ' ';
-            // introdu câte noduri există
-            let span2 = document.createElement('span');
+            
+            let span2 = document.createElement('span');                 // introdu câte noduri există
             span2.textContent = 'Nr. noduri: ' + dh['node.total'] + ' ';
-            // introdu starea nodului
-            let span3 = document.createElement('span');
+            
+            let span3 = document.createElement('span');                 // introdu starea nodului
             span3.textContent = 'Stare: ' + dh.status + ' ';
 
             pdet.appendChild(span1);
@@ -563,15 +574,17 @@ elkTab.addEventListener('click', (event) => {
             pdet.appendChild(span3);
             hdet.appendChild(pdet);
         }
-        // tratează cazurile când ai index și cel în care ești la început și nu există
+
+        // Pentru fiecare indice construiește câte un rând în tabel.
         if (data.indices) {
             // Indexurile -> informații despre fiecare index în parte
-            var tBody = cloneEs7statsTmpl.querySelector('tbody');
-            let indicesArr = Object.entries(data.indices);
+            let tBody = cloneEs7statsTmpl.querySelector('tbody'),
+                indicesArr = Object.entries(data.indices), 
+                d;
 
+            // generează rânduri în tabel pentru fiecare indice ES7
             for (d of indicesArr) {
                 // Adu un modal prin care să confirmi ștergerea!!!
-                // TODO: creează o funcție care să POPULEZE un modal de confirmare care să fie adaptat pentru fiecare situație.
                 let delopts = {
                     clone: mdl.cloneNode(true),
                     id:    d[0],
@@ -581,13 +594,15 @@ elkTab.addEventListener('click', (event) => {
                     para4: 'Șterge',
                     para5: 'Renunță'
                 };
+                // Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație.
                 generateModal(delopts); // clone (trebuie făcută o clonă/iterație) para1: id; para2: title; para3: body; para4: confirmation text; para5: close text                
 
-                let trow = document.createElement('tr');
-                trow.id = "tr-" + d[0];
+                let trow = document.createElement('tr');    // inițiază rândul
+                trow.id = "tr-" + d[0];                     // atribuie id
                 
-                let td0 = document.createElement('td');     // introdu acțiunile asupra indexurilor        
-                let actIdx = document.createElement('p');   // acțiunile vor fi introduse într-un paragraf
+                /** ACȚIUNI pe index --- BEGIN */
+                let td0 = document.createElement('td');     // introdu acțiunile asupra indexurilor => primul TD     
+                let actIdx = document.createElement('p');   // acțiunile vor fi introduse într-un paragraf gazdă
                 actIdx.classList = "actidx";
 
                 let btnRidx = document.createElement('button'); // reindexare
@@ -611,7 +626,9 @@ elkTab.addEventListener('click', (event) => {
                 actIdx.appendChild(btnRidx);
                 actIdx.appendChild(btnBkup);
                 actIdx.appendChild(btnDel);
+
                 td0.appendChild(actIdx);
+                /** ACȚIUNI pe index --- END */
 
                 let td1 = document.createElement('td'); // nume index     
                 td1.textContent = d[0];
@@ -638,7 +655,6 @@ elkTab.addEventListener('click', (event) => {
             }
 
             systemElk.appendChild(cloneEs7statsTmpl);
-            // TODO: Aici trebuie constituite și inserate modale penru fiecare dintre indexuri. Acestea trebuie să existe deja pentru a fi trigăruite.
         } else {
             // În cazul în care obiectul este gol
             let messageEmpty = document.createElement('div');
@@ -648,7 +664,12 @@ elkTab.addEventListener('click', (event) => {
     });
 });
 
-/* === Listener pentru `systemElk === */
+/**
+ * Funcția `idxactions` are rol de listener pentru tab-ul identificat ca `systemElk`
+ * Acest element va colecta si analiza evenimentele click pe elementele interne.
+ * În funcție de cine emite eveniment, o decizie se va lua care influiențează indexurile ES7
+ * @param evt 
+ */
 function idxactions (evt) {
 
     let idx, id, endIdx, vs, alsr; 
@@ -659,6 +680,7 @@ function idxactions (evt) {
     // extrage identificatorul tipului operațiunii
     id = evt.target.id.split("-").shift();
     
+    // FIXME: Vezi fragmentul aplicat la sockets  let aliasES7 = d.slice(0, d.search(/(\d{1,})+/g)); REEVALUEAZĂ CODUL! Este posibil ca de aici să fie generat indexul `false`.
     // cazul în care din neștiință sau accidental a fost creat un index fără număr de versiune în coadă
     if (idx.search(/\d{1,}/g) === -1) {
         endIdx = idx.length;
@@ -727,10 +749,98 @@ function generateModal (opts) {
     systemElk.appendChild(opts.clone);
 };
 
-/* === Listener pentru buton tab MongoDB 4 === */
-mgdbTab.addEventListener('click', () => {
+/* 
+ * === Listener pentru tab-ul MongoDB 4 === 
+ * Sunt prim
+*/
+mgdbTab.addEventListener('click', (event = {}) => {
+    // cer datele
     pubComm.emit('mgdbstat', '');
+    // prelucrez datele
     pubComm.on('mgdbstat', (data) => {
-        console.log(data);
+        // console.log("Am primit datele", data);
+        systemMgdb.innerHTML = ''; // clear tab!!!
+
+        let mdb4statsTmpl      = mdb4StatsTmpl.content,         // ref la template
+            cloneMdb4statsTmpl = mdb4statsTmpl.cloneNode(true), // clonează template-ul
+            mdl                = mdlTmpl.content;               // ref la conținut template modal
+
+        if (data) {
+            let tBody = cloneMdb4statsTmpl.querySelector('tbody'), d;
+
+            // pentru fiecare colecție, creează elementul de rând necesar
+            for (d of data) {
+                // Adu un modal prin care să confirmi backup-ul!!!
+                let backupopts = {
+                    clone: mdl.cloneNode(true),
+                    id:    d.name,
+                    para1: `modl-backupidx-${d.name}`,
+                    para2: `Continui cu backup-ul?`,
+                    para3: 'Acesta este un mesaj de confirmare pentru operațiunea de backup care urmează.',
+                    para4: 'Constituie-l',
+                    para5: 'Renunță'
+                };                
+                generateModal(backupopts); // Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație.
+
+                let trow = document.createElement('tr');    // inițiază rândul
+                trow.id = "tr-" + d.name;                   // atribuie id
+
+                /** ACTIUNI pe colectie --- BEGIN */
+                let td0 = document.createElement('td');     // introdu acțiunile asupra indexurilor        
+                let actCol = document.createElement('p');   // acțiunile vor fi introduse într-un paragraf
+                actCol.classList = "actcol";
+
+                let btnBkup = document.createElement('button'); // backup
+                btnBkup.classList = "btn btn-info m-2";
+                btnBkup.id = "bkpidx-" + d.name;
+                btnBkup.innerText = "Backup";
+
+                actCol.appendChild(btnBkup);
+                td0.appendChild(actCol);
+                /** ACTIUNI pe colectie --- END */
+
+                let td1 = document.createElement('td'); // nume colecție
+                td1.textContent = d.name ? d.name : '';
+
+                let td2 = document.createElement('td'); // nr documente în colecție
+                td2.textContent = d.no ? d.no : '';
+
+                let td3 = document.createElement('td'); // nume index corespondent în ES7
+                td3.textContent = d.es7name ? d.es7name : '';
+
+
+                let td4 = document.createElement('td'); // nr documente în indexul corespondent ES7
+                let span1 = document.createElement('span');
+                span1.classList.add('badge', 'badge-primary');
+                if (d.noEs7Docs) {
+                    span1.textContent = d.noEs7Docs.count;
+                } else {
+                    span1.textContent = '';
+                }
+                let span2 = document.createElement('span');
+                span2.classList.add('badge', 'badge-secondary');
+                if (d.noEs7Docs) {
+                    span2.textContent = d.noEs7Docs.deleted;
+                } else {
+                    span2.textContent = '';
+                }
+                td4.appendChild(span1);
+                td4.appendChild(span2);
+
+                trow.appendChild(td0);
+                trow.appendChild(td1);
+                trow.appendChild(td2);
+                trow.appendChild(td3);
+                trow.appendChild(td4);
+                tBody.appendChild(trow);
+            }
+
+            systemMgdb.appendChild(cloneMdb4statsTmpl);
+        } else {
+            // În cazul în care nu ai date
+            let messageEmpty = document.createElement('div');
+            messageEmpty.innerHTML = `<p>În acest moment nu există nicio colecție.</p>`
+            systemMgdb.appendChild(messageEmpty);
+        }
     });
 });

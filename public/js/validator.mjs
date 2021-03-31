@@ -1,3 +1,11 @@
+import {pubComm} from './main.mjs';
+
+// TESTAREA CONEXIUNII
+// setInterval(() => {
+//     console.log("Conectat: ", pubComm.connected, " cu id-ul: ", pubComm.id);
+//     pubComm.emit('testconn', 'test');
+// }, 2000);
+
 // ======== CĂUTAREA UNUI UTILIZATOR
 var findUserBtn = document.querySelector("#findUserBtn");
 findUserBtn.addEventListener('click', function clbkFindUser (evt) {

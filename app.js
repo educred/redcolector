@@ -1,5 +1,5 @@
 require('dotenv').config();
-// const config = require("config");
+global.CronJob = require('./util/cron'); // CRON -> programarea side ops-urilor
 
 const path           = require('path');
 const devlog         = require('morgan');
@@ -41,34 +41,9 @@ const mongoose = require('./mongoose.config');
 
 /* === ELASTICSEARCH env === */
 const esClient = require('./elasticsearch.config');
-/* Setează în Redis numele indecșilor;
- accesează și actualizează ori de câte ori se 
- reindexează prin incrementarea valorii de după nume */
-
-esClient.indices.stats({
-    index: "*,-.*",
-    level: "indices"
-}).then((r) => {
-    // console.log("Datele despre indici sunt ", r.body.indices);
-    if (r.body.indices) {
-        for (d in r.body.indices) {
-            // let vs = d[0].slice(d[0].search(/\d{1,}/g));
-            let alsr = d.slice(0, d.search(/\d{1,}/g));
-            // setează valorile în Redis
-            switch (alsr) {
-                case "users":
-                    redisClient.set("USR_IDX_ES7", d);
-                    redisClient.set("USR_IDX_ALS", alsr);
-                    break;
-                case "resedus":
-                    redisClient.set("RES_IDX_ES7", d);
-                    redisClient.set("RES_IDX_ALS", alsr);
-                    break;
-            }
-        }
-    }
-}).catch((err) => {
-    console.log('[app::ELASTICSEARCH] a apărut eroarea ', err.message);
+esClient.on('sniff', (err, req) => {
+    // console.log('ES7 sniff: ', err ? err.message : '', `${JSON.stringify(req.meta.sniff)}`);
+    // console.log('ES7 sniff: ', err ? logger.error('La inițializarea conexiunii ES7 a apărut eroarea: ', err.message) : 'Nicio problemă detectată la inițializare!!! All norminal 👌');
 });
 
 // process.report.writeReport('./report.json');
@@ -358,7 +333,7 @@ var server = http.listen(port, '127.0.0.1', function cbConnection () {
 
 // gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
 process.on('uncaughtException', (err) => {
-    console.log('[app.js] A apărul un uncaughtException cu detaliile ', err.message);
+    console.log('[app.js] A apărut un "uncaughtException" cu detaliile: ', err.message);
     logger.error(`${err.stack}`);
     // process.kill(process.pid, 'SIGTERM');
     process.nextTick( function exitProcess () {

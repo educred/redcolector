@@ -5,6 +5,7 @@ const express  = require('express');
 const router   = express.Router();
 const mongoose = require('mongoose');
 const moment   = require('moment');
+const logger      = require('../util/logger');
 const redisClient = require('../redis.config');
 
 // Încarcă mecanismele de verificare ale rolurilor
@@ -43,54 +44,60 @@ router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, re
 
 /* === ACCESAREA PROPRIILOR RESURSE :: /resurse === */
 router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (req, res) {
-        // var count = require('./controllers/resincred.ctrl')(req.user);
-        var count = Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((resurse) => {
-            // console.log("[profile::/resurse] Numărul resurselor aduse cu `resincred.ctrl.js` este ", resurse.length);
-            return resurse;
-        });
-        
-        // Promisiunea returnată (`find`). 
-        count.then((result) => {
+        /* === RESURSELE NECESARE LA RANDARE === */
+        let scripts = [       
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'},
+            // HOLDERJS
+            {script: '/lib/npm/holder.min.js'},
+            // LOCAL
+            //{script: '/js/form02log.js'},
+            // DATATABLES
+            {script: '/lib/npm/jquery.dataTables.min.js'},
+            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+            {script: '/lib/npm/dataTables.select.min.js'},
+            {script: '/lib/npm/dataTables.buttons.min.js'},
+            {script: '/lib/npm/dataTables.responsive.min.js'},
+            // TIMELINE 3
+            {script: '/lib/timeline3/js/timeline.js'},
+        ];
 
-            // transformă documentele Mongoose în POJOs
-            let newResultArr = result.map(function clbkMapResult (obi) {
-                const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-                // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
-                newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
-                // newResultArr.push(newObi);
-                return newObi;
-            });
+        let styles = [
+            // FONTAWESOME
+            {style: '/lib/npm/all.min.css'},
+            // JQUERY TOAST
+            {style: '/lib/npm/jquery.toast.min.css'},
+            // BOOTSTRAP
+            {style: '/lib/npm/bootstrap.min.css'},
+            {style: '/lib/npm/jquery.dataTables.min.css'},
+            {style: '/lib/npm/responsive.dataTables.min.css'},
+            {style: '/lib/npm/dataTables.bootstrap4.min.css'}
+        ];
+
+        let modules = [
+            // MAIN
+            {module: '/js/main.mjs'}
+        ];
+        /**
+         * Funncție cu rol de callback
+         * Transformă obiectul primit într-un POJO cu date formatate cu moment
+         * @param {Object} obi 
+         */
+        function clbkMapResult (obi) {
+            const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
+            // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
+            newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
+            // newResultArr.push(newObi);
+            return newObi;
+        }
+
+        // Afișează doar ultimele 6 resurse introduse
+        Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((result) => {
+
+            // transformă documentele Mongoose în POJOs cu dată formatată
+            let newResultArr = result.map(clbkMapResult);
 
             /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
-            let scripts = [       
-                // MOMENT.JS
-                {script: '/lib/npm/moment-with-locales.min.js'},
-                // HOLDERJS
-                {script: '/lib/npm/holder.min.js'},
-                // LOCAL
-                {script: '/js/form02log.js'},
-                // DATATABLES
-                {script: '/lib/npm/jquery.dataTables.min.js'},
-                {script: '/lib/npm/dataTables.bootstrap4.min.js'},
-                {script: '/lib/npm/dataTables.select.min.js'},
-                {script: '/lib/npm/dataTables.buttons.min.js'},
-                {script: '/lib/npm/dataTables.responsive.min.js'},
-                // TIMELINE 3
-                {script: '/lib/timeline3/js/timeline.js'},
-            ];
-
-            let styles = [
-                // FONTAWESOME
-                {style: '/lib/npm/all.min.css'},
-                // JQUERY TOAST
-                {style: '/lib/npm/jquery.toast.min.css'},
-                // BOOTSTRAP
-                {style: '/lib/npm/bootstrap.min.css'},
-                {style: '/lib/npm/jquery.dataTables.min.css'},
-                {style: '/lib/npm/responsive.dataTables.min.css'},
-                {style: '/lib/npm/dataTables.bootstrap4.min.css'}
-            ];
-
             res.render('resurse-profil', {                
                 title:     "Profil",
                 user:      req.user,
@@ -99,11 +106,13 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
                 csrfToken: req.csrfToken(),
                 resurse:   newResultArr,
                 scripts,
+                modules,
                 styles,
                 activeAdmLnk: true
             });
         }).catch((error) => {
-            console.error(error);
+            console.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
+            logger.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
         });
     }
 );

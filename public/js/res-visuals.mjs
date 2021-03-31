@@ -1,12 +1,14 @@
-var csrfToken = '';
+import {pubComm} from './main.mjs';
 
-if(document.getElementsByName('_csrf')[0].value) {
-    csrfToken = document.getElementsByName('_csrf')[0].value;
-}
+// var csrfToken = '';
 
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
+// if(document.getElementsByName('_csrf')[0].value) {
+//     csrfToken = document.getElementsByName('_csrf')[0].value;
+// }
+
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
 
 
 // TESTAREA CONEXIUNII
@@ -21,11 +23,12 @@ var cloneTbl = TblTmpl.content.cloneNode(true);      // clonarea template-ului p
 
 var uResTbl = cloneTbl.querySelector('#resurseTab');       // ref către div-ul gazdă al tabelului 
 let divResurseTabelare = document.createElement('table');  // creează tabel
-divResurseTabelare.classList.add('userResTbl');            // adaugă clasă la tabel
+divResurseTabelare.classList.add('userResTbl', 'display', 'table', 'table-striped', 'table-bordered'); // adaugă clase la tabel
 uResTbl.appendChild(divResurseTabelare);                   // append tabel la div-ul gazdă
 
-pubComm.emit('allRes');
+pubComm.emit('allRes'); // adu-mi resursele 
 pubComm.on('allRes', (resurse) => {
+    // console.log('[res-visuals.js] resursele aduse sunt ', resurse);
     let newResultArr = []; // noul array al obiectelor resursă
     resurse.map(function clbkMapResult (obi) {
         obi.dataRo = moment(obi.date).locale('ro').format('LLL');

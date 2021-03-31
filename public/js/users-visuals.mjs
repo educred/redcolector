@@ -1,12 +1,20 @@
-var csrfToken = '';
+import {pubComm} from './main.mjs';
 
-if(document.getElementsByName('_csrf')[0].value) {
-    csrfToken = document.getElementsByName('_csrf')[0].value;
-}
+// var csrfToken = '';
 
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
+// if(document.getElementsByName('_csrf')[0].value) {
+//     csrfToken = document.getElementsByName('_csrf')[0].value;
+// }
+
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
+
+// TESTAREA CONEXIUNII
+// setInterval(() => {
+//     console.log("Conectat: ", pubComm.connected, " cu id-ul: ", pubComm.id);
+//     pubComm.emit('testconn', 'test');
+// }, 2000);
 
 // Resurse afișate tabelar
 var TblTmpl = document.querySelector('#userResTbl'); // ref către template-ul resurselor în format tabelar
@@ -14,7 +22,7 @@ var cloneTbl = TblTmpl.content.cloneNode(true);      // clonarea template-ului p
 
 var uResTbl = cloneTbl.querySelector('#resurseTab');       // ref către div-ul gazdă al tabelului 
 let divResurseTabelare = document.createElement('table');  // creează tabel
-divResurseTabelare.classList.add('userResTbl');            // adaugă clasă la tabel
+divResurseTabelare.classList.add('userResTbl', 'display', 'table', 'table-striped', 'table-bordered');            // adaugă clasă la tabel
 uResTbl.appendChild(divResurseTabelare);                   // append tabel la div-ul gazdă
 
 pubComm.emit('allUsers');
