@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const Resursa = require('./resursa-red');
-
 const Schema = mongoose.Schema;
 
 let CompetentaS = Schema({
@@ -28,12 +26,9 @@ let CompetentaS = Schema({
     ref:        [],     // De ex: „Ordin al ministrului Nr. 3418/19.03.2013” sau poate fi link către ordin sau orice URI care poate identifica sursa informației sau orice asemenea
     parteA:     String, // Se introduce numele grupei de competențe specifice. De ex: „Receptarea de mesaje orale în contexte de comunicare cunoscute” 
     REDuri:     [],     // Este setul de identificatori. Fiecare identificator este o resursă care este în setul modelului resursei ca element în setul `target.value`. Dacă în `target.value` este adăugat id-ul unei competențe, id-ul respectivei resurse va fi adăugat acestui set.
-    contor:     Number  // ATENȚIE!!! Este un număr folosit doar în bateria de teste, dar poate fi utilizat în posibile scenarii.
 },
-// schema options: Don't forget this option
-// if you declare foreign keys for this schema afterwards.
 {
-    toJSON: { virtuals: true }, // So `res.json()` and other `JSON.stringify()` functions include virtuals
+    toJSON:   { virtuals: true }, // So `res.json()` and other `JSON.stringify()` functions include virtuals
     toObject: { virtuals: true } // So `toObject()` output includes virtuals
 });
 
@@ -46,7 +41,5 @@ CompetentaS.virtual('nrREDuri', {
     count: true
     // justOne: true // for many-to-1 relationships
 });
-
-// CompetentaS.plugin(mexp);
 
 module.exports = mongoose.model('competentaspecifica', CompetentaS);

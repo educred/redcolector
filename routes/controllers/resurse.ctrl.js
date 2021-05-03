@@ -1,14 +1,14 @@
 require('dotenv').config();
 const {v4: uuidv4} = require('uuid');
-
+const logger       = require('../../util/logger');
 /* === LIVRESQ - CONNECTOR === */
 const LivresqConnect = require('../../models/livresq-connect').LivresqConnect;
 
 /* === DEPENDINȚE === */
-const moment = require('moment');
+const moment      = require('moment');
 const redisClient = require('../../redis.config');
 /* === MODELE === */
-const Resursa = require('../../models/resursa-red'); // Adu modelul resursei
+const Resursa     = require('../../models/resursa-red'); // Adu modelul resursei
 /* === HELPERE === */
 // Cere helperul `checkRole` cu care verifică dacă există rolurile necesare accesului
 let checkRole     = require('./checkRole.helper');
@@ -18,45 +18,62 @@ require('./cache.helper');
 const {clearHash} = require('./cache.helper');
 let cookieHelper  = require('./cookie2obj.helper');
 
+// INDECȘII ES7
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    RES_IDX_ES7 = reply;
+});
+redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    RES_IDX_ALS = reply;
+});
+redisClient.get("USR_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    USR_IDX_ES7 = reply;
+});
+redisClient.get("USR_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    USR_IDX_ALS = reply;
+});
+
 /* === AFIȘAREA RESURSELOR :: /resurse === */
 exports.loadRootResources = function loadRootResources (req, res, next) {
-    // ACL
+    // ===> ACL
     let roles = ["user", "validator", "cred"];
-
-    // Verifică dacă indexul de căutare există
-    let idxRes = redisClient.get("RES_IDX_ALS", (err, reply) => {
-        if (err) {
-            console.error(error.message);
-        }
-        console.log("resurse.ctrl::idxRes ", reply);
-        return reply; // ar trebui să fie: "resedus"
-    });
-
     // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles); 
     // console.log("Am următoarele roluri (resurse.ctrl) din req.session.passport: ", req.session.passport.user.roles.rolInCRED);
 
-    // Adu-mi ultimele 8 resursele validate în ordinea ultimei intrări, te rog! Hey, hey, Mr. Serverman!        
-    // let resursePublice = Resursa.find({'expertCheck': 'true'}).sort({"date": -1}).limit(8).cache({key: req.user.id});
+    // Adu-mi ultimele 8 resursele validate în ordinea ultimei intrări, te rog! Hey, hey, Mr. Serverman!
     let resursePublice = Resursa.find({'expertCheck': 'true'}).sort({"date": -1}).limit(8);
-    // let promiseResPub  = resursePublice.exec();
 
-    // SCRIPTURI
+    // ===> SCRIPTURI GENERAL APLICABILE
     let scripts = [       
         // MOMENT.JS
         {script: '/lib/npm/moment-with-locales.min.js'},
         // HOLDER.JS
         {script: '/lib/npm/holder.min.js'},
     ];
-
+    // ===> MODULE GENERAL APLICABILE
     let modules = [
         // LOCALE
         {module: '/js/redincredall.mjs'} 
     ];
+
+    // REVIEW: Verifică dacă indexul de căutare există
+    if (RES_IDX_ALS) {
+        console.log('[resurse.ctrl.js]::Verificarea existenței alias-ului aduce val: ', RES_IDX_ALS);
+    } else {
+        //- FIXME: Tratează cazul în care nu există indexul alias în ES7 pentru că pur și simplu nu există index.
+        let err = new Error('[resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix');
+        next(err);
+    }
+
+
     
-    /* === VERIFICAREA CREDENȚIALELOR === */
+    /* ===> VERIFICAREA CREDENȚIALELOR <=== */
     if(req.session.passport.user.roles.admin){
-        // promiseResPub.then((result) => {
         resursePublice.then((result) => {
             let newResultArr = result.map(function clbkMapResult (obi) {
                 const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
@@ -66,19 +83,21 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
                 return newObi;
             });
             res.render('resurse', {
-                title:        "CRED RED",
+                title:        "RED::adm",
                 user:         req.user,
                 logoimg:      "img/rED-logo192.png",
                 csrfToken:    req.csrfToken(),
                 resurse:      newResultArr,
                 activeResLnk: true,
-                resIdx:       idxRes,
+                resIdx:       RES_IDX_ALS,
                 scripts,
                 modules
             });
         }).catch((err) => {
             if (err) {
                 console.log(JSON.stringify(err.body, null, 2));
+                logger.error(err);
+                next(err);
             }
         });
     } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
@@ -99,12 +118,14 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
                 csrfToken:    req.csrfToken(),                
                 resurse:      newResultArr,
                 activeResLnk: true,
-                resIdx:       idxRes,
+                resIdx:       RES_IDX_ALS,
                 scripts
             });
         }).catch((err) => {
             if (err) {
                 console.log(JSON.stringify(err.body, null, 2));
+                logger.error(err);
+                next(err);
             }
         });
     } else {
@@ -115,84 +136,84 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
 
 /* AFIȘAREA UNEI SINGURE RESURSE / ȘTERGERE / EDITARE */
 exports.loadOneResource = function loadOneResource (req, res, next) {
-    let query = Resursa.findById(req.params.id).populate({path: 'competenteS'});
-    query.then( (resursa) => {
-            if (resursa.id) {
-                // transformă obiectul document de Mongoose într-un obiect normal.
-                const obi = Object.assign({}, resursa._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
+    let scripts = [
+        // MOMENT.JS
+        {script: '/lib/npm/moment-with-locales.min.js'},
+        // EDITOR.JS
+        {script: '/lib/editorjs/editor.js'},
+        {script: '/lib/editorjs/header.js'},
+        {script: '/lib/editorjs/paragraph.js'},
+        {script: '/lib/editorjs/list.js'},
+        {script: '/lib/editorjs/image.js'},
+        {script: '/lib/editorjs/table.js'},
+        {script: '/lib/editorjs/attaches.js'},
+        {script: '/lib/editorjs/embed.js'},
+        {script: '/lib/editorjs/code.js'},
+        {script: '/lib/editorjs/quote.js'},
+        {script: '/lib/editorjs/inlinecode.js'},
+        // HOLDER.JS
+        {script: '/lib/npm/holder.min.js'}    
+    ];
 
-                // obiectul competenței specifice cu toate datele sale trebuie curățat.
-                obi.competenteS = obi.competenteS.map(obi => {
-                    return Object.assign({}, obi._doc);
-                });
+    let modules = [
+        // LOCALS
+        {module: '/js/uploader.mjs'},
+        // LOCAL 
+        {module: '/js/cred-res.js'}                
+    ];
 
-                // adaug o nouă proprietate la rezultat cu o proprietate a sa serializată [injectare în client a întregii înregistrări serializate]
-                obi.editorContent = JSON.stringify(resursa);
+    function renderRED (resursa) {
+        if (resursa.id) {
+            // transformă obiectul document de Mongoose într-un obiect normal.
+            const obi = Object.assign({}, resursa._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
 
-                // resursa._doc.content = editorJs2html(resursa.content);
-                let localizat = moment(obi.date).locale('ro').format('LLL');
-                obi.dataRo = `${localizat}`; // formatarea datei pentru limba română.            
+            // obiectul competenței specifice cu toate datele sale trebuie curățat.
+            obi.competenteS = obi.competenteS.map(obi => {
+                return Object.assign({}, obi._doc);
+            });
 
-                // Array-ul activităților modificat
-                let activitatiRehashed = obi.activitati.map((elem) => {
-                    let sablon = /^([aA-zZ])+\d/g;
-                    let cssClass = elem[0].match(sablon);
-                    let composed = '<span class="' + cssClass[0] + 'data-code="' + elem[0] + '">' + elem[1] + '</span>';
-                    return composed;
-                });
-                
-                obi.activitati = activitatiRehashed;
-                return obi;
-            } else {
-                return `<p>Între timp ceva s-a petrecut cu datele de la server... nu am putut aduce conținutul. Încearcă reload!</p>`;
-            }
-            // return Object.assign({}, resursa._doc);// Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-        }).then((result) => {
-            let scripts = [
-                // MOMENT.JS
-                {script: '/lib/npm/moment-with-locales.min.js'},
-                // EDITOR.JS
-                {script: '/lib/editorjs/editor.js'},
-                {script: '/lib/editorjs/header.js'},
-                {script: '/lib/editorjs/paragraph.js'},
-                {script: '/lib/editorjs/list.js'},
-                {script: '/lib/editorjs/image.js'},
-                {script: '/lib/editorjs/table.js'},
-                {script: '/lib/editorjs/attaches.js'},
-                {script: '/lib/editorjs/embed.js'},
-                {script: '/lib/editorjs/code.js'},
-                {script: '/lib/editorjs/quote.js'},
-                {script: '/lib/editorjs/inlinecode.js'},
-                // HOLDER.JS
-                {script: '/lib/npm/holder.min.js'}    
-            ];
+            // adaug o nouă proprietate la rezultat cu o proprietate a sa serializată [injectare în client a întregii înregistrări serializate]
+            obi.editorContent = JSON.stringify(resursa);
 
-            let modules = [
-                // LOCALS
-                {module: '/js/uploader.mjs'},
-                // LOCAL 
-                {module: '/js/cred-res.js'}                
-            ];
+            // resursa._doc.content = editorJs2html(resursa.content);
+            let localizat = moment(obi.date).locale('ro').format('LLL');
+            obi.dataRo = `${localizat}`; // formatarea datei pentru limba română.            
+
+            // Array-ul activităților modificat
+            let activitatiRehashed = obi.activitati.map((elem) => {
+                let sablon = /^([aA-zZ])+\d/g;
+                let cssClass = elem[0].match(sablon);
+                let composed = '<span class="' + cssClass[0] + 'data-code="' + elem[0] + '">' + elem[1] + '</span>';
+                return composed;
+            });
+            
+            obi.activitati = activitatiRehashed;
 
             let data = {
-                uuid: result.uuid,
+                uuid: obi.uuid,
                 publisher: process.env.PUBLISHER
             };            
 
             res.render('resursa-cred', {                
-                title:     result.title,
+                title:     obi.title,
                 user:      req.user,
                 logoimg:   "/img/red-logo-small30.png",
                 credlogo:  "../img/CREDlogo.jpg",
                 csrfToken: req.csrfToken(),
-                resursa:   result,
+                resursa:   obi,
                 data,
                 modules,
                 scripts
             });
-        }).catch(err => {
+        }
+    };
+
+    Resursa.findById(req.params.id).populate({path: 'competenteS'})
+        .then(renderRED).catch(err => {
             if (err) {
                 console.log(JSON.stringify(err.body, null, 2));
+                logger.error(err);
+                next(err);
             }
         });
 };
@@ -274,7 +295,7 @@ exports.describeResource = function describeResource (req, res, next) {
     /* === VERIFICAREA CREDENȚIALELOR === */
     if(req.session.passport.user.roles.admin){
         let user = req.session.passport.user;
-        // FIXME: Renunță la acest artificiu pentru conturile locale de îndată ce unifici localele cu profilurile Google.
+        //- FIXME: Renunță la acest artificiu pentru conturile locale de îndată ce unifici localele cu profilurile Google.
         let given_name =  "Jane" || user.googleProfile.given_name;
         let family_name = "Doe"  || user.googleProfile.family_name;
         

@@ -93,7 +93,7 @@ class createElement {
  **/
 function decodeCharEntities (str) {
     let decomposedStr = str.split(' ');
-    // FIXME: Nu acoperă toate posibilele cazuri!!! ar trebui revizuit la un moment dat.
+    //+ FIXME: Nu acoperă toate posibilele cazuri!!! ar trebui revizuit la un moment dat.
     var entity = /&(?:#x[a-f0-9]+|#[0-9]+|[a-z0-9]+);?/igu;
     
     let arrNew = decomposedStr.map(function (word, index, arr) {
@@ -160,7 +160,7 @@ function datasetToObject(elem){
  * @param {String} url Poate fi un URL întreg sau poate fi o cale
  * @returns {Object} Obiectul are semnătura `{err, path, path2file, afterLastSlash, uri}`
  */
- function check4url (url) {
+function check4url (url) {
     url = decodeURI(url); // facem decode, să nu avem surprize
 
     let err, uri;

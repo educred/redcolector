@@ -78,6 +78,10 @@
     max-width:10%;
     height:auto;
 }
+/* regleaza continutul fiecărei pagini. Atenție! */
+#content {
+    padding: 1rem;
+}
 
 /*===== NAVIGATION ====*/
 nav.navbar-light {
@@ -892,7 +896,7 @@ a[class$="8"], label[class$="8"] {
     justify-content: center;
 }
 
-/* === TABELE http://localhost:8080/administrator/... ==== */
+/* === TABELE http://localhost:3000/administrator/... ==== */
 #visuals {
     height: 100%;
 }

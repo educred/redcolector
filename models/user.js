@@ -90,7 +90,7 @@ User.post('save', function clbkUsrSave (doc, next) {
             family_name: doc.googleProfile.family_name
         }
     };
-    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.USR_IDX_ES7, process.env.USR_IDX_ALS);
+    ES7Helper.searchIdxAndCreateDoc(schema, data, process.env.USR_IDX_ES7, process.env.USR_IDX_ALS);
     next(); 
 });
 

@@ -279,7 +279,7 @@ function clbkDOMContentLoaded () {
                                         pubComm.on('resursa', (respObj) => {
                                             // semnătura lui respObj:
                                             /*
-                                                file: "http://localhost:8080/repo/5ebaf1ae32061d3fa4b7f0ae/ceb79940-8755-41e7-95fd-ee88e5e193fa/data/Marcus_Aurelius_Louvre_MR561_n02.jpg"
+                                                file: "http://localhost:3000/repo/5ebaf1ae32061d3fa4b7f0ae/ceb79940-8755-41e7-95fd-ee88e5e193fa/data/Marcus_Aurelius_Louvre_MR561_n02.jpg"
                                                 size: 9026609                                        ​
                                                 success: 1                                        ​
                                                 uuid: "ceb79940-8755-41e7-95fd-ee88e5e193fa"

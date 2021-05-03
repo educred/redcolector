@@ -1,3 +1,214 @@
+Patch Update Backwards-compatible bug fixes.
+❯◯ @fortawesome/fontawesome-free  5.15.2   ❯  5.15.3   https://fontawesome.com
+ ◯ datatables.net                 1.10.23  ❯  1.10.24  https://datatables.net
+ ◯ datatables.net-bs4             1.10.23  ❯  1.10.24  https://datatables.net
+ ◯ datatables.net-dt              1.10.23  ❯  1.10.24  https://datatables.net
+ ◯ datatables.net-select          1.3.1    ❯  1.3.3    https://datatables.net
+ ◯ datatables.net-select-dt       1.3.1    ❯  1.3.3    https://datatables.net
+ ◯ globby                         11.0.2   ❯  11.0.3   https://github.com/sindresorhus/globby#readme
+ ◯ isomorphic-git                 1.8.1    ❯  1.8.2    https://isomorphic-git.org/
+ ◯ mocha                          8.3.1    ❯  8.3.2    https://mochajs.org/
+ ◯ pm2                            4.5.5    ❯  4.5.6    http://pm2.keymetrics.io/
+ ◯ winston-daily-rotate-file      4.5.0    ❯  4.5.3    https://github.com/winstonjs/winston-daily-rotate-file#readme
+  
+Minor Update New backwards-compatible features.
+ ◯ @elastic/elasticsearch      7.11.0   ❯  7.12.0  http://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
+ ◯ connect-redis               5.1.0    ❯  5.2.0   https://github.com/visionmedia/connect-redis#readme
+ ◯ datatables.net-buttons      1.6.5    ❯  1.7.0   https://datatables.net
+ ◯ datatables.net-buttons-dt   1.6.5    ❯  1.7.0   https://datatables.net
+ ◯ express-hbs                 2.3.4    ❯  2.4.0   https://github.com/TryGhost/express-hbs
+ ◯ helmet                      4.4.1    ❯  4.6.0   https://helmetjs.github.io/
+ ◯ mongoose                    5.11.13  ❯  5.12.7  https://mongoosejs.com
+ ◯ redis                       3.0.2    ❯  3.1.2   https://github.com/NodeRedis/node-redis
+ ◯ validator                   13.5.2   ❯  13.6.0  https://github.com/validatorjs/validator.js
+ ◯ autocannon devDep           7.0.5    ❯  7.2.0   https://github.com/mcollina/autocannon#readme
+ ◯ copy-webpack-plugin devDep  8.0.0    ❯  8.1.1   https://github.com/webpack-contrib/copy-webpack-plugin
+ ◯ eslint devDep               7.22.0   ❯  7.25.0  https://eslint.org
+ ◯ webpack devDep              5.24.3   ❯  5.36.2  https://github.com/webpack/webpack
+ ◯ webpack-cli devDep          4.5.0    ❯  4.6.0   https://github.com/webpack/webpack-cli
+  
+ Major Update Potentially breaking API changes. Use caution.
+ ◯ socket.io         3.1.2  ❯  4.0.1  https://github.com/socketio/socket.io#readme
+ ◯ socket.io-client  3.1.2  ❯  4.0.1  https://github.com/socketio/socket.io-client#readme
+
+npm install --save @fortawesome/fontawesome-free@5.15.3 datatables.net@1.10.24 datatables.net-bs4@1.10.24 datatables.net-dt@1.10.24 datatables.net-select@1.3.3 datatables.net-select-dt@1.3.3 globby@11.0.3 isomorphic-git@1.8.2 mocha@8.3.2 pm2@4.5.6 winston-daily-rotate-file@4.5.3 @elastic/elasticsearch@7.12.0 connect-redis@5.2.0 datatables.net-buttons@1.7.0 datatables.net-buttons-dt@1.7.0 express-hbs@2.4.0 helmet@4.6.0 mongoose@5.12.7 redis@3.1.2 validator@13.6.0 socket.io@4.0.1 socket.io-client@4.0.1 --color=always
+
+added 5 packages, removed 37 packages, changed 58 packages, and audited 1289 packages in 31s
+
+85 packages are looking for funding
+  run `npm fund` for details
+
+3 low severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+
+$ npm install --save-dev autocannon@7.2.0 copy-webpack-plugin@8.1.1 eslint@7.25.0 webpack@5.36.2 webpack-cli@4.6.0 --color=always
+
+added 1 package, changed 12 packages, and audited 1290 packages in 5s
+
+85 packages are looking for funding
+  run `npm fund` for details
+
+3 low severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+npm audit report
+
+xmldom  <0.5.0
+Misinterpretation of malicious XML input - https://npmjs.com/advisories/1650
+fix available via `npm audit fix --force`
+Will install passport-twitter@0.1.5, which is a breaking change
+node_modules/xmldom
+  xtraverse  *
+  Depends on vulnerable versions of xmldom
+  node_modules/xtraverse
+    passport-twitter  >=1.0.0
+    Depends on vulnerable versions of xtraverse
+    node_modules/passport-twitter
+
+3 low severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+
+
+Actualizare la versiunea 2.21.0 a pachetului Editor.js.
+
+
+https://r-future.github.io/post/how-to-fix-redis-warnings-with-docker/
+
+
+Dacă ai erori de tipul
+ERROR: for redcolectordevel  Container "64467f7e2e99" is unhealthy.
+ERROR: Encountered errors while bringing up the project.
+
+Verifică folosind docker-compose ps pentru a vedea starea tuturor containerelor active
+Poți investiga fiecare container individual cu:
+docker inspect  --format "{{json .State.Health }}" nume_container_sau_id  | jq
+sau
+docker inspect --format "{{json .State.Health }}" $(docker-compose ps -q) | jq
+
+docker-compose up in the first terminal window, and docker-compose logs -f in another. This will display all logs from docker-compose-managed containers.
+
+
+Și dacă ai o eroare de citire de socket:
+Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/64467f7e2e99/json: dial unix /var/run/docker.sock: connect: permission denied
+
+Atunci e o groblemă pentru că folosești docker drept root!!!
+Vezi: https://docs.docker.com/engine/install/linux-postinstall/
+Vezi: https://www.digitalocean.com/community/questions/how-to-fix-docker-got-permission-denied-while-trying-to-connect-to-the-docker-daemon-socket
+
+sudo groupadd docker
+groupadd: group 'docker' already exists
+
+sudo usermod -aG docker $USER
+
+
+
+
+Am introdus o variabilă de mediu nouă necesară pregătirii saltului aplicației la posibilitatea de a fi rulată virtualizat: APP_RUNTIME=local
+Această variabilă de mediu poate avea două valori: `local` | `virtual`
+
+Actualizare editor de la versiunea 2.20.1 la 2.20.2.
+
+http://localhost:8080/profile/6063439394f7007d68138c05
+
+{
+  "error": {
+    "root_cause": [
+      {
+        "type": "invalid_alias_name_exception",
+        "reason": "Invalid alias name [false], an index exists with the same name as the alias",
+        "index_uuid": "H8XDS7EvSJuw4ELntKVNbQ",
+        "index": "false"
+      }
+    ],
+    "type": "invalid_alias_name_exception",
+    "reason": "Invalid alias name [false], an index exists with the same name as the alias",
+    "index_uuid": "H8XDS7EvSJuw4ELntKVNbQ",
+    "index": "false"
+  },
+  "status": 400
+}
+
+Actualizare editor de la versiunea 2.19.1 la 2.20.1.
+
+```javascript
+// webminer.js
+import fs                from 'fs'
+import path              from 'path'
+import superagent        from 'superagent'
+import mkdirp            from 'mkdirp'
+import { urlToFilename } from './utils.js'
+
+export function webminer (url, cb) {
+  const filename = urlToFilename(url);
+
+  // dacă fișierul nu există
+  fs.access(filename, err => {
+    if (err && err.code === 'ENOENT') {
+
+      // poți purcede la crearea structurii
+      console.log(`Downloading ${url} into ${filename}`);
+
+      // descarcă pagina
+      superagent.get(url).end((err, res) => {
+        if (err) {
+          // cb(err);
+          return cb(err); // early return principle
+        } else {
+
+          // construiește un director al cărui nume va fi numele fișierului
+          mkdirp(path.dirname(filename), err => {
+            if (err) {
+              // cb(err);
+              return cb(err);
+            } else {
+
+              // scrie fișierul
+              fs.writeFile(filename, res.text, err => {
+                  if (err) {
+                    // cb(err);
+                    return cb(err);
+                  } else {
+                    // apelează callback-ul final
+                    cb(null, filename, true);
+                  }
+              })
+            }
+          })
+        }
+      })
+    } else {
+      // apelează callback-ul final
+      cb(null, filename, false);
+    }
+  });
+}
+
+// webminecli.js
+import { spider } from './webminer.js'
+webminer(process.argv[2], (err, filename, downloaded) => {
+  if (err) {
+    console.error(err)
+  } else if (downloaded) {
+    console.log(`Completed the download of "${filename}"`)
+  } else {
+    console.log(`"${filename}" was already downloaded`)
+  }
+});
+```
+
+
 Am instalat eslint
 
 eslint --init

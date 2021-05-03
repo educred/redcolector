@@ -33,7 +33,7 @@ pubComm.on('allComps', (compets) => {
     // console.log('[comps-visuals.js] competențele aduse sunt ', compets);
     let newResultArr = []; // noul array al obiectelor copmpetență specifică
 
-    // _ FIXME: Ai putea aici să verifici dacă fiecare obiect are toate proprietățile. 
+    // _ WORKING: Verifici dacă fiecare obiect are toate proprietățile. 
     let arrPropsNeeded = ['nume', 'ids', 'cod', 'activitati', 'disciplina', 'coddisc', 'nivel', 'nrREDuri'];
     compets.map(function clbkMapResult (obi) {
         obi.dataRo = moment(obi.date).locale('ro').format('LLL');

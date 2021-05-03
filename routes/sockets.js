@@ -49,7 +49,7 @@ const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
 // căutare resurse în Mongo prin Mongoose
 const {pagination} = require('./controllers/pagination.ctrl');
 // funcții de indexare și reindexare în Elasticsearch 7
-const {reidx, deleteIndex, reidxincr} = require('../models/model-helpers/es7-helper');
+const {reidx, delAndCreateNew, deleteIndex, reidxincr} = require('../models/model-helpers/es7-helper');
 const { get, set } = require('../redis.config');
 const { error } = require('../util/logger');
 // funcții de raportare date statistice în MongoDB
@@ -665,6 +665,13 @@ module.exports = function sockets (io) {
                             logger.error(`[sockets.js::'delresid'] În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea ${err}`);
                             // throw error;
                         });
+
+                        /* REVIEW: Testează și următoare alternativă pentru verificarea existenței unui fișier/director
+                        fs.access(filename, err => {
+                            if (err && err.code === 'ENOENT') {
+
+                        Faptul că fișierul nu există indică inexistența întregii structuri.
+                         */
                     }
                 });
             }
@@ -883,7 +890,8 @@ module.exports = function sockets (io) {
                         UserModel.exists({_id: user._id}).then((result) => {
                             if (!result) {
                                 esClient.delete({
-                                    index: 'users0',
+                                    // index: 'users0',
+                                    index: USR_IDX_ALS,
                                     type: 'user',
                                     id: user._id
                                 }).then((res) => {
@@ -1075,14 +1083,15 @@ module.exports = function sockets (io) {
                 socket.emit('elkstat', data);
             }).catch((err) => {
                 console.log('[sockets::elkstat] a apărut eroarea ', err.message);
+                logger.error(err);
             });
         });
 
         // === REINDEXARE ES7 ===
-        socket.on('es7reidx', reidxincr);
+        // socket.on('es7reidx', reidxincr);
         
         // === DEL ES7 INDEX ===
-        socket.on('es7delidx', deleteIndex);
+        // socket.on('es7delidx', deleteIndex);
 
         // === STATS::MONGODB ===
         socket.on('mgdbstat', () => {
@@ -1259,10 +1268,58 @@ module.exports = function sockets (io) {
         socket.on('allComps', () => {
             Competente.find().populate('nrREDuri').exec()
             .then((allComps) => {
+                // console.log(allComps[0]);
                 socket.emit('allComps', allComps);
             }).catch((err) => {
                 logger.error(`[sockets.js::'allComps'] Eroare la aducerea tuturor competențelor specifice: ${err}`);
             });
+        });
+
+        // === ACTUALIZEAZĂ O COMPETENȚĂ ===
+        socket.on('updateComp', async (record) => {
+            const data = {
+                nume:       record.nume,
+                activitati: record.activitati,
+                cod:        record.cod,
+                coddisc:    record.coddisc,
+                disciplina: record.disciplina,
+                nivel:      record.nivel,
+                parteA:     record.parteA,
+                ref:        record.ref
+            };
+            // Cazul Update
+            if(record.id) {
+                // console.log('Datele primite în server pe `updateComp` sunt: ', record);
+                let filter =  {_id: record.id};
+                let doc = await Competente.findOneAndUpdate(filter, data, {
+                    new: true,
+                    upsert: true // Make this update into an upsert
+                });
+                doc.save();
+            } else {
+                // Cazul Create
+                data._id = new mongoose.Types.ObjectId();
+                let doc = new Competente(data);
+                doc.save().then((result) => {
+                    // trimite clientului 
+                    socket.emit('updateComp', result.id);
+                }).catch(error => {
+                    console.log('Am încercat să salvez o nouă competență, dar a apărut eroarea: ', error.message);
+                    next(error);
+                })
+            }
+        });
+
+        socket.on('delComp', async (id) => {
+            if (id) {
+                const res = await Competente.deleteOne({ _id: id });
+                // console.log('Rezultatul ștergerii este: ', res);
+                if (res.ok === 1) {
+                    socket.emit('delComp', id);
+                }
+            } else {
+                console.log('Nu am pe cine să șterg. Id-ul primit este: ', id);
+            }            
         });
     });
 

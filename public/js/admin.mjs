@@ -125,7 +125,7 @@ pubComm.on('personrecord', function clblPersReds (resurse) {
     userFile = resurse;
     // console.log('Din admin.js [on(personrecord)] -> resurse ', resurse);
 
-    // TODO: Transformă `resurse` într-un subset necesar lui Timeline
+    //- TODO: Transformă `resurse` într-un subset necesar lui Timeline
     if (resurse.googleProfile) {
         console.log('Din admin.js [on(personrecord)] -> resurse.googleProfile ', resurse.googleProfile);
         TimelineObj.title.text.headline = resurse.googleProfile.name;
@@ -447,12 +447,13 @@ function colectUnits () {
     });
 }
 
+// REVIEW: Sunt doar pentru test! Ia o decizie pentru production
 pubComm.on('addUnit', (resurce) => {
-    console.log(resurce);
+    console.log('[admin.mjs::evenimentul `addUnit`]', resurce);
 });
 
 pubComm.on('addRole', (resurce) => {
-    console.log(resurce);
+    console.log('[admin.mjs::evenimentul `addRole`]', resurce);
 });
 
 // DATELE STATISTICE
@@ -511,12 +512,12 @@ function populateStatisticArticle (data) {
 
     // <a> care joacă rol de link către o pagină dedicată afișării tuturor respectivelor resurse.
     let aInParaInStats = cloneStatsContent.querySelector('.stat__figure');
-    aInParaInStats.href = `/administrator/${data.descriptor}`; // TODO: pagina care se va deschide, va fi dedicată unor vizualizări pe datele despre toate resursele
+    aInParaInStats.href = `/administrator/${data.descriptor}`; //- TODO: pagina care se va deschide, va fi dedicată unor vizualizări pe datele despre toate resursele
     aInParaInStats.setAttribute("href", `/administrator/${data.descriptor}`);
     aInParaInStats.textContent = data.figure;
 
     restatsEntry.appendChild(cloneStatsContent);
-}
+};
 
 /* === Date statistice privind activitatea Elasticsearch === */
 
@@ -531,18 +532,18 @@ function bytesToSize(bytes) {
     return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
 }
 
-/** REFERINȚE DOM NECESARE INSERȚIEI DATELOR STATISTICE */
-var es7StatsTmpl = document.querySelector('#es7tpl'),    // ref către template-ul de afișare a statisticilor Elasticsearch 7
-    systemElk = document.querySelector('#system-elk'),   // ref către locul de inserție al template-ului `es7StatsTmpl`
-    elkTab = document.querySelector('#elk-tab'),         // ref buton tab din meniu (Elasticsearch 7)
+/* REFERINȚE DOM NECESARE INSERȚIEI DATELOR STATISTICE */
+var es7StatsTmpl  = document.querySelector('#es7tpl'),      // ref către template-ul de afișare a statisticilor Elasticsearch 7
+    systemElk     = document.querySelector('#system-elk'),  // ref către locul de inserție al template-ului `es7StatsTmpl`
+    elkTab        = document.querySelector('#elk-tab'),     // ref buton tab din meniu (Elasticsearch 7)
 
-    mdb4StatsTmpl = document.querySelector('#mongo4tpl'),// ref către template-ul de afișare a statisticilor MongoDB
-    systemMgdb = document.querySelector('#system-mgdb'), // ref către locul de inserție al template-ului `mdb4StatsTmpl`
-    mgdbTab = document.querySelector('#mgdb-tab'),       // ref buton tab meniu (MongoDB 4)
+    mdb4StatsTmpl = document.querySelector('#mongo4tpl'),   // ref către template-ul de afișare a statisticilor MongoDB
+    systemMgdb    = document.querySelector('#system-mgdb'), // ref către locul de inserție al template-ului `mdb4StatsTmpl`
+    mgdbTab       = document.querySelector('#mgdb-tab'),    // ref buton tab meniu (MongoDB 4)
 
-    mdlTmpl = document.querySelector("#mdl");            // ref către template-ul de afișare al modalului
+    mdlTmpl       = document.querySelector("#mdl");         // ref către template-ul de afișare al modalului
 
-/* === Listener pentru buton tab Elasticsearch 7 ==== */
+/* NOTE: ==== Listener pentru buton tab Elasticsearch 7 ==== */
 elkTab.addEventListener('click', (event) => {
     // Emite event de interogare Elasticsearch
     pubComm.emit('elkstat', '');
@@ -597,38 +598,39 @@ elkTab.addEventListener('click', (event) => {
                 // Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație.
                 generateModal(delopts); // clone (trebuie făcută o clonă/iterație) para1: id; para2: title; para3: body; para4: confirmation text; para5: close text                
 
-                let trow = document.createElement('tr');    // inițiază rândul
-                trow.id = "tr-" + d[0];                     // atribuie id
+                let trow = document.createElement('tr'); // inițiază rândul
+                trow.id  = "tr-" + d[0];                 // atribuie id
                 
-                /** ACȚIUNI pe index --- BEGIN */
-                let td0 = document.createElement('td');     // introdu acțiunile asupra indexurilor => primul TD     
-                let actIdx = document.createElement('p');   // acțiunile vor fi introduse într-un paragraf gazdă
-                actIdx.classList = "actidx";
+                /* ==== ACȚIUNI pe index ==== BEGIN */
+                let td0           = document.createElement('td');    // introdu acțiunile asupra indexurilor => primul TD     
+                let actIdx        = document.createElement('p');     // acțiunile vor fi introduse într-un paragraf gazdă
+                actIdx.classList  = "actidx";
 
-                let btnRidx = document.createElement('button'); // reindexare
+                let btnRidx       = document.createElement('button'); // reindexare [REINDEX]
                 btnRidx.classList = "btn btn-warning";
-                btnRidx.id = 'ridx-' + d[0];
+                btnRidx.id        = 'ridx-' + d[0];
                 btnRidx.innerText = "Reindex";
 
-                let btnBkup = document.createElement('button'); // backup
+                let btnBkup       = document.createElement('button'); // backup     [BACKUP]
                 btnBkup.classList = "btn btn-info m-2";
-                btnBkup.id = "bkpidx-" + d[0];
+                btnBkup.id        = "bkpidx-" + d[0];
                 btnBkup.innerText = "Backup";
 
-                let btnDel = document.createElement('button'); // ștergere
-                btnDel.classList = "btn btn-danger m-2";
-                btnDel.type = "button";
-                btnDel.id = "delidx-" + d[0];
+                //- FIXME: Adaugă eveniment și listener
+                let btnDel        = document.createElement('button'); // ștergere   [DELETE]
+                btnDel.classList  = "btn btn-danger m-2";
+                btnDel.type       = "button";
+                btnDel.id         = "delidx-" + d[0];
                 btnDel.setAttribute('data-toggle', 'modal');
                 btnDel.setAttribute('data-target', `#modl-delidx-${d[0]}`);
-                btnDel.innerText = "Delete";
+                btnDel.innerText  = "Delete";
 
                 actIdx.appendChild(btnRidx);
                 actIdx.appendChild(btnBkup);
                 actIdx.appendChild(btnDel);
 
                 td0.appendChild(actIdx);
-                /** ACȚIUNI pe index --- END */
+                /* ==== ACȚIUNI pe index ==== END */
 
                 let td1 = document.createElement('td'); // nume index     
                 td1.textContent = d[0];
@@ -749,7 +751,7 @@ function generateModal (opts) {
     systemElk.appendChild(opts.clone);
 };
 
-/* 
+/**
  * === Listener pentru tab-ul MongoDB 4 === 
  * Sunt prim
 */

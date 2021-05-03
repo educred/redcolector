@@ -1,0 +1,24 @@
+version: '3.9'
+services:
+    nodeapp:
+        build:
+            target: devel
+        image: redcolector/development
+        container_name: redcolectordevel
+        working_dir: /redcolector
+        env_file: 
+            - ./.env
+        volumes:
+            - ./repo:/redcolector/repo
+            - .:/redcolector
+            - /node_modules
+        ports:
+            - "8080:8080"
+        command: npm run dev
+        depends_on:
+            mongo:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            es01:
+                condition: service_healthy

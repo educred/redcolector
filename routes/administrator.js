@@ -267,7 +267,7 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                             expertCheck:      obi.expertCheck
                         };
 
-                        ES7Helper.searchIdxAlCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
+                        ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
                     }
                     return resFromIdx;
                 }).catch(err => {
@@ -444,6 +444,36 @@ router.get('/compets', function clbkAdmCompets (req, res) {
     }
 });
 
+router.get('/compets/new', function clbkAdmCompetsID (req, res) {
+    // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
+    if(req.session.passport.user.roles.admin){
+
+        // Scripturile necesare rutei /administrator/compets/:id [rol: admin]
+        let admModules = [
+            {module: '/js/comp-id.mjs'}
+        ];
+        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
+
+        /* === ADMIN === */
+        if(req.session.passport.user.roles.admin){
+            res.render('comp-id-admin', {                    
+                title:    "RED admin",
+                user:     req.user,
+                logoimg:  "/img/red-logo-small30.png",
+                credlogo: "../img/CREDlogo.jpg",
+                csrfToken: req.csrfToken(),
+                scripts: scriptsArr,
+                modules,
+                styles
+            });
+        } else {
+            res.redirect('/401');
+        }
+    } else {
+        res.redirect('/401');
+    }
+});
+
 router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
     // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
     if(req.session.passport.user.roles.admin){
@@ -454,11 +484,17 @@ router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
         ];
         let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
 
-        let query = Competente.findById(req.params.id).populate({path: 'idRED'});
+        let query = Competente.findById(req.params.id).populate({path: 'nrREDuri'});
         query.then( (comp) => {
             if (comp.id) {
+                // console.log('Competenta trimisa are urmatoarea semnatura ', comp);
+
                 // transformă obiectul document de Mongoose într-un obiect normal.
                 const obi = Object.assign({}, comp._doc); 
+
+                // adaugă versiunea la care este înregistrarea și nr de RED-uri
+                obi['__v'] = comp.__v;
+                obi['nrREDuri'] = comp.nrREDuri;
 
                 // obiectul competenței specifice cu toate datele sale trebuie curățat.
                 obi.idRED = obi.idRED.map(obi => {
@@ -468,16 +504,6 @@ router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
                 let localizat = moment(obi.date).locale('ro').format('LLL');
                 // resursa._doc.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
                 obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
-                
-                // Array-ul activităților modificat
-                // let activitatiRehashed = obi.activitati.map((elem) => {
-                //     let sablon = /^([aA-zZ])+\d/g;
-                //     let cssClass = elem[0].match(sablon);
-                //     let composed = '<span class="' + cssClass[0] + 'data-code="' + elem[0] + '">' + elem[1] + '</span>';
-                //     return composed;
-                // });
-                
-                // obi.activitati = activitatiRehashed;
 
                 return obi;
             }
@@ -493,6 +519,7 @@ router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
                     csrfToken: req.csrfToken(),
                     comp,
                     scripts: scriptsArr,
+                    modules,
                     styles
                 });
             } else {
@@ -500,7 +527,6 @@ router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
             }
         }).catch(err => {
             if (err) {
-                console.log(err);
                 logger.error(`La afișarea competenței individuale: ${err}`);
                 // next(); // fugi pe următorul middleware / rută
                 res.redirect('/administrator/compets');
@@ -511,5 +537,7 @@ router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
         res.redirect('/401');
     }
 });
+
+
 
 module.exports = router;

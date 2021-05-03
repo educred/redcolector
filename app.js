@@ -1,6 +1,7 @@
 require('dotenv').config();
 global.CronJob = require('./util/cron'); // CRON -> programarea side ops-urilor
 
+const os             = require('os');
 const path           = require('path');
 const devlog         = require('morgan');
 const logger         = require('./util/logger');
@@ -25,6 +26,9 @@ const favicon        = require('serve-favicon');
 const { v1: uuidv1 } = require('uuid'); // https://github.com/uuidjs/uuid#deep-requires-now-deprecated
 const i18n           = require('i18n');
 
+/* === TIMP RĂSPUNS ÎN HEADER === */
+app.use(responseTime());
+
 /* === ÎNCĂRCAREA RUTELOR NEPORTEJATE === */
 let login          = require('./routes/login');
 let signupLoco     = require('./routes/signup');
@@ -48,8 +52,6 @@ esClient.on('sniff', (err, req) => {
 
 // process.report.writeReport('./report.json');
 
-// FIXME: https://stackoverflow.com/questions/52746384/what-is-the-best-way-to-store-node-js-site-settings
-
 /* === FIȘIERELE statice === */
 app.use(express.static(path.join(__dirname, '/public'), {
     index: false, 
@@ -67,11 +69,19 @@ app.use(helmet({
 })); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
 // https://helmetjs.github.io/docs/dont-sniff-mimetype/
 
+/* === PROXY SUPPORT === */
+app.enable('trust proxy');
+
 /* === CORS === */
 var corsOptions = {
-    origin: 'http://' + process.env.DOMAIN,
+    origin: '',
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
+if (process.env.APP_RUNTIME === 'virtual') {
+    corsOptions.origin = 'http://' + process.env.DOMAIN_VIRT + ':' + process.env.PORT;
+} else {
+    corsOptions.origin = 'http://' + process.env.DOMAIN;
+}
 app.use(cors(corsOptions));
 
 /* === BODY PARSER === */
@@ -79,21 +89,16 @@ app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
 /* === SESIUNI === */
-app.use(cookies());// Parse Cookie header and populate req.cookies with an object keyed by the cookie names
+app.use(cookies()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names
 
-/* === TIMP RĂSPUNS ÎN HEADER === */
-app.use(responseTime());
 
-/* === PROXY SUPPORT === */
-app.set('trust proxy', true);
-app.enable('trust proxy');
 
 /* === INIȚIALIZARE I18N === */
 app.use(i18n.init); // instanțiere modul i18n - este necesar ca înainte de a adăuga acest middleware să fie cerut cookies
 
 // creează sesiune - https://expressjs.com/en/advanced/best-practice-security.html
 let sessionMiddleware = session({
-    name: 'redcolector',
+    name: process.env.APP_NAME,
     secret: process.env.COOKIE_ENCODING,
     genid: function(req) {
         return uuidv1(); // use UUIDs for session IDs
@@ -110,6 +115,7 @@ let sessionMiddleware = session({
         sameSite: 'lax' // https://www.npmjs.com/package/express-session#cookiesamesite
     }
 });
+//=> FIXME: În producție, setează la secure: true pentru a funcționa doar pe HTTPS
 
 // MIDDLEWARE de stabilirea a sesiunii de lucru prin încercări repetate. Vezi: https://github.com/expressjs/session/issues/99
 app.use(function (req, res, next) {
@@ -139,13 +145,19 @@ app.use(passport.session()); // restaurează starea sesiunii dacă aceasta exist
 
 /* === SERVER SOCKETURI === */
 // #1 Creează server prin atașarea celui existent
+const corsOptsSockets = {
+    origin: "",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["_csrf"],
+    credentials: true
+}
+if (process.env.APP_RUNTIME === 'virtual') {
+    corsOptsSockets.origin = 'http://' + process.env.DOMAIN_VIRT + ':' + process.env.PORT;
+} else {
+    corsOptsSockets.origin = 'http://' + process.env.DOMAIN;
+}
 const io = require('socket.io')(http, {
-    cors: {
-        origin: "http://" + process.env.DOMAIN,
-        methods: ["GET", "POST"],
-        allowedHeaders: ["_csrf"],
-        credentials: true
-    },
+    cors: corsOptsSockets,
     transports: [ "websocket", "polling" ]
 });
 // #2 Creează un wrapper de middleware Express pentru Socket.io
@@ -324,9 +336,10 @@ if( process.env.NODE_ENV === 'production') {
 
 /* === Pornește serverul! === */
 let port = process.env.PORT || 8080;
-var server = http.listen(port, '127.0.0.1', function cbConnection () {
+let hostname = os.hostname();
+var server = http.listen(port, '0.0.0.0', function cbConnection () {
     console.log('RED Colector ', process.env.APP_VER);
-    console.log('Server pornit pe 8080 -> binded pe 127.0.0.1. Proces no: ', process.pid);
+    console.log(`Hostnme: ${hostname}, \n Port ${process.env.PORT}. \n Proces no:`, process.pid);
 });
 
 /* === GESTIONAREA evenimentelor pe `process` și a SEMNALELOR === */
@@ -334,7 +347,7 @@ var server = http.listen(port, '127.0.0.1', function cbConnection () {
 // gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
 process.on('uncaughtException', (err) => {
     console.log('[app.js] A apărut un "uncaughtException" cu detaliile: ', err.message);
-    logger.error(`${err.stack}`);
+    logger.error(`${err.message} ${err.stack}`);
     // process.kill(process.pid, 'SIGTERM');
     process.nextTick( function exitProcess () {
         mongoose.disconnect(() => {
@@ -369,7 +382,6 @@ process.on('SIGTERM', function onSiginit () {
         console.log('Am închis conexiunea la MongoDb!');
     });
     console.info('Am prins un SIGTERM (stop). Închid procesul! Data: ', new Date().toISOString());
-    // FIXME: Închide conexiunile la MongoDB și Elasticsearch
     shutdownserver();
 });
 
@@ -384,7 +396,6 @@ function shutdownserver () {
             console.error(err.message, err.stack);
             process.exitCode = 1;            
         }
-        // FIXME: Închide conexiunile la MongoDB și Elasticsearch
         process.exit(1);
     });
 }

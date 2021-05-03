@@ -86,3 +86,6 @@ backup
 
 # ignoră regulile de linting
 .eslintrc.json
+
+# ignoră tururile ghidate
+.tours

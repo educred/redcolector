@@ -1,5 +1,5 @@
-var express      = require('express');
-var router       = express.Router();
+const express    = require('express');
+const router     = express.Router();
 const mongoose   = require('mongoose');
 const moment     = require('moment');
 var content2html = require('./controllers/editorJs2HTML');

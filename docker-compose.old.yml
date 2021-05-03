@@ -1,0 +1,195 @@
+version: '3.9'
+services:
+    # nodeapp:
+    #     build:
+    #         context: .
+    #         dockerfile: Dockerfile
+    #     restart: always
+    nodeapp:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: devel
+            network: host
+        image: redcolector/development
+        container_name: redcolectordevel
+        working_dir: /redcolector
+        env_file: 
+            - ./.env
+        volumes:
+            - ./repo:/redcolector/repo
+            - .:/redcolector
+            - /node_modules
+        ports:
+            - "8080:8080"
+        expose: 
+            - "8080"
+        command: nodemon app.js
+        networks: 
+            - es
+            - frontend
+            - backend
+        depends_on:
+            mongo:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            # es01:
+            #     condition: service_healthy
+
+    mongo:
+        image: mongo:4.4.5-bionic
+        container_name: mongo
+        env_file: 
+            - ./.env
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWD}
+            - MONGO_INITDB_DATABASE=${MONGO_DB}
+        volumes:
+            - mongodata:/data/db
+        networks: 
+            - backend
+        command: [--auth]
+        ports:
+            - 27017:27017
+        restart: unless-stopped
+        healthcheck:
+            test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+    
+    redis:
+        image: redis:latest
+        # Asigură-te că numele imaginii este diferit de cel din Dockerfile, altfel: failed to build: max depth exceeded
+        # Altfel, fiecare build va adăuga layere la imaginea de start depășind limita admisă a numărului acestora (https://www.benfi.ca/docker-failed-to-build-max-depth-exceeded/)
+        container_name: redis-repo
+        # WARNING overcommit_memory is set to 0! Background save may fail under low memory condition.
+        # To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+        # The overcommit_memory has 3 options.
+        # 0, the system kernel check if there is enough memory to be allocated to the process or not, if not enough, it will return errors to the process.
+        # 1, the system kernel is allowed to allocate the whole memory to the process no matter what the status of memory is.
+        # 2, the system kernel is allowed to allocate a memory whose size could be bigger than the sum of the size of physical memory and the size of exchange workspace to the process.
+        # sysctls:
+        #     - vm.overcommit_memory=1
+        #     - net.core.somaxconn=512
+        # command: sh -c "./init.sh"
+        volumes:
+            - redisdata:/data:rw
+        networks: 
+            - frontend
+        ports:
+            - "6379:6379"
+        healthcheck:
+            test: redis-cli ping
+            interval: 1s
+            timeout: 3s
+            retries: 30
+    
+    es01:
+        image: elasticsearch:7.12.0
+        container_name: es01
+        environment:
+            - node.name=es01
+            - cluster.name=es-docker-cluster
+            - discovery.seed_hosts=es02
+            - cluster.initial_master_nodes=es01,es02
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+            # - http.cors.enabled=true
+            # - http.cors.allow-origin=*
+            # - "http.host=0.0.0.0"
+            # - "transport.host=127.0.0.1"
+        ports:
+            - "9200:9200"
+        volumes:
+            - data01:/usr/share/elasticsearch/data
+        networks: 
+            - es
+            - frontend
+        # healthcheck:
+        #     test: curl --silent --fail "localhost:9200/_cluster/health?wait_for_status=green&timeout=1s" || exit 1
+        #     interval: 30s
+        #     timeout: 30s
+        #     retries: 3
+        # restart: always
+
+    es02:
+        image: elasticsearch:7.12.0
+        container_name: es02
+        environment:
+            - node.name=es02
+            - cluster.name=es-docker-cluster
+            - discovery.seed_hosts=es01
+            - cluster.initial_master_nodes=es01,es02
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+            # - http.cors.enabled=true
+            # - http.cors.allow-origin=*
+            # - "http.host=0.0.0.0"
+            # - "transport.host=127.0.0.1"
+        volumes:
+            - data02:/usr/share/elasticsearch/data
+        networks: 
+            - es
+        # healthcheck:
+            # test: curl --silent --fail -X GET "localhost:9200/_cluster/health?wait_for_status=green&timeout=1s" || exit 1
+            # interval: 30s
+            # timeout: 30s
+            # retries: 3
+        # https://www.grandmetric.com/2020/09/16/docker-healthcheck/
+        # restart: always
+        # https://github.com/maxyermayank/docker-compose-elasticsearch-kibana/blob/master/docker-compose.yml
+
+    kibana:
+        image: kibana:7.12.0
+        container_name: kibana
+        ports:
+            - "5601:5601"
+        environment:
+            SERVER_NAME: kibana.localhost
+            ELASTICSEARCH_URL: http://es01:9200
+            ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200"]'
+        networks: 
+            - es
+            - frontend
+        healthcheck:
+            test: curl --silent --fail http://0.0.0.0:5601/login
+            retries: 6
+            # https://github.com/peter-evans/docker-compose-healthcheck
+        #https://gist.github.com/bossjones/92790d817e7767a68345ea0f29a6b455
+        # restart: always
+
+    nginx:
+        image: nginx:latest
+        container_name: nginx
+        ports:
+            - "80:80"
+        volumes:
+            - ./assets/nginx/:/etc/nginx/conf.d/
+        networks: 
+            - frontend
+            - backend
+        command: /bin/bash -c "nginx -g 'daemon off;'"
+        ulimits:
+            nproc: 65535
+        healthcheck:
+            test: curl --silent --fail http://localhost
+            interval: 30s
+            timeout: 30s
+            retries: 5
+
+volumes:
+    redisdata:
+    mongodata:
+    # kibana_data:
+    data01:
+        driver: local
+    data02:
+        driver: local
+
+networks:
+    es:
+    #     driver: bridge
+    frontend:
+    backend:
