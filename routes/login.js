@@ -7,6 +7,9 @@ const mongoose = require('mongoose');
 const connectEnsureLogin = require('connect-ensure-login');
 const LocalStrategy = require('passport-local').Strategy;
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
 // Încarcă controlerul necesar tratării rutelor de autentificare
 const UserPassport = require('./controllers/user.ctrl')(passport);
 
@@ -28,10 +31,8 @@ router.get('/', (req, res, next) => {
     ]
     // console.log("Din user.ctrl avem din req.body pe /login: ", req.body);
     res.render('login', {
-        title:    "login",
-        // style:   "/lib/fontawesome/css/fontawesome.min.css",
-        logoimg:  "img/rED-logo192.png",
-        credlogo: "img/CREDlogo150.jpg",
+        title:   "login",
+        logoimg: LOGO_IMG,
         scripts,
         modules,
         styles

@@ -7,9 +7,11 @@ const devlog         = require('morgan');
 const logger         = require('./util/logger');
 const compression    = require('compression');
 const express        = require('express');
+const rateLimit      = require("express-rate-limit");
 const cookies        = require('cookie-parser');
 const session        = require('express-session');
 const csurf          = require('csurf');
+const flash          = require('connect-flash');
 const redisClient    = require('./redis.config');
 const helmet         = require('helmet');
 const passport       = require('passport');
@@ -69,8 +71,19 @@ app.use(helmet({
 })); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
 // https://helmetjs.github.io/docs/dont-sniff-mimetype/
 
+// Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
+// see https://expressjs.com/en/guide/behind-proxies.html
+// app.set('trust proxy', 1);
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+
 /* === PROXY SUPPORT === */
 app.enable('trust proxy');
+
+// apply to all requests
+app.use('/api/', limiter);
 
 /* === CORS === */
 var corsOptions = {
@@ -88,10 +101,11 @@ app.use(cors(corsOptions));
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
+// introdu mesaje flash
+app.use(flash()); // acum ai acces în rute la `req.flash()`.
+
 /* === SESIUNI === */
 app.use(cookies()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names
-
-
 
 /* === INIȚIALIZARE I18N === */
 app.use(i18n.init); // instanțiere modul i18n - este necesar ca înainte de a adăuga acest middleware să fie cerut cookies
@@ -116,6 +130,12 @@ let sessionMiddleware = session({
     }
 });
 //=> FIXME: În producție, setează la secure: true pentru a funcționa doar pe HTTPS
+
+// https://www.npmjs.com/package/express-session
+if (app.get('env') === 'production') {
+    app.set('trust proxy', 1);              // trust first proxy
+    sessionMiddleware.cookie.secure = true; // serve secure cookies
+}
 
 // MIDDLEWARE de stabilirea a sesiunii de lucru prin încercări repetate. Vezi: https://github.com/expressjs/session/issues/99
 app.use(function (req, res, next) {
@@ -281,30 +301,45 @@ app.use('/log',            csurfProtection, UserPassport.ensureAuthenticated, lo
 app.use('/profile',        csurfProtection, profile);
 app.use('/tags',           csurfProtection, tags);
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
 // === 401 - NEPERMIS ===
 app.get('/401', function(req, res){
     res.status(401);
     res.render('nepermis', {
         title:    "401",
-        logoimg:  "img/red-logo-small30.png",
+        logoimg:  LOGO_IMG,
         mesaj:    "Încă nu ești autorizat pentru această zonă"
     });
 });
 
+// === 500 - Internal Server Error ===
+app.get('/500', function(req, res){
+    res.status(500);
+    res.render('500', {
+        title:    "500",
+        logoimg:  LOGO_IMG,
+        mesaj:    "Probleme legate de funcționare internă a serverului. Mergi la secțiunea de interes în câteva secunde."
+    });
+});
+
+
 //=== 404 - NEGĂSIT ===
 app.use('*', function (req, res, next) {
     res.render('negasit', {
-        title:    "404",
-        logoimg:  "/img/red-logo-small30.png",
+        title:         "404",
+        logoimg:       LOGO_IMG,
         imaginesplash: "/img/theseAreNotTheDroids.jpg",
-        mesaj:    "Nu-i! Verifică linkul!"
+        mesaj:         "Nu-i! Verifică linkul!"
     });
 });
 
 // colectarea erorilor de pe toate middleware-urile
 app.use(function catchAllMiddleware (err, req, res, next) {
-    console.error(err.stack);
-    res.status(500).send('În lanțul de prelucrare a cererii, a apărut o eroare');
+    console.error('Aplicația a crăpat cu următoarele detalii: ', err.stack);
+    logger.error(err);
+    res.redirect('/500');
 });
 
 /**
@@ -325,8 +360,9 @@ function formatBytes (bytes) {
     }
 
     return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
-} 
+}
 
+// Afișează informații utile la start
 console.info("Memoria RAM alocată la pornire este de: ", formatBytes(process.memoryUsage().rss));
 if( process.env.NODE_ENV === 'production') {
     console.info("Aplicația rulează în modul", app.get("env"));
@@ -339,7 +375,7 @@ let port = process.env.PORT || 8080;
 let hostname = os.hostname();
 var server = http.listen(port, '0.0.0.0', function cbConnection () {
     console.log('RED Colector ', process.env.APP_VER);
-    console.log(`Hostnme: ${hostname}, \n Port ${process.env.PORT}. \n Proces no:`, process.pid);
+    console.log(`Hostname: ${hostname}, \n port: ${process.env.PORT}. \n proces no: ${process.pid} \n`, `node: ${process.version}`);
 });
 
 /* === GESTIONAREA evenimentelor pe `process` și a SEMNALELOR === */

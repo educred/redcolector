@@ -1,5 +1,6 @@
 require('dotenv').config();
 const mongoose      = require('mongoose');
+const validator     = require('validator');
 const Schema        = mongoose.Schema;
 const redisClient   = require('../redis.config');
 const schema        = require('./resursa-red-es7');
@@ -14,7 +15,6 @@ const logger        = require('../util/logger');
 //     RES_IDX_ALS = ES7Helper.ESNAMES.RES_IDX_ALS;
 
 // let {RES_IDX_ES7, RES_IDX_ALS} = ES7Helper.esnames;
-console.log(ES7Helper);
 
 var softwareSchema = new mongoose.Schema({
     nume:     {
@@ -300,8 +300,12 @@ function clbkResFindPostHookREDschema (doc, next) {
 }
 
 // Adăugare middleware pe `post` pentru toate operațiunile `find`
-ResursaSchema.post(/^find/, clbkResFindPostHookREDschema);
+// ResursaSchema.post(/^find/, clbkResFindPostHookREDschema);
 
+
+
+// Resursa.methods.nume_metodă = function () {}; // metodă care poate fi folosită pe un singur obiect instanțiat în baza schemei. obiectul adus din bază!!!
+// Resursa.static.nume_metodă = function () {}; // metodă care poate fi folosită pe model
 
 /**
  * EXPORTUL MODULULUI

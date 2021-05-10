@@ -1,6 +1,8 @@
 require('dotenv').config();
 const mongoose              = require('mongoose');
 const passportLocalMongoose = require('passport-local-mongoose');
+const bcrypt                = require('bcrypt');
+const jwt                   = require('jsonwebtoken');
 const redisClient           = require('../redis.config');
 const esClient              = require('../elasticsearch.config');
 const schema                = require('./user-es7');
@@ -175,6 +177,28 @@ User.virtual('resurse', {
     foreignField: 'idContributor' // este câmpul cu id-uri de useri. Odată „ajunse” în câmpul virtual `resurse` se vor expanda la întreaga înregistrare pentru acel id
 });
 //https://mongoosejs.com/docs/populate.html#populate-virtuals
+
+// Verificarea credențialeleor în cazul folosirii jsontoken
+// Metoda statică poate fi accesată din model (static -> metodele modelului creat)
+User.static.findByCredentials = async (email, password) => {
+    const user = await User.findOne({email});
+    if (!user) {
+        throw new Error('Logare eșuată!');
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+        throw new Error('Logare eșuată!');
+    }
+    return user;
+};
+
+// Metoda este accesibilă instanțelor (instance methods).
+User.methods.generateAuthToken = async function () {
+    // accesezi userul prin legătura this. De aceea este nevoie de `function`
+    const user = this;
+    const token = jwt.sign({_id: user._id.toString()}, process.env.JWT_SECRET);
+    return token;
+}
 
 User.plugin(passportLocalMongoose);
 

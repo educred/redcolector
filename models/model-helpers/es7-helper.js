@@ -53,7 +53,7 @@ let primeREDidxAl = process.env.MONGO_REDS;
  * @param {String} idx Este un string din Redis cu numele indexului ES pentru care s-a constituit alias-ul
  * @param {String} aliasidx Este un string din .env cu numele indexului alias la care trebuie indexată înregistrarea
  */
-exports.searchIdxAndCreateDoc = async function searchCreateIdx (schema, data, idx, aliasidx) {
+exports.searchIdxAndCreateDoc = async function searchIdxAndCreateDoc (schema, data, idx, aliasidx) {
     // https://stackoverflow.com/questions/44395313/node-mongoose-how-to-get-a-full-list-of-schemas-documents-and-subdocuments
     // console.log('[es7-helper.js::searchIdxAlCreateDoc()] `schema.paths` are valorile: ', schema);
     /*

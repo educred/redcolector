@@ -4,6 +4,9 @@ const router   = express.Router();
 const moment   = require('moment');
 const Resursa  = require('../models/resursa-red'); // Adu modelul resursei
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
 /* === LANDING :: / === */
 router.get('/', function clbkRootRoute (req, res, next) {
     // let localizat = moment(result.date).locale('ro').format('LLL');
@@ -53,7 +56,7 @@ router.get('/', function clbkRootRoute (req, res, next) {
         res.render('index', {
             title:     "Acasă",
             user:      req.user,
-            logoimg:   "img/rED-logo192.png",            
+            logoimg:   LOGO_IMG,            
             resurse:   newResultArr,
             csrfToken: req.csrfToken(),
             modules,

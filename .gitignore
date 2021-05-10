@@ -89,3 +89,6 @@ backup
 
 # ignoră tururile ghidate
 .tours
+
+# ignoră cheile de securitate create local
+assets/ssl_keys

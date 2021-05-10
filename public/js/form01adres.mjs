@@ -3628,7 +3628,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         });
 
         // colectarea etichetelor
-        // TODO: Diferențiază-le pe cele care sunt redactate cu `[]` de celelalte. Cele cu `[]` trebuie să genereze în backend colecții!!! IMPLEMENTEAZĂ!
+        //_ TODO: Diferențiază-le pe cele care sunt redactate cu `[]` de celelalte. Cele cu `[]` trebuie să genereze în backend colecții!!! IMPLEMENTEAZĂ!
         var newTags = document.getElementById('eticheteRed'); // ref la textarea de introducere
         // detectează când s-a introdus o etichetă în momentul în care apare o virgulă
         newTags.addEventListener('input', (evt) => {

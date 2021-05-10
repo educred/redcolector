@@ -31,6 +31,9 @@ redisClient.get("USR_IDX_ALS", (err, reply) => {
     USR_IDX_ALS = reply;
 });
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
 // === VERIFICAREA ROLURILOR ===
 let checkRole = require('./controllers/checkRole.helper');
 const logger = require('../util/logger');
@@ -83,8 +86,7 @@ router.get('/', function clbkAdmRoot (req, res) {
         res.render('administrator', {
             title:     "Admin",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
             scripts:   scriptsArr,
             modules,
@@ -111,8 +113,7 @@ router.get('/', function clbkAdmRoot (req, res) {
         res.render('validator', {
             title:     "Validator",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
             scripts,
             modules,
@@ -137,8 +138,7 @@ router.get('/reds', function clbkAdmReds (req, res) {
         res.render('reds-data-visuals', {
             title:     "Adm. REDs",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
             scripts:   scriptsArr,
             modules,
@@ -294,10 +294,9 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                 }
 
                 res.render('resursa-admin', {                    
-                    title:    "RED admin",
-                    user:     req.user,
-                    logoimg:  "/img/red-logo-small30.png",
-                    credlogo: "../img/CREDlogo.jpg",
+                    title:     "RED admin",
+                    user:      req.user,
+                    logoimg:   LOGO_IMG,
                     csrfToken: req.csrfToken(),
                     resursa,
                     scripts,
@@ -305,10 +304,9 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                 });
             } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
                 res.render('resursa', {                    
-                    title:    "RED",
-                    user:     req.user,
-                    logoimg:  "/img/red-logo-small30.png",
-                    credlogo: "../img/CREDlogo.jpg",
+                    title:     "RED",
+                    user:      req.user,
+                    logoimg:   LOGO_IMG,
                     csrfToken: req.csrfToken(),
                     resursa,
                     scripts,
@@ -431,8 +429,7 @@ router.get('/compets', function clbkAdmCompets (req, res) {
         res.render('comps-data-visuals', {
             title:     "CompS",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
             scripts:   scriptsArr,
             modules,
@@ -457,12 +454,11 @@ router.get('/compets/new', function clbkAdmCompetsID (req, res) {
         /* === ADMIN === */
         if(req.session.passport.user.roles.admin){
             res.render('comp-id-admin', {                    
-                title:    "RED admin",
-                user:     req.user,
-                logoimg:  "/img/red-logo-small30.png",
-                credlogo: "../img/CREDlogo.jpg",
+                title:     "RED admin",
+                user:      req.user,
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
-                scripts: scriptsArr,
+                scripts:   scriptsArr,
                 modules,
                 styles
             });
@@ -512,13 +508,12 @@ router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
             /* === ADMIN === */
             if(req.session.passport.user.roles.admin){
                 res.render('comp-id-admin', {                    
-                    title:    "RED admin",
-                    user:     req.user,
-                    logoimg:  "/img/red-logo-small30.png",
-                    credlogo: "../img/CREDlogo.jpg",
+                    title:     "RED admin",
+                    user:      req.user,
+                    logoimg:   LOGO_IMG,
                     csrfToken: req.csrfToken(),
                     comp,
-                    scripts: scriptsArr,
+                    scripts:   scriptsArr,
                     modules,
                     styles
                 });

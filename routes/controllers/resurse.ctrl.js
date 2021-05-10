@@ -1,12 +1,13 @@
 require('dotenv').config();
+
+/* === DEPENDINȚE === */
+const moment       = require('moment');
+const redisClient  = require('../../redis.config');
 const {v4: uuidv4} = require('uuid');
 const logger       = require('../../util/logger');
 /* === LIVRESQ - CONNECTOR === */
 const LivresqConnect = require('../../models/livresq-connect').LivresqConnect;
 
-/* === DEPENDINȚE === */
-const moment      = require('moment');
-const redisClient = require('../../redis.config');
 /* === MODELE === */
 const Resursa     = require('../../models/resursa-red'); // Adu modelul resursei
 /* === HELPERE === */
@@ -37,9 +38,12 @@ redisClient.get("USR_IDX_ALS", (err, reply) => {
     USR_IDX_ALS = reply;
 });
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
 /* === AFIȘAREA RESURSELOR :: /resurse === */
 exports.loadRootResources = function loadRootResources (req, res, next) {
-    // ===> ACL
+    //  ACL
     let roles = ["user", "validator", "cred"];
     // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles); 
@@ -61,9 +65,11 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
         {module: '/js/redincredall.mjs'} 
     ];
 
+
+
     // REVIEW: Verifică dacă indexul de căutare există
     if (RES_IDX_ALS) {
-        console.log('[resurse.ctrl.js]::Verificarea existenței alias-ului aduce val: ', RES_IDX_ALS);
+        console.log('[resurse.ctrl.js]::Verificarea existenței alias-ului ES aduce val: ', RES_IDX_ALS);
     } else {
         //- FIXME: Tratează cazul în care nu există indexul alias în ES7 pentru că pur și simplu nu există index.
         let err = new Error('[resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix');
@@ -85,7 +91,7 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
             res.render('resurse', {
                 title:        "RED::adm",
                 user:         req.user,
-                logoimg:      "img/rED-logo192.png",
+                logoimg:      LOGO_IMG,
                 csrfToken:    req.csrfToken(),
                 resurse:      newResultArr,
                 activeResLnk: true,
@@ -114,7 +120,7 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
             res.render('resurse', {
                 title:        "Resurse publice",
                 user:         req.user,
-                logoimg:      "img/rED-logo192.png",
+                logoimg:      LOGO_IMG,
                 csrfToken:    req.csrfToken(),                
                 resurse:      newResultArr,
                 activeResLnk: true,
@@ -197,8 +203,7 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
             res.render('resursa-cred', {                
                 title:     obi.title,
                 user:      req.user,
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resursa:   obi,
                 data,
@@ -288,7 +293,7 @@ exports.describeResource = function describeResource (req, res, next) {
     };
 
     // roluri pe care un cont le poate avea în proiectul CRED.
-    let roles = ["user", "cred", "validator"];
+    let roles = ["user", "cred", "validator"]; // _REVIEW: când vei permite tuturor să adauge resurse, introdu și `user`!!
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
     // console.log(req.session.passport.user.roles.rolInCRED);
 
@@ -305,10 +310,9 @@ exports.describeResource = function describeResource (req, res, next) {
 
         // Dacă avem un admin, atunci oferă acces neîngrădit
         res.render('adauga-res', {            
-            title:   "Adauga",
-            user:    req.user,
-            logoimg: "red-logo-small30.png",
-            credlogo:"/img/CREDlogo.jpg",
+            title:     "Adauga",
+            user:      req.user,
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
             styles,
             modules,
@@ -317,10 +321,10 @@ exports.describeResource = function describeResource (req, res, next) {
             livresqProjectRequest: url /* === LIVRESQ CONNECTOR === */
         });
         // trimite informații despre user care sunt necesare formularului de încărcare pentru autocompletare
-    } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere al resursei.
+    } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
         
         let user = req.session.passport.user;
-        // FIXME: Introdu în formularul de creare cont câmpurile name și surname pentru a elimina artificiul făcut pentru integrarea cu Livresq
+        // -FIXME: Introdu în formularul de creare cont câmpurile name și surname pentru a elimina artificiul făcut pentru integrarea cu Livresq
         let given_name = 'Jane' || user.googleProfile.given_name;
         let family_name = 'Doe' || user.googleProfile.family_name;
         
@@ -329,10 +333,9 @@ exports.describeResource = function describeResource (req, res, next) {
         if(!url.startsWith("http")) url = "#";
 
         res.render('adauga-res', {            
-            title:   "Adauga",
-            user:    req.user,
-            logoimg: "/img/rED-logo192.png",
-            credlogo:"/img/CREDlogo.jpg",
+            title:     "Adauga",
+            user:      req.user,
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
             styles,
             modules,

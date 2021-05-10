@@ -14,9 +14,11 @@ FROM base as devel
 ENV NODE_ENV=development
 WORKDIR /redcolector
 # USER node
+RUN apt-get update && apt-get install -y git
 RUN npm install -g npm && npm install -g nodemon
 COPY ./package*.json ./
-RUN npm install
+# Enables caching for npm installs, making subsequent npm installs faster
+RUN npm config set cache-min 9999999 && npm install
 # USER node
 COPY . ./
 EXPOSE ${FRONT_END_PORT}
@@ -24,17 +26,15 @@ EXPOSE ${FRONT_END_PORT}
 # construiește nivelul de producție
 FROM base as prod
 ENV NODE_ENV=production
-WORKDIR /home/node/redcolector
+WORKDIR /redcolector
 RUN apt-get update && apt-get install -y git
-RUN chown -R node:node /redcolector
+RUN npm install -g npm && npm install -g nodemon
 # Truc pentru copierea și a lui package-locked
-COPY --chown=node:node ./package*.json ./
-USER node
-COPY --chown=node:node . ./
+COPY ./package*.json ./
+RUN npm install --only=production
 # folosește `npm ci` pentru a instala pachetele din package-lock.json
-RUN npm ci && npm cache clean --force
+# RUN npm ci && npm cache clean --force
 EXPOSE ${FRONT_END_PORT}
-CMD ["npm", "run", "start"]
 
 # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md
 # https://www.freecodecamp.org/news/the-docker-handbook/

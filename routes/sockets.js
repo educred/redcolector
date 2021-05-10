@@ -6,7 +6,7 @@ const path        = require('path');
 const BagIt       = require('bagit-fs');
 const {v4: uuidv4}= require('uuid'); // https://github.com/uuidjs/uuid#deep-requires-now-deprecated
 // const Readable    = require('stream').Readable;
-const {Readable, pipeline} = require('stream');
+const {Readable, Writable, pipeline} = require('stream');
 const mongoose    = require('mongoose');
 const validator   = require('validator');
 const redisClient = require('../redis.config');
@@ -40,9 +40,6 @@ redisClient.get("USR_IDX_ALS", (err, reply) => {
     if (err) console.error;
     USR_IDX_ALS = reply;
 });
-
-
-
 
 // funcțiile de căutare
 const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
@@ -211,7 +208,8 @@ module.exports = function sockets (io) {
 
         // === RESURSA === ::Primește fișiere, fapt care conduce la crearea Bag-ului. Servește instanței de Editor.js (uploadByFile și uploadByUrl)
         socket.on('resursa', function clbkResursa (resourceFile) {
-            //TODO: Detectează dimensiunea fișierului și dă un mesaj în cazul în care depășește anumită valoare (vezi API-ul File)
+            //_ TODO: Detectează dimensiunea fișierului și dă un mesaj în cazul în care depășește anumită valoare (vezi API-ul File)
+            /* LIMITAREA dimensiunii fișierului am făcut-o cu directivă în NGINX deocamdată */
             /* 
                 Obiectul primit `resourceFile` este `objRes` din `form01adres` și are următoarea semnătură
                 {
@@ -228,39 +226,48 @@ module.exports = function sockets (io) {
             // creez calea către subdirectorul corespunzător userului
             let calea = `${process.env.REPO_REL_PATH}${resourceFile.user}/`;
 
-            // Transformarea Buffer-ului primit într-un stream `Readable`
-            var sourceStream = new Readable();      // Creează stream-ul Readable
-            sourceStream.push(resourceFile.resF);   // Injectează Buffer-ul care este fișierul, de fapt
-            sourceStream.push(null);                // Trimite null în stream pentru a semnala faptul că injectarea fișierului s-a încheiat.
-
             // asigură-te că poți scrie în directorul userului
             fs.access(calea, function clbkfsAccess (error) {
                 if (error) {
                     // console.log("[sockets.js::resursa] La verificarea posibilității de a scrie în directorul userului am dat de eroare: ", error);
+                    logger.error(error);
                 } else {
                     // console.log("[sockets.js::resursa] Directorul există și poți scrie liniștit în el!!!");
                 }
             });
 
+            // Transformarea Buffer-ului primit într-un stream `Readable` gata de a fi scris pe disc
+            var sourceStream = new Readable();      // Creează stream-ul Readable
+            sourceStream.push(resourceFile.resF);   // Injectează Buffer-ul care este fișierul, de fapt
+            sourceStream.push(null);                // Trimite null în stream pentru a semnala faptul că injectarea fișierului s-a încheiat.
+            // construiește obiectul de răspuns.
+            const responseObj4AddedFile = {
+                success: 0,
+                file: '',
+                size: resourceFile.size
+            };
             /*
-            * === ÎNCĂRCAREA FIȘIERELOR ===
-            * valoarea `uuid` este setată la momentul trimiterii template-ului
+            * === ÎNCĂRCAREA FIȘIERULUI ===
+            * valoarea `uuid` este setată la momentul trimiterii template-ului, deci vine de la client!!!
+            * dacă nu ai `uuid`, înseamnă că ai o intrare de blog
             */
             if (resourceFile.uuid) {
                 // setează calea către directorul deja existent al resursei
                 let existPath = calea + `${resourceFile.uuid}`;
 
                 // Calea către fișier [ce pleacă în client]
-                let file = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/${resourceFile.uuid}/data/${resourceFile.numR}`;
+                let file   = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/${resourceFile.uuid}/data/${resourceFile.numR}`;
                 let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/${resourceFile.uuid}/data/${resourceFile.numR}`; // calea către fișierul local din server
 
+                responseObj4AddedFile.file = file;
+
                 /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
-                fs.ensureDir(existPath, desiredMode, err => {
-                    if(err === null){
-                        console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
+                fs.ensureDir(existPath, desiredMode, (error) => {
+                    if(error === null){
+                        // console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
                     } else {
-                        console.log("[sockets.js::'resursa'::cu uuid] Eroare la verificare/crearea subdirectorului cu următoarele detalii: ", err);
-                        throw err;
+                        console.log("[sockets.js::'resursa'::cu uuid] Eroare la verificare/crearea subdirectorului cu următoarele detalii: ", error);
+                        logger.error(error);
                     }
 
                     // reactualizează referința către Bag. Verifică dacă cu cumva funcționează fără.
@@ -270,37 +277,68 @@ module.exports = function sockets (io) {
                     var destinationStream = lastBag.createWriteStream(`${resourceFile.numR}`);
 
                     // adăugarea fișierului primit în Bag
-                    // sourceStream.pipe(destinationStream); // SCRIE PE HARD [OLD]
                     pipeline(sourceStream, destinationStream, (error, val) => {
                         if (error) {
                             console.error("[sockets.js::'resursa'::cu uuid] Nu s-a reușit scrierea fișierului în Bag", error);
-                            next(error);
+                            logger.error(err);
                         }
-                        console.log('[sockets.js::resursa] Am primit următoarea valoare de pe streamul destination ', val);
+                        
+                        /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
+                        fs.access(localF, fs.F_OK, (error) => {
+                            if (error) {
+                                console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ", error);
+                                logger.error(error);
+                                socket.emit('resursa', responseObj4AddedFile);
+                            }
+                            // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
+                            responseObj4AddedFile.success = 1;
+                            // trimite înapoi obiectul necesar confirmării operațiunii lui Editor.js
+                            socket.emit('resursa', responseObj4AddedFile);
+                        });  
                     });
 
-                    // construiește obiectul de răspuns.
-                    var responseObj4AddedFile = {
-                        success: 0,
-                        file,
-                        size: resourceFile.size
-                    };
-
-                    /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
-                    fs.access(localF, fs.F_OK, (err) => {
-                        if (err) {
-                            console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ", err);
-                            socket.emit('resursa', responseObj4AddedFile);
-                        }
-                        // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
-                        responseObj4AddedFile.success = 1;
-                        // trimite înapoi obiectul necesar confirmării operațiunii lui Editor.js
-                        socket.emit('resursa', responseObj4AddedFile);
-                    });                    
+                  
                 });
             } else {
-                const err = new Error('message', 'nu pot încărca... se încearcă crearea unui bag nou');
-                console.error(err.message);                
+                //_ TODO: ne vom folosi de acest caz pentru a crea o imagine pe disc pentru o intrare de blog
+                let timestamp = Date.now();
+                // setează calea către directorul deja existent al resursei
+                let existPath = calea + 'log/' + timestamp;
+                // Calea către fișier [ce pleacă înapoi în client]
+                let file   = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/log/${timestamp}/${resourceFile.numR}`;
+                // calea către fișierul local din server
+                let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/log/${timestamp}/${resourceFile.numR}`;
+
+                responseObj4AddedFile.file = file;
+
+                /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
+                fs.ensureDir(existPath, desiredMode, (error) => {
+                    if(error){
+                        console.log("[sockets.js::'resursa'] Eroare la verificare/crearea subdirectorului cu următoarele detalii: ", error);
+                        logger.error(error);
+                    }
+
+                    // var destinationStream = fs.createWriteStream(`${resourceFile.numR}`);
+                    var destinationStream = fs.createWriteStream(localF);
+                    pipeline(sourceStream, destinationStream, (error, val) => {
+                        if (error) {
+                            console.error("[sockets.js::'resursa'] Nu s-a reușit scrierea fișierului", error);
+                            logger.error(error);
+                        }
+                        /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
+                        fs.access(localF, fs.F_OK, (error) => {
+                            if (error) {
+                                console.log("[sockets.js::'resursa'] Nu am găsit fișierul tocmai scris: ", error);
+                                logger.error(error);
+                                socket.emit('resursa', responseObj4AddedFile);
+                            }
+                            // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
+                            responseObj4AddedFile.success = 1;
+                            // trimite înapoi obiectul necesar confirmării operațiunii lui Editor.js
+                            socket.emit('resursa', responseObj4AddedFile);
+                        });   
+                    });
+                });            
             }
         });
 
@@ -439,7 +477,8 @@ module.exports = function sockets (io) {
                 utilMie:         0,
                 etichete:        RED.etichete
             });
-            // SAVE!!! INDEXARE ÎN ACELAȘI MOMENT!
+
+            // SAVE!!!
             var pResEd = resursaEducationala.populate('competenteS').execPopulate(); // returnează o promisiune
             pResEd.then(async function clbkThenSave (res) {
                 // Trimite înregistrarea și în Elasticsearch și creează și un fișier json pe hard în subdirectorul red-ului [FIXED::`post`hook pe schemă la `save`]
@@ -507,17 +546,19 @@ module.exports = function sockets (io) {
             }
         });
 
-        // === LOG ===
+        // === LOG === :: Crearea unei noi înregistrări în blog
         socket.on('log', (entry) => {
+            // creează documentul
             var log = new Log({
-                _id: new mongoose.Types.ObjectId(),
-                date: Date.now(),
-                title: entry.title,
+                _id:           new mongoose.Types.ObjectId(),
+                date:          Date.now(),
+                title:         entry.title,
                 idContributor: entry.idContributor,
-                autor: entry.autor,
-                content: entry.content,
-                contorAcces: entry.contorAcces
+                autor:         entry.autor,
+                content:       entry.content,
+                contorAcces:   entry.contorAcces
             });
+            // salvează documentul
             log.save().then((result) => {
                 socket.emit('log', result);
             }).catch(err => {
@@ -567,18 +608,12 @@ module.exports = function sockets (io) {
                 versioned: false
             */
             // Șterge din MongoDB, din Elasticsearch, precum și de pe hard FIXME: bagă callback-ul în resource-ops.js
-            
-            //FIXME: Se sterge resursa, dar este o promisiune care da o eroare si este netratată!!!
 
             let dirPath      = path.join(`${process.env.REPO_REL_PATH}`, `${resource.contribuitor}`, `${resource.uuid}`),
                 path2deleted = path.join(`${process.env.REPO_REL_PATH}`, `${resource.contribuitor}`, 'deleted'),
                 path2deres   = `${path2deleted}/${resource.uuid}`; // constituie calea către viitoarea arhivă din deleted.          
 
             console.info("Căile formate sunt: ", dirPath, path2deleted, path2deres);
-            // Căile formate sunt:  
-            // repo/5e9832fcf052494338584d92/5c7d042a-3694-4419-89e1-c8e1be836a43 
-            // repo/5e9832fcf052494338584d92/deleted 
-            // repo/5e9832fcf052494338584d92/deleted/5c7d042a-3694-4419-89e1-c8e1be836a43
 
             // Verifică dacă în rădăcina userului există subdirectorul `deleted`. Dacă nu, creează-l!!!
             fs.ensureDir(path2deleted, 0o2775).then(function clbkArchiveAndDel () {
@@ -606,9 +641,9 @@ module.exports = function sockets (io) {
 
                 /* === FINALIZEAZĂ ARHIVAREA === */
                 archive.finalize();
-            }).catch(error => {
+            }).catch((error) => {
                 console.log("[sockets.js::'delresid'] Întreaga operațiune de arhivare și ștergere a subdirectorului resursei a eșuat cu eroarea: ", error);
-                logger.error(`Întreaga operațiune de arhivare și ștergere a subdirectorului resursei a eșuat cu eroarea: ${error.message}`);
+                logger.error(error.message);
             });
 
             /**
@@ -619,7 +654,7 @@ module.exports = function sockets (io) {
                 // rre('mesaje', 'Resursa a intrat în conservare!');
                 // rre('delresid', {bytes: archive.pointer()});
 
-                console.log("[sockets.js::'delresid'] Acest id am să incerc să-l șterg. Acum îl caut în Mongoose: ", resource.id);
+                // console.log("[sockets.js::'delresid'] Acest id am să incerc să-l șterg. Acum îl caut în Mongoose: ", resource.id);
 
                 /* === Șterge din MONGODB și din Elasticsearch === */
                 Resursa.findOneAndDelete({_id: resource.id}, (err, doc) => {       
@@ -631,21 +666,22 @@ module.exports = function sockets (io) {
                     if (doc.id) {
                         // console.log('Documentul adus din bază este ', doc);
 
-                        if (RES_IDX_ALS) {
-                            // Șterge înregistrarea din Elasticsearch, dacă ștergerea din bază a reușit                        
-                            esClient.delete({
-                                id: doc.id,
-                                index: RES_IDX_ES7,
-                                refresh: true
-                            }, function (err, response, status) {
-                                if (err) {
-                                    console.error(`[sockets.js::'delresid'] În timpul ștergerii din Elasticsearch, a apărut eroarea pentru ${doc.id} la indexul ${index}, având eroarea: ${err.message}`, `reason`, response.body.error.reason, 'status: ', status);
-                                    logger.error(err);
-                                }
-                                // console.log(`[sockets.js::'delresid'] Starea operațiunii asupra Elasticsearch este `, status);
-                                // console.log(`[sockets.js::'delresid'] Avem răspunsul din partea lui Elasticsearch `, response);
-                            });
-                        }
+                        //_ FIXME: Reactivează la momentul reglării mecanismului de indexare.
+                        // if (RES_IDX_ALS) {
+                        //     // Șterge înregistrarea din Elasticsearch, dacă ștergerea din bază a reușit                        
+                        //     esClient.delete({
+                        //         id: doc.id,
+                        //         index: RES_IDX_ES7,
+                        //         refresh: true
+                        //     }, function (err, response, status) {
+                        //         if (err) {
+                        //             console.error(`[sockets.js::'delresid'] În timpul ștergerii din Elasticsearch, a apărut eroarea pentru ${doc.id} la indexul ${index}, având eroarea: ${err.message}`, `reason`, response.body.error.reason, 'status: ', status);
+                        //             logger.error(err);
+                        //         }
+                        //         // console.log(`[sockets.js::'delresid'] Starea operațiunii asupra Elasticsearch este `, status);
+                        //         // console.log(`[sockets.js::'delresid'] Avem răspunsul din partea lui Elasticsearch `, response);
+                        //     });
+                        // }
                         // reason: 'no write index is defined for alias [resedus]. The write index may be explicitly disabled using is_write_index=false or the alias points to multiple indices without one being designated as a write index'
 
                         /* === ȘTERGE SUBDIRECTOR === */

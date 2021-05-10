@@ -1,10 +1,10 @@
 require('dotenv').config();
 /* === DEPENDINȚE === */
-const util     = require('util');
-const express  = require('express');
-const router   = express.Router();
-const mongoose = require('mongoose');
-const moment   = require('moment');
+const util        = require('util');
+const express     = require('express');
+const router      = express.Router();
+const mongoose    = require('mongoose');
+const moment      = require('moment');
 const logger      = require('../util/logger');
 const redisClient = require('../redis.config');
 
@@ -20,14 +20,19 @@ const schema     = require('../models/resursa-red-es7');
 const ES7Helper  = require('../models/model-helpers/es7-helper');
 let editorJs2TXT = require('./controllers/editorJs2TXT');
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
 // INDECȘII ES7
-const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+let RES_IDX_ES7 = '', RES_IDX_ALS = '';
+
+redisClient.get("RES_IDX_ES7", (err, reply) => {
     if (err) console.error;
-    return reply;
+    RES_IDX_ES7 = reply;
 });
-const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+redisClient.get("RES_IDX_ALS", (err, reply) => {
     if (err) console.error;
-    return reply;
+    RES_IDX_ALS = reply;
 });
 
 /* === PROFILUL PROPRIU === */
@@ -35,8 +40,7 @@ router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, re
     res.render('profile', {        
         title:        "Profil",
         user:         req.user,
-        logoimg:      "/img/red-logo-small30.png",
-        credlogo:     "../img/CREDlogo.jpg",
+        logoimg:      LOGO_IMG,
         csrfToken:    req.csrfToken(),
         activePrfLnk: true
     });
@@ -101,8 +105,7 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
             res.render('resurse-profil', {                
                 title:     "Profil",
                 user:      req.user,
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resurse:   newResultArr,
                 scripts,
@@ -193,59 +196,59 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             obi.activitati = activitatiRehashed;
 
             // Dacă nu este indexată în Elasticsearch deja, indexează aici!
-            esClient.exists({
-                index: RES_IDX_ALS,
-                id: req.params.idres
-            }).then(resFromIdx => {
-                /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
-                if(resFromIdx.statusCode === 404){
-                    // verifică dacă există conținut
-                    var content2txt = '';
-                    if ('content' in obi) {
-                        content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                    }
-                    // indexează documentul
-                    const data = {
-                        id:               obi._id,
-                        date:             obi.date,
-                        idContributor:    obi.idContributor,
-                        emailContrib:     obi.emailContrib,
-                        uuid:             obi.uuid,
-                        autori:           obi.autori,
-                        langRED:          obi.langRED,
-                        title:            obi.title,
-                        titleI18n:        obi.titleI18n,
-                        arieCurriculara:  obi.arieCurriculara,
-                        level:            obi.level,
-                        discipline:       obi.discipline,
-                        disciplinePropuse:obi.disciplinePropuse,
-                        competenteGen:    obi.competenteGen,
-                        rol:              obi.rol,
-                        abilitati:        obi.abilitati,
-                        materiale:        obi.materiale,
-                        grupuri:          obi.grupuri,
-                        domeniu:          obi.demersuri,
-                        spatii:           obi.spatii,
-                        invatarea:        obi.invatarea,
-                        description:      obi.description,
-                        dependinte:       obi.dependinte,
-                        coperta:          obi.coperta,
-                        content:          content2txt,
-                        bibliografie:     obi.bibliografie,
-                        contorAcces:      obi.contorAcces,
-                        generalPublic:    obi.generalPublic,
-                        contorDescarcare: obi.contorDescarcare,
-                        etichete:         obi.etichete,
-                        utilMie:          obi.utilMie,
-                        expertCheck:      obi.expertCheck
-                    };
+            // esClient.exists({
+            //     index: RES_IDX_ALS,
+            //     id: req.params.idres
+            // }).then(resFromIdx => {
+            //     /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
+            //     if(resFromIdx.statusCode === 404){
+            //         // verifică dacă există conținut
+            //         var content2txt = '';
+            //         if ('content' in obi) {
+            //             content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+            //         }
+            //         // indexează documentul
+            //         const data = {
+            //             id:               obi._id,
+            //             date:             obi.date,
+            //             idContributor:    obi.idContributor,
+            //             emailContrib:     obi.emailContrib,
+            //             uuid:             obi.uuid,
+            //             autori:           obi.autori,
+            //             langRED:          obi.langRED,
+            //             title:            obi.title,
+            //             titleI18n:        obi.titleI18n,
+            //             arieCurriculara:  obi.arieCurriculara,
+            //             level:            obi.level,
+            //             discipline:       obi.discipline,
+            //             disciplinePropuse:obi.disciplinePropuse,
+            //             competenteGen:    obi.competenteGen,
+            //             rol:              obi.rol,
+            //             abilitati:        obi.abilitati,
+            //             materiale:        obi.materiale,
+            //             grupuri:          obi.grupuri,
+            //             domeniu:          obi.demersuri,
+            //             spatii:           obi.spatii,
+            //             invatarea:        obi.invatarea,
+            //             description:      obi.description,
+            //             dependinte:       obi.dependinte,
+            //             coperta:          obi.coperta,
+            //             content:          content2txt,
+            //             bibliografie:     obi.bibliografie,
+            //             contorAcces:      obi.contorAcces,
+            //             generalPublic:    obi.generalPublic,
+            //             contorDescarcare: obi.contorDescarcare,
+            //             etichete:         obi.etichete,
+            //             utilMie:          obi.utilMie,
+            //             expertCheck:      obi.expertCheck
+            //         };
 
-                    ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS); // https://stackoverflow.com/questions/50609417/elasticsearch-error-cluster-block-exception-forbidden-12-index-read-only-all                  
-                }
-                return resFromIdx;
-            }).catch(err => {
-                console.error(err);
-            });
+            //         ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS); // https://stackoverflow.com/questions/50609417/elasticsearch-error-cluster-block-exception-forbidden-12-index-read-only-all                  
+            //     }
+            //     return resFromIdx;
+            // }).catch(err => {
+            //     console.error(err);
+            // });
             return obi;
         } else {
             // Caută resursa și în Elasticsearch. Dacă există indexată, dar a fost ștearsă din MongoDB, șterge-o din indexare, altfel va apărea la căutare
@@ -291,8 +294,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             res.render('resursa-admin', {
                 title:     "RED",
                 user:      req.user,                
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
@@ -310,8 +312,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             res.render('resursa-validator', {            
                 title:     "Validator",
                 user:      req.user,               
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
@@ -325,8 +326,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 title:     "RED",
                 user:      req.user,
                 // style:     "/lib/fontawesome/css/fontawesome.min.css",
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,

@@ -1,3 +1,100 @@
+socket.on('delresid'
+
+AM DEZACTIVAT CODUL DE STERGERE DIN INDEX ES!!! REACTIVEAZA!
+
+
+Căile formate sunt:  repo/5e9832fcf052494338584d92/f1d06596-2878-4d09-b939-ab20b5a404c0 repo/5e9832fcf052494338584d92/deleted repo/5e9832fcf052494338584d92/deleted/f1d06596-2878-4d09-b939-ab20b5a404c0
+[sockets.js::'delresid'] Acest id am să incerc să-l șterg. Acum îl caut în Mongoose:  6097ed16531dfaf084e9b6bf
+[app.js] A apărut un "uncaughtException" cu detaliile:  index is not defined
+[09-05-2021 17:09:57] [error] [undefined]:      index is not defined ReferenceError: index is not defined
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:683:163
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:339:9)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:264:11)
+    at IncomingMessage.emit (node:events:377:35)
+    at endReadableNT (node:internal/streams/readable:1312:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21)
+[09-05-2021 17:09:57] [error] [undefined]:      index is not defined ReferenceError: index is not defined
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:683:163
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:339:9)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:264:11)
+    at IncomingMessage.emit (node:events:377:35)
+    at endReadableNT (node:internal/streams/readable:1312:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21)
+Procesul a fost încheiat având codul:  1
+[nodemon] app crashed - waiting for file changes before starting...
+
+
+
+
+
+AM dezafectat codul care face indexare în profile/cod_resursă. Voi reactiva cand reconstruiesc sistemul de indexare 
+
+
+undefined
+
+[09-05-2021 16:47:23] [error] [undefined]:      Cannot read property 'exists' of undefined
+[09-05-2021 16:47:23] [error] [undefined]:      Cannot read property 'exists' of undefined
+
+(node:60048) Warning: Accessing non-existent property 'indices' of module exports inside circular dependency
+    at emitCircularRequireWarning (node:internal/modules/cjs/loader:703:11)
+    at Object.get (node:internal/modules/cjs/loader:717:5)
+    at Object.searchCreateIdx [as searchIdxAndCreateDoc] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:99:35)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/profile.js:246:31
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+GET /profile/6097e7e9448834e95b3fc3c5 200 134.498 ms - -
+Căile formate sunt:  repo/5e9832fcf052494338584d92/c17f02a9-7e16-428d-8773-bb6af6a4f8a7 repo/5e9832fcf052494338584d92/deleted repo/5e9832fcf052494338584d92/deleted/c17f02a9-7e16-428d-8773-bb6af6a4f8a7
+[sockets.js::'delresid'] Acest id am să incerc să-l șterg. Acum îl caut în Mongoose:  6097e7e9448834e95b3fc3c5
+[app.js] A apărut un "uncaughtException" cu detaliile:  index is not defined
+[09-05-2021 16:48:49] [error] [undefined]:      index is not defined ReferenceError: index is not defined
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:682:163
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:339:9)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:264:11)
+    at IncomingMessage.emit (node:events:377:35)
+    at endReadableNT (node:internal/streams/readable:1312:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21)
+[09-05-2021 16:48:49] [error] [undefined]:      index is not defined ReferenceError: index is not defined
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:682:163
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:339:9)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:264:11)
+    at IncomingMessage.emit (node:events:377:35)
+    at endReadableNT (node:internal/streams/readable:1312:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21)
+Procesul a fost încheiat având codul:  1
+[nodemon] app crashed - waiting for file changes before starting...
+
+
+
+
+[app.js] O promisiune a fost respinsă fără a fi tratată respingerea Promise {
+  <rejected> ReferenceError: RES_IDX_ES7 is not defined
+      at model.clbkPostSave1 (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/resursa-red.js:182:5)
+      at callMiddlewareFunction (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:483:23)
+      at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:194:9)
+      at Kareem.execPost (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:218:3)
+      at _cb (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:308:15)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/model.js:418:5
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/model.js:293:7
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/utils.js:697:5
+      at executeCallback (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/operations/execute_operation.js:65:7)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/operations/insert_one.js:34:21
+      at handleCallback (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/utils.js:102:55)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/operations/common_functions.js:262:5
+      at handler (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/core/sdam/topology.js:944:24)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/cmap/connection_pool.js:350:13
+      at handleOperationResult (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/core/sdam/server.js:558:5)
+      at MessageStream.messageHandler (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/cmap/connection.js:277:5)
+      at MessageStream.emit (node:events:365:28)
+      at processIncomingData (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/cmap/message_stream.js:144:12)
+      at MessageStream._write (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/cmap/message_stream.js:42:5)
+      at writeOrBuffer (node:internal/streams/writable:389:12)
+      at _write (node:internal/streams/writable:330:10)
+      at MessageStream.Writable.write (node:internal/streams/writable:334:10)
+}  având motivul ReferenceError: RES_IDX_ES7 is not defined
+
+
+
+httpstatuses.com
+
 Patch Update Backwards-compatible bug fixes.
 ❯◯ @fortawesome/fontawesome-free  5.15.2   ❯  5.15.3   https://fontawesome.com
  ◯ datatables.net                 1.10.23  ❯  1.10.24  https://datatables.net

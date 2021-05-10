@@ -5,6 +5,9 @@ const moment     = require('moment');
 var content2html = require('./controllers/editorJs2HTML');
 const Log        = require('../models/logentry'); // Adu modelul unei înregistrări de jurnal
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
 // === VERIFICAREA ROLURILOR ===
 let checkRole = require('./controllers/checkRole.helper');
 
@@ -59,8 +62,7 @@ router.get('/', function clbkLog (req, res, next) {
             res.render('logentry', {
                 title:      "Noutăți",
                 user:       req.user,
-                logoimg:    "/img/red-logo-small30.png",
-                credlogo:   "../img/CREDlogo.jpg",
+                LOGO_IMG,
                 csrfToken:  req.csrfToken(),
                 logentries: newResultArr,
                 scripts,
@@ -126,8 +128,7 @@ router.get('/new', function (req, res) {
         res.render('logentry-form', {
             title:     "Adaugă în log",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
             scripts,
             modules,
