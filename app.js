@@ -1,12 +1,17 @@
 require('dotenv').config();
+global.CronJob = require('./util/cron'); // CRON -> programarea side ops-urilor
 
+const os             = require('os');
 const path           = require('path');
-const logger         = require('morgan');
+const devlog         = require('morgan');
+const logger         = require('./util/logger');
 const compression    = require('compression');
 const express        = require('express');
+const rateLimit      = require("express-rate-limit");
 const cookies        = require('cookie-parser');
 const session        = require('express-session');
 const csurf          = require('csurf');
+const flash          = require('connect-flash');
 const redisClient    = require('./redis.config');
 const helmet         = require('helmet');
 const passport       = require('passport');
@@ -23,6 +28,9 @@ const favicon        = require('serve-favicon');
 const { v1: uuidv1 } = require('uuid'); // https://github.com/uuidjs/uuid#deep-requires-now-deprecated
 const i18n           = require('i18n');
 
+/* === TIMP RĂSPUNS ÎN HEADER === */
+app.use(responseTime());
+
 /* === ÎNCĂRCAREA RUTELOR NEPORTEJATE === */
 let login          = require('./routes/login');
 let signupLoco     = require('./routes/signup');
@@ -37,13 +45,14 @@ i18n.configure({
 /* === MONGOOSE === */
 const mongoose = require('./mongoose.config');
 
-/* === LOGGER === */
-app.use(logger('dev', {
-    skip: function (req, res) {
-        return res.statusCode < 400;
-    }
-})); // TODO: Creează un mecanism de rotire a logurilor. ('combined')
-// app.use(logger('dev')); // Activează doar atunci când faci dezvoltare...
+/* === ELASTICSEARCH env === */
+const esClient = require('./elasticsearch.config');
+esClient.on('sniff', (err, req) => {
+    // console.log('ES7 sniff: ', err ? err.message : '', `${JSON.stringify(req.meta.sniff)}`);
+    // console.log('ES7 sniff: ', err ? logger.error('La inițializarea conexiunii ES7 a apărut eroarea: ', err.message) : 'Nicio problemă detectată la inițializare!!! All norminal 👌');
+});
+
+// process.report.writeReport('./report.json');
 
 /* === FIȘIERELE statice === */
 app.use(express.static(path.join(__dirname, '/public'), {
@@ -57,42 +66,59 @@ app.use('/repo', express.static(path.join(__dirname, 'repo')));
 app.use(favicon(path.join(__dirname,  'public', 'favicon.ico')));
 
 /* === HELMET === */
-app.use(helmet()); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
+app.use(helmet({
+    contentSecurityPolicy: false
+})); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
 // https://helmetjs.github.io/docs/dont-sniff-mimetype/
+
+// Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
+// see https://expressjs.com/en/guide/behind-proxies.html
+// app.set('trust proxy', 1);
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+
+/* === PROXY SUPPORT === */
+app.enable('trust proxy');
+
+// apply to all requests
+app.use('/api/', limiter);
 
 /* === CORS === */
 var corsOptions = {
-    origin: 'http://' + process.env.DOMAIN,
+    origin: '',
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
+if (process.env.APP_RUNTIME === 'virtual') {
+    corsOptions.origin = 'http://' + process.env.DOMAIN_VIRT + ':' + process.env.PORT;
+} else {
+    corsOptions.origin = 'http://' + process.env.DOMAIN;
+}
 app.use(cors(corsOptions));
 
 /* === BODY PARSER === */
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 
+// introdu mesaje flash
+app.use(flash()); // acum ai acces în rute la `req.flash()`.
+
 /* === SESIUNI === */
-app.use(cookies());// Parse Cookie header and populate req.cookies with an object keyed by the cookie names
-
-/* === TIMP RĂSPUNS ÎN HEADER === */
-app.use(responseTime());
-
-/* === PROXY SUPPORT === */
-app.set('trust proxy', true);
-app.enable('trust proxy');
+app.use(cookies()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names
 
 /* === INIȚIALIZARE I18N === */
 app.use(i18n.init); // instanțiere modul i18n - este necesar ca înainte de a adăuga acest middleware să fie cerut cookies
 
 // creează sesiune - https://expressjs.com/en/advanced/best-practice-security.html
 let sessionMiddleware = session({
-    name: 'redcolector',
+    name: process.env.APP_NAME,
     secret: process.env.COOKIE_ENCODING,
     genid: function(req) {
         return uuidv1(); // use UUIDs for session IDs
     },
     store: new RedisStore({client: redisClient}),
-    unref: true,
+    unref:  true,
 	proxy:  true,
     resave: false, 
     saveUninitialized: true,
@@ -103,6 +129,13 @@ let sessionMiddleware = session({
         sameSite: 'lax' // https://www.npmjs.com/package/express-session#cookiesamesite
     }
 });
+//=> FIXME: În producție, setează la secure: true pentru a funcționa doar pe HTTPS
+
+// https://www.npmjs.com/package/express-session
+if (app.get('env') === 'production') {
+    app.set('trust proxy', 1);              // trust first proxy
+    sessionMiddleware.cookie.secure = true; // serve secure cookies
+}
 
 // MIDDLEWARE de stabilirea a sesiunii de lucru prin încercări repetate. Vezi: https://github.com/expressjs/session/issues/99
 app.use(function (req, res, next) {
@@ -132,7 +165,21 @@ app.use(passport.session()); // restaurează starea sesiunii dacă aceasta exist
 
 /* === SERVER SOCKETURI === */
 // #1 Creează server prin atașarea celui existent
-const io = require('socket.io')(http);
+const corsOptsSockets = {
+    origin: "",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["_csrf"],
+    credentials: true
+}
+if (process.env.APP_RUNTIME === 'virtual') {
+    corsOptsSockets.origin = 'http://' + process.env.DOMAIN_VIRT + ':' + process.env.PORT;
+} else {
+    corsOptsSockets.origin = 'http://' + process.env.DOMAIN;
+}
+const io = require('socket.io')(http, {
+    cors: corsOptsSockets,
+    transports: [ "websocket", "polling" ]
+});
 // #2 Creează un wrapper de middleware Express pentru Socket.io
 function wrap (middleware) {
     return function matcher (socket, next) {
@@ -155,6 +202,7 @@ let upload = require('./routes/upload')(io);
 app.use('/upload', upload);
 // SIGNUP
 app.use('/signup', signupLoco); // SIGNUP!!!
+
 // LOGIN
 const UserSchema = require('./models/user');
 const { shutdown, server_info } = require('./redis.config');
@@ -166,6 +214,9 @@ passport.serializeUser(UserDetails.serializeUser());
 passport.deserializeUser(UserDetails.deserializeUser());
 app.use('/login', login);
 
+/* LOGGING CU MORGAN */
+app.use(devlog('dev'));
+
 /* === CSRF - Cross Site Request Forgery - expressjs.com/en/resources/middleware/csurf.html === */
 const csurfProtection = csurf({
     cookie: {
@@ -176,14 +227,18 @@ const csurfProtection = csurf({
         signed: false, // în caz de signed cookies, setează la true
         sameSite: 'strict', // https://www.owaspsafar.org/index.php/SameSite
         maxAge: 24 * 60 * 60 * 1000, // 24 ore
-    }
+    },
+    ignoreMethods: ['GET', 'HEAD', 'OPTIONS']
 });
+
 app.use(csurfProtection); // activarea protecției la CSRF
+// tratează erorile apărute
 app.use(function (err, req, res, next) {
     if (err.code !== 'EBADCSRFTOKEN') return next(err);
     // gestionarea erorilor CSRF token:
     res.status(403).send('Sockets.io nu trimite înapoi tokenul!!!');
 });
+
 //https://github.com/expressjs/csurf/issues/21
 // app.use(function (req, res, next) {
 //     if (req.url === '/repo') return next();
@@ -228,7 +283,6 @@ let log            = require('./routes/log');
 let resursepublice = require('./routes/resursepublice');
 let profile        = require('./routes/profile');
 let tags           = require('./routes/tags');
-let tools          = require('./routes/tools');
 let help           = require('./routes/help');
 let apiv1          = require('./routes/apiV1');
 
@@ -246,32 +300,46 @@ app.use('/resurse',        csurfProtection, UserPassport.ensureAuthenticated, re
 app.use('/log',            csurfProtection, UserPassport.ensureAuthenticated, log);
 app.use('/profile',        csurfProtection, profile);
 app.use('/tags',           csurfProtection, tags);
-app.use('/tools',          csurfProtection, tools);
+
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
 
 // === 401 - NEPERMIS ===
 app.get('/401', function(req, res){
     res.status(401);
     res.render('nepermis', {
         title:    "401",
-        logoimg:  "img/red-logo-small30.png",
+        logoimg:  LOGO_IMG,
         mesaj:    "Încă nu ești autorizat pentru această zonă"
     });
 });
 
+// === 500 - Internal Server Error ===
+app.get('/500', function(req, res){
+    res.status(500);
+    res.render('500', {
+        title:    "500",
+        logoimg:  LOGO_IMG,
+        mesaj:    "Probleme legate de funcționare internă a serverului. Mergi la secțiunea de interes în câteva secunde."
+    });
+});
+
+
 //=== 404 - NEGĂSIT ===
 app.use('*', function (req, res, next) {
     res.render('negasit', {
-        title:    "404",
-        logoimg:  "/img/red-logo-small30.png",
+        title:         "404",
+        logoimg:       LOGO_IMG,
         imaginesplash: "/img/theseAreNotTheDroids.jpg",
-        mesaj:    "Nu-i! Verifică linkul!"
+        mesaj:         "Nu-i! Verifică linkul!"
     });
 });
 
 // colectarea erorilor de pe toate middleware-urile
 app.use(function catchAllMiddleware (err, req, res, next) {
-    console.error(err.stack);
-    res.status(500).send('În lanțul de prelucrare a cererii, a apărut o eroare');
+    console.error('Aplicația a crăpat cu următoarele detalii: ', err.stack);
+    logger.error(err);
+    res.redirect('/500');
 });
 
 /**
@@ -292,53 +360,88 @@ function formatBytes (bytes) {
     }
 
     return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
-} 
-// citește detaliile de alocare a procesului
-let alocareProces = process.memoryUsage();
-const detalii = {
-    RAM: formatBytes(alocareProces.rss)
-};
+}
 
-console.info("Memoria RAM alocată la pornire este de: ", detalii.RAM);
-if(process.env.NODE_ENV === 'production') {
-    console.info("Aplicația rulează în modul de producție");
+// Afișează informații utile la start
+console.info("Memoria RAM alocată la pornire este de: ", formatBytes(process.memoryUsage().rss));
+if( process.env.NODE_ENV === 'production') {
+    console.info("Aplicația rulează în modul", app.get("env"));
+} else if (process.env.NODE_ENV === 'development') {
+    console.info("Aplicația rulează în modul ", app.get("env"));
 }
 
 /* === Pornește serverul! === */
 let port = process.env.PORT || 8080;
-var server = http.listen(port, '127.0.0.1', function cbConnection () {
+let hostname = os.hostname();
+var server = http.listen(port, '0.0.0.0', function cbConnection () {
     console.log('RED Colector ', process.env.APP_VER);
-    console.log('Server pornit pe 8080 -> binded pe 127.0.0.1. Proces no: ', process.pid);
+    console.log(`Hostname: ${hostname}, \n port: ${process.env.PORT}. \n proces no: ${process.pid} \n`, `node: ${process.version}`);
 });
 
 /* === GESTIONAREA evenimentelor pe `process` și a SEMNALELOR === */
 
 // gestionează erorile care ar putea aprea în async-uri netratate corespunzător sau alte promisiuni.
 process.on('uncaughtException', (err) => {
-    console.log('[app.js] A apărul un uncaughtException cu detaliile ', err.message);
+    console.log('[app.js] A apărut un "uncaughtException" cu detaliile: ', err.message);
+    logger.error(`${err.message} ${err.stack}`);
     // process.kill(process.pid, 'SIGTERM');
-    console.error(err.stack); // afișează stiva la momentul închidere
-    process.nextTick(function() {
+    process.nextTick( function exitProcess () {
+        mongoose.disconnect(() => {
+            console.log('Am închis conexiunea la MongoDb!');
+        });
         process.exit(1);
     });
 });
 
-process.on('SIGINT', function onSiginit () {
-    console.info('Am prins un SIGINT (ctr+c). Închid procesul! Data: ', new Date().toISOString());
-    shutdownserver();
+// tratarea promisiunilor respinse
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('[app.js] O promisiune a fost respinsă fără a fi tratată respingerea', promise, ` având motivul ${reason}`);
+    logger.error(`${promise} ${reason}`);
+    process.nextTick( function exitProcess () {
+        mongoose.disconnect(() => {
+            console.log('Am închis conexiunea la MongoDb!');
+        });
+        process.exit(1);
+    });
+});
+
+process.on('SIGINT', function onSiginit (signal) {
+    mongoose.disconnect(() => {
+        console.log('Am închis conexiunea la MongoDb!');
+    });
+    console.info(`Procesul a fost întrerupt (CTRL+C). Închid procesul ${process.pid}! Data: `, new Date().toISOString());
+    process.exit(0);
 });
 
 process.on('SIGTERM', function onSiginit () {
+    mongoose.disconnect(() => {
+        console.log('Am închis conexiunea la MongoDb!');
+    });
     console.info('Am prins un SIGTERM (stop). Închid procesul! Data: ', new Date().toISOString());
     shutdownserver();
+});
+
+process.on('exit', code => {
+    console.log(`Procesul a fost încheiat având codul: `, code);
 });
 
 function shutdownserver () {
     server.close(function onServerClosed (err) {
         if (err) {
+            logger.error(err.message);
             console.error(err.message, err.stack);
             process.exitCode = 1;            
         }
         process.exit(1);
     });
 }
+
+
+
+/* === LOGGER MORGAN === */
+// app.use(devlog('dev', {
+//     skip: function (req, res) {
+//         return res.statusCode < 400;
+//     }
+// }));
+// app.use(devlog('dev')); // Activează doar atunci când faci dezvoltare...

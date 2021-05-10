@@ -1,40 +1,75 @@
-const esClient= require('../elasticsearch.config');
-const moment  = require('moment');
-const router  = require('express').Router();
-const Resursa = require('../models/resursa-red');
-const pubComm = require('./sockets');
+require('dotenv').config();
+const redisClient = require('../redis.config');
+const esClient    = require('../elasticsearch.config');
+const moment      = require('moment');
+const router      = require('express').Router();
+const Resursa     = require('../models/resursa-red');
+const Competente  = require('../models/competenta-specifica');
 
 // HELPERI
-const ES7Helper  = require('../models/model-helpers/es7-helper');
-const schema     = require('../models/resursa-red-es7');
+const ES7Helper   = require('../models/model-helpers/es7-helper');
+const schema      = require('../models/resursa-red-es7');
 // let content2html = require('./controllers/editorJs2HTML');
-let editorJs2TXT = require('./controllers/editorJs2TXT');
+let editorJs2TXT  = require('./controllers/editorJs2TXT');
+
+// INDECȘII ES7
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    RES_IDX_ES7 = reply;
+});
+redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    RES_IDX_ALS = reply;
+});
+redisClient.get("USR_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    USR_IDX_ES7 = reply;
+});
+redisClient.get("USR_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    USR_IDX_ALS = reply;
+});
+
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
 
 // === VERIFICAREA ROLURILOR ===
 let checkRole = require('./controllers/checkRole.helper');
+const logger = require('../util/logger');
 
 // === SCRIPTURI și STILURI COMUNE ===
 let scriptsArr = [       
     // MOMENT.JS
-    {script: '/lib/npm/moment-with-locales.min.js'},  
-    // DATATABLES
-    {script: '/lib/npm/jquery.dataTables.min.js'},
-    {script: '/lib/npm/dataTables.bootstrap4.min.js'},
-    {script: '/lib/npm/dataTables.select.min.js'},
-    {script: '/lib/npm/dataTables.buttons.min.js'},
-    {script: '/lib/npm/dataTables.responsive.min.js'}
+    {script: '/lib/npm/moment-with-locales.min.js'},
+    {script: '/lib/timeline3/js/timeline.js'},
+
     // Scripturile caracteristice fiecărei rute vor fi injectate per rută
 ];
 let styles = [
-    {style: '/lib/npm/jquery.dataTables.min.css'},
+    // DATATABLES
+    // {style: '/lib/npm/jquery.dataTables.min.css'},    
+    {style: '/lib/npm/dataTables.bootstrap4.min.css'},
     {style: '/lib/npm/responsive.dataTables.min.css'},
-    {style: '/lib/npm/dataTables.bootstrap4.min.css'}
+    // TIMELINE
+    {style: '/lib/timeline3/css/fonts/font.roboto-megrim.css'},
+    {style: '/lib/timeline3/css/timeline.css'}
+];
+
+let modulesArr = [
+    // MAIN
+    {module: '/js/main.mjs'},
+    // DATATABLES
+    {module: '/lib/npm/jquery.dataTables.min.js'},
+    {module: '/lib/npm/dataTables.bootstrap4.min.js'},
+    {module: '/lib/npm/dataTables.select.min.js'},
+    {module: '/lib/npm/dataTables.buttons.min.js'},
+    {module: '/lib/npm/dataTables.responsive.min.js'}
 ];
 
 /* === /administrator === */
-router.get('/', function clbkAdmRoot (req, res) {
-    // ACL
-    let roles = ["admin", "validator"];
+router.get('/', function clbkAdmRoot (req, res) {    
+    let roles = ["admin", "validator"]; // ACL
     
     // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
@@ -43,19 +78,18 @@ router.get('/', function clbkAdmRoot (req, res) {
     if(req.session.passport.user.roles.admin){
 
         // Scripturile necesare rutei /administrator [rol: admin]
-        let admScripts = [
-            // LOCAL ADMIN
-            {script: '/js/admin.js'}
+        let admModules = [
+            {module: '/js/admin.mjs'}
         ];
-        let scripts = scriptsArr.concat(admScripts); // injectează în array-ul `scripts`
+        let modules = modulesArr.concat(admModules); // injectează în array-ul `scripts`
 
         res.render('administrator', {
             title:     "Admin",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
-            scripts,
+            scripts:   scriptsArr,
+            modules,
             styles,
             activeAdmLnk: true
         });
@@ -66,19 +100,23 @@ router.get('/', function clbkAdmRoot (req, res) {
         // Scripturile necesare rutei /administrator [rol: validator]
         let valScripts = [
             // TIMELINE 3
-            {script: '/lib/timeline3/js/timeline.js'},
-            // LOCALE
-            {script: '/js/validator.js'}
+            {script: '/lib/timeline3/js/timeline.js'}
         ];
         let scripts = scriptsArr.concat(valScripts); // injectează în array-ul `scripts`
+
+        let valModules = [
+            // LOCAL ADMIN
+            {module: '/js/validator.mjs'}
+        ];
+        let modules = modulesArr.concat(valModules); // injectează în array-ul `scripts`
 
         res.render('validator', {
             title:     "Validator",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
             scripts,
+            modules,
             activeAdmLnk: true
         });
     } else {
@@ -88,32 +126,25 @@ router.get('/', function clbkAdmRoot (req, res) {
 
 /* === /administrator/reds === */
 router.get('/reds', function clbkAdmReds (req, res) {
-    // ACL
-    let roles = ["admin", "validator"];
-    
-    // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
-    let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
-    
-    /* === ADMIN === :: Dacă avem un admin, atunci oferă acces neîngrădit*/
+    // DOAR ADMINISTRATORII VAD TOATE RESURSELE ODATĂ FIXME: Creează aceeași posibilitate și validatorilor!!!
     if(req.session.passport.user.roles.admin){
 
         // Scripturile necesare rutei /administrator/reds [rol: admin]
-        let admScripts = [
-            {script: '/js/res-visuals.js'}
+        let admModules = [
+            {module: '/js/res-visuals.mjs'}
         ];
-        let scripts = admScripts.concat(scriptsArr); // injectează în array-ul `scripts`
+        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
 
         res.render('reds-data-visuals', {
-            title:     "REDs adm",
+            title:     "Adm. REDs",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
             csrfToken: req.csrfToken(),
-            scripts,
+            scripts:   scriptsArr,
+            modules,
             styles,
             activeAdmLnk: true
         });
-    // Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public
     } else {
         res.redirect('/401');
     }
@@ -190,7 +221,7 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
 
                 // Dacă nu este indexată în Elasticsearch deja, indexează aici!
                 esClient.exists({
-                    index: process.env.RES_IDX_ALS,
+                    index: RES_IDX_ES7,
                     id: req.params.id
                 }).then(resFromIdx => {
                     /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
@@ -236,21 +267,7 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                             expertCheck:      obi.expertCheck
                         };
 
-                        ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
-                        //FIXME: EROAREA care apare în consolă 
-                        // {
-                        //     "error": {
-                        //       "root_cause": [
-                        //         {
-                        //           "type": "cluster_block_exception",
-                        //           "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
-                        //         }
-                        //       ],
-                        //       "type": "cluster_block_exception",
-                        //       "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
-                        //     },
-                        //     "status": 429
-                        //   }
+                        ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
                     }
                     return resFromIdx;
                 }).catch(err => {
@@ -277,10 +294,9 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                 }
 
                 res.render('resursa-admin', {                    
-                    title:    "RED admin",
-                    user:     req.user,
-                    logoimg:  "/img/red-logo-small30.png",
-                    credlogo: "../img/CREDlogo.jpg",
+                    title:     "RED admin",
+                    user:      req.user,
+                    logoimg:   LOGO_IMG,
                     csrfToken: req.csrfToken(),
                     resursa,
                     scripts,
@@ -288,10 +304,9 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                 });
             } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
                 res.render('resursa', {                    
-                    title:    "RED",
-                    user:     req.user,
-                    logoimg:  "/img/red-logo-small30.png",
-                    credlogo: "../img/CREDlogo.jpg",
+                    title:     "RED",
+                    user:      req.user,
+                    logoimg:   LOGO_IMG,
                     csrfToken: req.csrfToken(),
                     resursa,
                     scripts,
@@ -303,6 +318,7 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
         }).catch(err => {
             if (err) {
                 console.log(err);
+                logger.error(`La afișarea resursei individuale: ${err}`);
                 // next(); // fugi pe următorul middleware / rută
                 res.redirect('/administrator/reds');
                 next(err);
@@ -322,22 +338,22 @@ router.get('/users', function clbkAdmUsr (req, res) {
     if(req.session.passport.user.roles.admin){
 
         // Scripturile necesare rutei /administrator/reds [rol: admin]
-        let admScripts = [
-            {script: '/js/users-visuals.js'}
+        let admModules = [
+            {module: '/js/users-visuals.mjs'}
         ];
-        let scripts = admScripts.concat(scriptsArr); // injectează în array-ul `scripts`
+        let modules = modulesArr.concat(admModules); // injectează în array-ul `scripts`
 
         res.render('users-data-visuals', {
-            title:   "Utilizatorii",
-            user:    req.user,
-            logoimg: "/img/red-logo-small30.png",
-            credlogo: "../img/CREDlogo.jpg",
+            title:     "Utilizatori",
+            user:      req.user,
+            logoimg:   "/img/red-logo-small30.png",
+            credlogo:  "../img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
-            scripts,
+            scripts:   scriptsArr,
+            modules,
             styles,
             activeAdmLnk: true
         });
-    // Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public
     } else {
         res.redirect('/401');
     }
@@ -399,5 +415,124 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
         res.redirect('/401');
     }
 });
+
+router.get('/compets', function clbkAdmCompets (req, res) {
+    // DOAR ADMINISTRATORII VAD TOATE COMPETENȚELE SPECIFICE ODATĂ
+    if(req.session.passport.user.roles.admin){
+
+        // Scripturile necesare rutei /administrator/compets [rol: admin]
+        let admModules = [
+            {module: '/js/comps-visuals.mjs'}
+        ];
+        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
+
+        res.render('comps-data-visuals', {
+            title:     "CompS",
+            user:      req.user,
+            logoimg:   LOGO_IMG,
+            csrfToken: req.csrfToken(),
+            scripts:   scriptsArr,
+            modules,
+            styles,
+            activeAdmLnk: true
+        });
+    } else {
+        res.redirect('/401');
+    }
+});
+
+router.get('/compets/new', function clbkAdmCompetsID (req, res) {
+    // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
+    if(req.session.passport.user.roles.admin){
+
+        // Scripturile necesare rutei /administrator/compets/:id [rol: admin]
+        let admModules = [
+            {module: '/js/comp-id.mjs'}
+        ];
+        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
+
+        /* === ADMIN === */
+        if(req.session.passport.user.roles.admin){
+            res.render('comp-id-admin', {                    
+                title:     "RED admin",
+                user:      req.user,
+                logoimg:   LOGO_IMG,
+                csrfToken: req.csrfToken(),
+                scripts:   scriptsArr,
+                modules,
+                styles
+            });
+        } else {
+            res.redirect('/401');
+        }
+    } else {
+        res.redirect('/401');
+    }
+});
+
+router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
+    // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
+    if(req.session.passport.user.roles.admin){
+
+        // Scripturile necesare rutei /administrator/compets/:id [rol: admin]
+        let admModules = [
+            {module: '/js/comp-id.mjs'}
+        ];
+        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
+
+        let query = Competente.findById(req.params.id).populate({path: 'nrREDuri'});
+        query.then( (comp) => {
+            if (comp.id) {
+                // console.log('Competenta trimisa are urmatoarea semnatura ', comp);
+
+                // transformă obiectul document de Mongoose într-un obiect normal.
+                const obi = Object.assign({}, comp._doc); 
+
+                // adaugă versiunea la care este înregistrarea și nr de RED-uri
+                obi['__v'] = comp.__v;
+                obi['nrREDuri'] = comp.nrREDuri;
+
+                // obiectul competenței specifice cu toate datele sale trebuie curățat.
+                obi.idRED = obi.idRED.map(obi => {
+                    return Object.assign({}, obi._doc);
+                });
+
+                let localizat = moment(obi.date).locale('ro').format('LLL');
+                // resursa._doc.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
+                obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
+
+                return obi;
+            }
+        }).then((comp) => {
+            // console.log(Object.keys(comp));
+            /* === ADMIN === */
+            if(req.session.passport.user.roles.admin){
+                res.render('comp-id-admin', {                    
+                    title:     "RED admin",
+                    user:      req.user,
+                    logoimg:   LOGO_IMG,
+                    csrfToken: req.csrfToken(),
+                    comp,
+                    scripts:   scriptsArr,
+                    modules,
+                    styles
+                });
+            } else {
+                res.redirect('/401');
+            }
+        }).catch(err => {
+            if (err) {
+                logger.error(`La afișarea competenței individuale: ${err}`);
+                // next(); // fugi pe următorul middleware / rută
+                res.redirect('/administrator/compets');
+                next(err);
+            }
+        });
+    } else {
+        res.redirect('/401');
+    }
+});
+
+
 
 module.exports = router;

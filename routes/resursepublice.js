@@ -5,9 +5,22 @@ const router  = express.Router();
 const moment  = require('moment');
 const Resursa = require('../models/resursa-red'); // Adu modelul resursei
 var content2html = require('./controllers/editorJs2HTML');
+const redisClient = require('../redis.config');
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
+// INDECȘII ES7
+const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
+const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    return reply;
+});
 // Indexul de căutare
-let idxRes = process.env.RES_IDX_ALS;
+let idxRes = RES_IDX_ALS;
 
 // === RESURSE PUBLICE ===
 router.get('/', (req, res) => {
@@ -56,7 +69,7 @@ router.get('/', (req, res) => {
         res.render('resursepublice', {
             title:        "Publice",
             user:         req.user,
-            logoimg:      "img/rED-logo192.png",
+            logoimg:      LOGO_IMG,
             csrfToken:    req.csrfToken(),            
             resurse:      newResultArr,
             activeResLnk: true,
@@ -99,8 +112,7 @@ router.get('/:id', (req, res) => {
             res.render('resursa-publica', {                
                 title:     "RED public",
                 user:      req.user,
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resursa:   newObi,
                 scripts

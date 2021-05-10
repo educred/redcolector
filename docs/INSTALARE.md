@@ -211,7 +211,7 @@ Pentru a vedea ce opțiuni îți oferă sistemul privind Java Virtual Machines, 
 
 Pentru a verifica, rulează comanda `echo $JAVA_HOME`.
 
-Mai trebuile adăugat directorul binarelor Java la căile de sistem. Vom face acest lucru beneficiind de faptul că am setat variabila de sistem `$JAVA_HOME`. Astfel, în consolă executăm `export PATH=$PATH:$JAVA_HOME/bin`.
+Mai trebuie adăugat directorul binarelor Java la căile de sistem. Vom face acest lucru beneficiind de faptul că am setat variabila de sistem `$JAVA_HOME`. Astfel, în consolă executăm `export PATH=$PATH:$JAVA_HOME/bin`.
 
 Verifică dacă a fost adăugată calea către binare rulând `echo $PATH`. Rulând comanda `java -version` ar trebui să reflecte versiunea de Java dorită.
 
@@ -257,7 +257,7 @@ git checkout master
 
 Imediat după aducerea resurselor de pe Github, este indicată instalarea din consola serverului a dependințelor externe necesare. Se va executa `npm install`.
 
-Toate dependințele necesare specificate în fișierul `assets.js` din rădăcină, vor trebui copiate în `public/lib/npm`. Acest lucru se face prin rularea comenzii `npm run build` din rădăcina proiectului după ce s-au instalat toate pachetele.
+Toate dependințele necesare specificate în fișierul `assets.js` din rădăcină, vor trebui copiate în `public/lib/npm`. Acest lucru se face prin rularea comenzii `npm run copy` din rădăcina proiectului după ce s-au instalat toate pachetele.
 
 #### Dependințe 
 
@@ -287,10 +287,6 @@ BASE_URL=http://localhost:8080
 NAME_OF_REPO_DIR=repo
 REPO_REL_PATH=./repo/
 FILE_LIMIT_UPL_RES=5242880
-USR_IDX_ES7=users
-USR_IDX_ALS=users0
-RES_IDX_ES7=resedus
-RES_IDX_ALS=resedus0
 LIVRESQ_TOKEN = 'gasrwe54333m'
 LIVRESQ_TOKEN_PLAN = '1dafsdfsb2b'
 LIVRESQ_HOSTNAME = 'livresq.com'
@@ -301,7 +297,6 @@ APP_VER=0.9.2
 
 Câmpurile `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET` sunt proprii administratorului care face instalarea.
 Câmpurile `MONGO_USER` și `MONGO_PASSWD` se vor completa cu datele necesare autorizării la serverul bazei de date MongoDB, care a fost securizat în prealabil.
-Pentru `USR_IDX_ES7` trebuie ales numele indexului care va fi creat în Elasticsearch, urmat apoi de numele indexului alias `URS_IDX_ALS`.
 
 ### Instalare NGINX
 

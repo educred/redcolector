@@ -1,19 +1,20 @@
 require('dotenv').config();
 /* ==== DEPENDINȚE ==== */
-const express = require('express');
-const router  = express.Router();
-const passport= require('passport');
+const express    = require('express');
+const router     = express.Router();
+const passport   = require('passport');
+const mongoose   = require('mongoose');
+const UserSchema = require('../models/user');
 const connectEnsureLogin = require('connect-ensure-login');
 // Încarcă controlerul necesar tratării rutelor de autentificare
 const UserPassport = require('./controllers/user.ctrl')(passport);
-
-const mongoose   = require('mongoose');
-const UserSchema = require('../models/user');
-
-const UserDetails = mongoose.model('users', UserSchema, 'users');
+const UserDetails  = mongoose.model('users', UserSchema, 'users');
 passport.use(UserDetails.createStrategy());
 passport.serializeUser(UserDetails.serializeUser());
 passport.deserializeUser(UserDetails.deserializeUser());
+
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
 
 /* === SIGNUP [GET] ===*/
 router.get('/', function clbkSignUpGet (req, res, next) {
@@ -24,8 +25,7 @@ router.get('/', function clbkSignUpGet (req, res, next) {
     res.render('signup', {
         title:   "Signup RED",
         style:   "/lib/fontawesome/css/fontawesome.min.css",
-        logoimg: "/img/red-logo-small30.png",
-        credlogo: "../img/CREDlogo.jpg",
+        logoimg: LOGO_IMG,
         scripts
     });
 });

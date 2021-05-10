@@ -5,25 +5,28 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <meta name="keywords"    content="educred, red, colector, resurse educaționale, educație">
-        <meta name="description" content="Aceasta este aplicația care colectează Resurse Educaționale Deschise create în cadrul proiectului EDUCRED.">
-        <meta name="generator"   content="Colector RED">
-        <meta name="creator"     content="CRED-Curriculum relevant, educație deschisă pentru toți– cod SMIS 2014+:118327">
+        <meta name="keywords"    content="{{creator}} {{publisher}} {{brandname}}">
+        <meta name="description" content="{{description}}">
+        <meta name="generator"   content="{{brandname}}">
+        <meta name="creator"     content="{{creator}}">
         <meta name="autor"       content="Constantinescu Nicolaie">
-        <meta name="publisher"   content="Institutul pentru Științele Educației">
+        <meta name="publisher"   content="{{publisher}}">
         
-        <meta property="dc:title"       content="Colector Resurse Educaționale Deschise">
-        <meta property="dc:description" content="Aceasta este aplicația care colectează Resurse Educaționale Deschise create în cadrul proiectului EDUCRED.">
+        <meta property="dc:title"       content="{{brandname}}">
+        <meta property="dc:description" content="{{description}}">
         
-        <meta itemprop="name" content="Colector Resurse Educaționale Deschise">
-        <meta itemprop="description" content="Aceasta este aplicația care colectează Resurse Educaționale Deschise create în cadrul proiectului EDUCRED.">
+        <meta itemprop="name" content="{{brandname}}">
+        <meta itemprop="description" content="{{description}}">
 
         <meta name="csrf-token" content="{{csrfToken}}">
         
         {{!-- SOCKET --}}
-        {{!-- <script type="application/javascript" src="/socket.io/socket.io.js"></script> --}}
+        {{!-- <script src="https://cdn.socket.io/3.1.1/socket.io.min.js" integrity="sha384-gDaozqUvc4HTgo8iZjwth73C6dDDeOJsAgpxBcMpZYztUfjHXpzrpdrHRdVp8ySO" crossorigin="anonymous"></script> --}}
+        {{!-- <script type="application/javascript" src="/socket.io/socket.io.js" charset="utf-8" crossorigin="anonymous"></script> --}}
+        {{!-- <script type="text/html" src="/socket.io/socket.io.js" charset="utf-8" crossorigin="anonymous"></script> --}}
+        {{!-- <script type="application/javascript" src="/socket.io/socket.io.js" charset="utf-8" crossorigin="anonymous"></script> --}}
         {{!-- În cazul în care sunt probleme cu browserele, activează încărcarea scriptului în mod direct --}}
-        <script type="application/javascript" src="/lib/npm/socket.io.slim.js"></script>
+        <script type="application/javascript" src="/lib/npm/socket.io.min.js"></script>
         
         {{!-- ES6 SHIM --}}
         <script type="application/javascript" src="/lib/es6-shim/es6-shim.min.js"></script>

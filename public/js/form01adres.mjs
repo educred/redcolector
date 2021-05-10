@@ -1,4 +1,4 @@
-import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+import {socket, pubComm, createElement, check4url, decodeCharEntities, datasetToObject} from './main.mjs';
 import {AttachesToolPlus} from './uploader.mjs';
 
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
@@ -7,7 +7,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     var uuid    = document.querySelector("meta[property='uuid']").getAttribute("content") || '',
         RED     = {},
         csrfToken = '',
-        pubComm = null,
         sync    = false,     // variabila ține evidența tranzacționării uuid-ului cu serverul. În cazul în care uuid-ul este setat, nu se va mai emite mai jos la prima modificare a editorului (onchange editor.js)
         imagini = new Set(), // un `Set` cu toate imaginile care au fost introduse în document.
         fileRes = new Set(); // un `Set` care unifică fișierele, fie imagini, fie atașamente.
@@ -16,12 +15,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     if(document.getElementsByName('_csrf')[0].value) {
         csrfToken = document.getElementsByName('_csrf')[0].value;
     }
-
-    // trebuie recreat pentru fiecare cale în parte [specific prin inperecherea cu csrf-ul]
-    pubComm = io('/redcol', {
-        allowUpgrades: true,
-        query: {['_csrf']: csrfToken}
-    });
     
     /* === Obiectul RED - valori din oficiu === */
     RED.expertCheck     = false;
@@ -521,15 +514,15 @@ import {AttachesToolPlus} from './uploader.mjs';
      */
     function creeazaTitluAlternativ () {
         // creează aceleași elemente de formular responsabile cu generarea unui titlu
-        let insertie = document.querySelector('#langAlternative');  // punct de aclanșare în DOM pentru elementele generate dinamic
-        let primulTitlu = document.querySelector('#titlu-res').id;   // extrage id-ul primului titlu pe baza căruia se vor construi restul în cele alternative
+        let insertie = document.querySelector('#langAlternative');                // punct de aclanșare în DOM pentru elementele generate dinamic
+        let primulTitlu = document.querySelector('#titlu-res').id;                // extrage id-ul primului titlu pe baza căruia se vor construi restul în cele alternative
         let arrAlternative = document.querySelectorAll('#langAlternative > div'); // selectează toate elementele din titlurile alternative (dacă există)
 
         // verifică dacă există elemente ca titluri alternative
         if (arrAlternative.length !== 0) {
             let lastAlternativeTitle = Array.from(arrAlternative).slice(-1); // fă o referință către ultimul introdus în alternative
-            let idOfLastElem = lastAlternativeTitle[0].id;  // extrage id-ul acelui element
-            let contorIdxIds = parseInt(idOfLastElem.slice(-1)); // din id, extrage numarul de incrementare (pentru primul element adăugat în alternative este 1).
+            let idOfLastElem = lastAlternativeTitle[0].id;                   // extrage id-ul acelui element
+            let contorIdxIds = parseInt(idOfLastElem.slice(-1));             // din id, extrage numarul de incrementare (pentru primul element adăugat în alternative este 1).
 
             creeazaTitluAlternativHelper(`${primulTitlu}-${++contorIdxIds}`, insertie); // adaugă titluri alternative după primul alternativ existent!!!
             
@@ -3635,7 +3628,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         });
 
         // colectarea etichetelor
-        // TODO: Diferențiază-le pe cele care sunt redactate cu `[]` de celelalte. Cele cu `[]` trebuie să genereze în backend colecții!!! IMPLEMENTEAZĂ!
+        //_ TODO: Diferențiază-le pe cele care sunt redactate cu `[]` de celelalte. Cele cu `[]` trebuie să genereze în backend colecții!!! IMPLEMENTEAZĂ!
         var newTags = document.getElementById('eticheteRed'); // ref la textarea de introducere
         // detectează când s-a introdus o etichetă în momentul în care apare o virgulă
         newTags.addEventListener('input', (evt) => {

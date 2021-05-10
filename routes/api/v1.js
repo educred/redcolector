@@ -17,7 +17,7 @@ exports.getREDs = asyncHandler(async function getREDs (req, res, next) {
         // de ex: /resurse?accesari[lte]=100 sau ?accesari[gt]=10 sau ?accesari[gt]=10& sau ?accesari[gt]=10&util=true
         // sau poți introduce câmpurile necesare unui select, precum în ?accesari[gt]=10&util=true&select=nume,varsta
         let query;
-        const reqQuery = {...req.query}; // contituie o copie a obiectului pentru a putea prelucrări cereri de filtrare complexe
+        const reqQuery = {...req.query}; // constituie o copie a obiectului pentru a putea face prelucrări / cereri de filtrare complexe
         // câmpuri pentru excluderea din rezultat -> sunt părți din query string care sunt folosite pentru rafinarea interogării
         const removeFields = ['select', 'sort', 'page', 'limit']; // uneori este necesara să pasezi parametri care să nu intre în rezultatul de căutare, dar necesari pentru filtrare folosind mongoose (query.select).
         // Ia rând pe rând din array-ul câmpurilor pentru excludere și șterge-le din obiectul req.params
@@ -48,11 +48,11 @@ exports.getREDs = asyncHandler(async function getREDs (req, res, next) {
         }
 
         // Paginarea rezultatelor
-        let page = parseInt(req.query.page, 10) || 1; // preia pagina iar dacă aceasta nu este menționată, din oficiu va fi 1
-        let limit = parseInt(req.query.limit, 10) || 100; // numărul de înregistrăru din setul de date, dar nu mai mult de 100
+        let page       = parseInt(req.query.page, 10)  || 1;   // preia pagina iar dacă aceasta nu este menționată, din oficiu va fi 1
+        let limit      = parseInt(req.query.limit, 10) || 100; // numărul de înregistrăru din setul de date, dar nu mai mult de 100
         let startIndex = (page - 1) * limit;
-        let endIndex = page * limit;
-        let total = RedModel.count();
+        let endIndex   = page * limit;
+        let total      = RedModel.count();
         // aplicarea lui skip și a limitării
         query = query.skip(startIndex).limit(limit);
 
@@ -150,3 +150,30 @@ exports.delRED = function delRED (req, res, next) {
         let roles = ["user", "validator", "cred"];
         res.status(201).send({creat: true});
 };
+
+// @desc   creează un utilizator
+// @route  POST /api/v1/user
+// @access privat
+exports.userLogin = function userLogin (req, res, next) {
+        // ACL
+        let roles = ["user", "validator", "cred"];
+        res.status(201).send({user: true});
+}
+
+// @desc   login
+// @route  POST /api/v1/user/login
+// @access privat
+exports.userLogin = function userLogin (req, res, next) {
+        // ACL
+        let roles = ["user", "validator", "cred"];
+        res.status(200).send({logged: true});
+}
+
+// @desc   logout
+// @route  POST /api/v1/user/logout
+// @access privat
+exports.userLogin = function userLogin (req, res, next) {
+        // ACL
+        let roles = ["user", "validator", "cred"];
+        res.status(200).send({logout: true});
+}

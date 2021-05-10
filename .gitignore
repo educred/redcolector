@@ -1,5 +1,5 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -58,7 +58,7 @@ typings/
 .next
 
 # nu salva bibliotecile de cod transferate din npm
-public/lib/npm
+# public/lib/npm
 
 # nu salva bundle-ul creat de Webpack
 public/bundle
@@ -80,3 +80,15 @@ ecosystem.config.js
 
 # ignoră logul
 log.md
+
+# ignoră directorul backup
+backup
+
+# ignoră regulile de linting
+.eslintrc.json
+
+# ignoră tururile ghidate
+.tours
+
+# ignoră cheile de securitate create local
+assets/ssl_keys

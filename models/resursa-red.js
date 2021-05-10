@@ -1,12 +1,20 @@
 require('dotenv').config();
 const mongoose      = require('mongoose');
+const validator     = require('validator');
 const Schema        = mongoose.Schema;
-const CompetentaS   = require('./competenta-specifica');
-const esClient      = require('../elasticsearch.config');
+const redisClient   = require('../redis.config');
 const schema        = require('./resursa-red-es7');
 const editorJs2TXT  = require('../routes/controllers/editorJs2TXT'); 
 const ES7Helper     = require('./model-helpers/es7-helper');
 const globby        = require('globby');
+const logger        = require('../util/logger');
+
+/* INDECȘII ES7 */
+// Pornești setând valori de pornire. Atenție, aici se face hardcodarea denumirilor indecșilor. Fiecare index este varianta la plural a numelui schemei la export
+// let RES_IDX_ES7 = ES7Helper.ESNAMES.RES_IDX_ES7, 
+//     RES_IDX_ALS = ES7Helper.ESNAMES.RES_IDX_ALS;
+
+// let {RES_IDX_ES7, RES_IDX_ALS} = ES7Helper.esnames;
 
 var softwareSchema = new mongoose.Schema({
     nume:     {
@@ -21,12 +29,12 @@ var softwareSchema = new mongoose.Schema({
     logoUri:  String
 });
 
-var recomSchema = new mongoose.Schema({
+var recomSchema = Schema({
     contorRecom: Number, // este numărul recomandării
     continut:    String, // este conținutul recomandării
 });
 
-var ResursaSchema = new mongoose.Schema({
+var ResursaSchema = Schema({
     _id: Schema.Types.ObjectId,
 
     // #1. INIȚIALIZARE ÎNREGISTRARE
@@ -54,8 +62,8 @@ var ResursaSchema = new mongoose.Schema({
     disciplinePropuse: [],    // Aici vor intra sugestiile publicului. I se va oferi un câmp de introducere etichete, cu autocompletare primele sugestii fiind disciplinele din vocabularul controlat. Codurile acestora devin automat etichete
     competenteGen:     [],    // Va fi un array de id-uri ale competențelor generale
     competenteS:       [{     // Va fi un array de id-uri ale competențelor specifice.
-        type: mongoose.Schema.Types.ObjectId, // va lua id-uri din altă colecție
-        ref: 'competentaspecifica' // este numele modelului de competență specifică, în cazul de față (ceea ce exporți din modul)
+        type: Schema.Types.ObjectId, // va lua id-uri din altă colecție
+        ref: "competentaspecifica" // este numele modelului de competență specifică, în cazul de față (ceea ce exporți din modul)
     }],
     activitati:    [], // sunt activitățile selectate de contribuitor și/sau adăugate de acesta suplimentar.
     prerequisite:  [], // sunt toate competențele necesare celui care accesează resursa. Gândește-te la nivelurile de cunoaștere ale unei limbi (A1, B2, etc). Aici va sta valoarea sau valorile pentru limba primară în care au fost introduse informațiile. La un moment dat este posibilă o interfațare cu Open Badges ca prerequisite în scop de gamificare.
@@ -105,17 +113,13 @@ var ResursaSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'badge'
     }],
-}, {
-    toJSON: {
-        virtuals: true
-    },
-    toObject: {
-        virtuals: true
-    }
+},
+{
+    toJSON:   { virtuals: true },  // So `res.json()` and other `JSON.stringify()` functions include virtuals
+    toObject: { virtuals: true } // So `toObject()` output includes virtuals
 });
 
-/* === HOOKS === */
-// PRE
+/* === HOOKS PRE=== */
 
 // Stergerea comentariilor asociate utiliatorului atunci când acesta este șters din baza de date.
 ResursaSchema.pre('remove', function hRemoveClbk (next) {
@@ -126,9 +130,10 @@ ResursaSchema.pre('remove', function hRemoveClbk (next) {
     }).then(() => next()); // -> acesta este momentul în care putem spune că înregistrarea a fost eliminată complet.
 });
 
-// POST -> Indexare în Elasticsearch!
+/* === HOOKS POST === */ 
+// Indexare în Elasticsearch!
 ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
-    // console.log("[sursa-red.js] a primit în post save următorul obiect pentru doc._doc: ", doc._doc._id);
+    // console.log("[models/sursa-red.js] a primit în post save următorul obiect pentru doc._doc: ", doc._doc._id);
     
     let obi = Object.assign({}, doc._doc);
     // verifică dacă există conținut
@@ -172,126 +177,87 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
         expertCheck:      obi.expertCheck
     };
 
-    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
+    //- FIXME: Aici este funcția care generează indexul numit `false`
+    // NOTE: Vezi ca acest helper sa raspunda cazului in care ai de-a face cu prima resursă, caz în care nu ai nici idx, nici alias-ul său
+    if (RES_IDX_ES7) {
+        ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
+    }
     next();
 });
 
-// Adăugare middleware pe `post` pentru toate operațiunile `find`
-ResursaSchema.post(/^find/, async function clbkResFindPostHookREDschema (doc, next) {
-    // Când se face căutarea unei resurse folosindu-se metodele`find`, `findOne`, `findOneAndUpdate`, vezi dacă a fost indexat. Dacă nu, indexează-l!
 
-    // cazul `find` când rezultatele sunt multiple într-un array.
-    if (Array.isArray(doc)){
-        doc.map(function (res) {
-            try {                
-                // verifică dacă înregistrarea din Mongo există în ES?
-                ES7Helper.recExists(res._id, process.env.RES_IDX_ALS).then(e => {
-                    if (e === false) {
-                        let obi = Object.assign({}, res._doc);
-                        // verifică dacă există conținut
-                        var content2txt = '';
-                        if ('content' in obi) {
-                            content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                        }
-                        // indexează documentul
-                        const data = {
-                            id:               obi._id,
-                            date:             obi.date,
-                            idContributor:    obi.idContributor,
-                            emailContrib:     obi.emailContrib,
-                            uuid:             obi.uuid,
-                            autori:           obi.autori,
-                            langRED:          obi.langRED,
-                            title:            obi.title,
-                            titleI18n:        obi.titleI18n,
-                            arieCurriculara:  obi.arieCurriculara,
-                            level:            obi.level,
-                            discipline:       obi.discipline,
-                            disciplinePropuse:obi.disciplinePropuse,
-                            competenteGen:    obi.competenteGen,
-                            rol:              obi.rol,
-                            abilitati:        obi.abilitati,
-                            materiale:        obi.materiale,
-                            grupuri:          obi.grupuri,
-                            domeniu:          obi.demersuri,
-                            spatii:           obi.spatii,
-                            invatarea:        obi.invatarea,
-                            description:      obi.description,
-                            dependinte:       obi.dependinte,
-                            coperta:          obi.coperta,
-                            content:          content2txt,
-                            bibliografie:     obi.bibliografie,
-                            contorAcces:      obi.contorAcces,
-                            generalPublic:    obi.generalPublic,
-                            contorDescarcare: obi.contorDescarcare,
-                            etichete:         obi.etichete,
-                            utilMie:          obi.utilMie,
-                            expertCheck:      obi.expertCheck
-                        };
-    
-                        ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
-                    }   
-                }).catch((error) => {
-                    console.error(JSON.stringify(error, null, 2));
-                    next(error);
-                });            
-            } catch (error) {
-                console.error(JSON.stringify(error, null, 2));
-                next(error);
-            }
-        });
-    } else {
-        // console.log("De pe hook-ul `post` metoda ^find, ramura unui singur document: ", doc.title);
-        try {
-            // verifică dacă înregistrarea din Mongo există în ES?
-            // console.log("[Scheme::resursa-red.js] Documentul nu este array și este de forma: ", doc);
-            ES7Helper.recExists(doc._id, process.env.RES_IDX_ALS).then(function (e) {                
-                if (e === false) {
-                    let obi = Object.assign({}, doc); // recast la înregistrare pentru a elimina artefacte Mongoose document
 
-                    // verifică dacă există conținut
-                    var content2txt = '';
-                    if ('content' in obi) {
-                        content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                    }
-                    // indexează documentul
-                    const data = {
-                        id:               obi._id,
-                        date:             obi.date,
-                        idContributor:    obi.idContributor,
-                        emailContrib:     obi.emailContrib,
-                        uuid:             obi.uuid,
-                        autori:           obi.autori,
-                        langRED:          obi.langRED,
-                        title:            obi.title,
-                        titleI18n:        obi.titleI18n,
-                        arieCurriculara:  obi.arieCurriculara,
-                        level:            obi.level,
-                        discipline:       obi.discipline,
-                        disciplinePropuse:obi.disciplinePropuse,
-                        competenteGen:    obi.competenteGen,
-                        rol:              obi.rol,
-                        abilitati:        obi.abilitati,
-                        materiale:        obi.materiale,
-                        grupuri:          obi.grupuri,
-                        domeniu:          obi.demersuri,
-                        spatii:           obi.spatii,
-                        invatarea:        obi.invatarea,
-                        description:      obi.description,
-                        dependinte:       obi.dependinte,
-                        coperta:          obi.coperta,
-                        content:          content2txt,
-                        bibliografie:     obi.bibliografie,
-                        contorAcces:      obi.contorAcces,
-                        generalPublic:    obi.generalPublic,
-                        contorDescarcare: obi.contorDescarcare,
-                        etichete:         obi.etichete,
-                        utilMie:          obi.utilMie,
-                        expertCheck:      obi.expertCheck
-                    };
+     
 
-                    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS);
+
+/* === CAZUL ÎN CARE SUNT CĂUTATE MAI MULTE ÎNREGISTRĂRI SAU UNA SINGURĂ ==== */
+
+/**
+ * Funcția se aplică pe fiecare înregistrarea dintr-un array, dacă sunt mai multe (`doc.map(checkRecord)`)
+ * Funcția este cerută de `clbkResFindPostHookREDschema()`
+ * @param {*} res 
+ */
+
+function checkRecord (res) {
+    // console.log('[resursa-red.js] Ptr cazul array-ului, indexul este ', RES_IDX_ALS, 'iar documentul este ', res);
+
+    // MAI ÎNTÂI VERIFICĂ DACĂ EXISTĂ INDEXUL ȘI ALIAS-uL. POATE INTRE TIMP NU MAI E SAU ESTI CHIAR LA INCEPUT CAND NU EXISTA
+
+    if (RES_IDX_ALS) {
+        // console.log("[models/sursa-red.js] De pe hook-ul `post` metoda ^find, ramura unui singur document. Titlul doc: ", res.title);
+        
+        // verifică dacă înregistrarea din Mongo există în ES?
+        ES7Helper.recExists(res._id, RES_IDX_ALS).then((e) => {
+            // console.log("resursa-red::test daca exista in ES", e);
+            if (e === false) {
+                // console.log("[models/sursa-red.js] Documentul adus cu ES6Helper.recExists este:", e);
+                
+                let obi = Object.assign({}, res._doc); // recast la înregistrare pentru a elimina artefacte Mongoose document
+                var content2txt = ''; // verifică dacă există conținut
+                if ('content' in obi) {
+                    content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
                 }
+                // indexează documentul
+                const data = {
+                    id:               obi._id,
+                    date:             obi.date,
+                    idContributor:    obi.idContributor,
+                    emailContrib:     obi.emailContrib,
+                    uuid:             obi.uuid,
+                    autori:           obi.autori,
+                    langRED:          obi.langRED,
+                    title:            obi.title,
+                    titleI18n:        obi.titleI18n,
+                    arieCurriculara:  obi.arieCurriculara,
+                    level:            obi.level,
+                    discipline:       obi.discipline,
+                    disciplinePropuse:obi.disciplinePropuse,
+                    competenteGen:    obi.competenteGen,
+                    rol:              obi.rol,
+                    abilitati:        obi.abilitati,
+                    materiale:        obi.materiale,
+                    grupuri:          obi.grupuri,
+                    domeniu:          obi.demersuri,
+                    spatii:           obi.spatii,
+                    invatarea:        obi.invatarea,
+                    description:      obi.description,
+                    dependinte:       obi.dependinte,
+                    coperta:          obi.coperta,
+                    content:          content2txt,
+                    bibliografie:     obi.bibliografie,
+                    contorAcces:      obi.contorAcces,
+                    generalPublic:    obi.generalPublic,
+                    contorDescarcare: obi.contorDescarcare,
+                    etichete:         obi.etichete,
+                    utilMie:          obi.utilMie,
+                    expertCheck:      obi.expertCheck
+                };
+
+                ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
+
+                //- FIXME: Se dublează această funcție cu cea de verificare a înregistrării.
+                // ES7Helper.searchIdxAlCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
+
                 /* TODO: === REINDEXARE ÎN BAZA HASHULUI DE CONȚINUT :: componentă a REEDITĂRII de resursă === */
                 // else {
                     //  version conflict, document already exists (statusCode === 409)
@@ -304,16 +270,44 @@ ResursaSchema.post(/^find/, async function clbkResFindPostHookREDschema (doc, ne
                     // Compară HASH-ul conținutului existent al lui `body` in ES cu hash-ul documentului curent
                     // În cazul în care diferă, REINDEXEAZĂ DOCUMENT!!!
                 // } 
-            }).catch((error) => {
-                console.error(JSON.stringify(error, null, 2));
-                next(error);
-            });   
-        } catch (error) {
+            }   
+        }).catch((error) => {
             console.error(JSON.stringify(error, null, 2));
-            next(error);
-        }
+            logger.error(error);
+        });
+    } else {
+        // DACĂ NU AI ALIAS_UL, VERIFICĂ DACĂ AI INDEXUL. DACĂ AI indexul creează alias-ul, dacă nu creează tot
     }
-    next();
-});
+}
 
-module.exports = mongoose.model(process.env.MONGO_REDS, ResursaSchema);
+/**
+ * Funcția are rol de callback pentru hook-ul mongoose post definit prin regexp-ul `/^find/`
+ * Când se face căutarea unei resurse folosindu-se metodele`find`, `findOne`, `findOneAndUpdate`, vezi dacă a fost indexat. 
+ * Dacă nu, se indexează!
+ * @param {Array | Object} doc Înregistrarea(le)
+ * @param {*} next 
+ */
+function clbkResFindPostHookREDschema (doc, next) {
+    // cazul când rezultatele sunt multiple într-un array.
+    if (Array.isArray(doc)){
+        doc.map(checkRecord);
+    // cazul unei singure înregistrări
+    } else if(doc._id) {
+        checkRecord(doc);
+    } else {
+        next();
+    }
+}
+
+// Adăugare middleware pe `post` pentru toate operațiunile `find`
+// ResursaSchema.post(/^find/, clbkResFindPostHookREDschema);
+
+
+
+// Resursa.methods.nume_metodă = function () {}; // metodă care poate fi folosită pe un singur obiect instanțiat în baza schemei. obiectul adus din bază!!!
+// Resursa.static.nume_metodă = function () {}; // metodă care poate fi folosită pe model
+
+/**
+ * EXPORTUL MODULULUI
+ */
+module.exports = mongoose.model('resursedu', ResursaSchema);

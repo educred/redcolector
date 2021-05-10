@@ -8,10 +8,7 @@ var LogentrySchema = new mongoose.Schema({
     idContributor: {type: String, es_indexed: true},
     autor: {type: String, es_indexed: true},
     title: {        
-        type: String,  // Aici se introduce titlul lucrării în limba de elaborare
-        // validate: {
-        //     required: [true, 'Titlul este absolut necesar']
-        // },
+        type: String,
         index: true,
         trim: true,
         es_indexed: true

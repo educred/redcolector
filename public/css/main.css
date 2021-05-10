@@ -40,17 +40,47 @@
 
 /* GENERAL */
 .footer {
-    /* display: flex;
-    z-index: 10;
-    flex-wrap: wrap;
-    align-items: center; */
+    display: flex;
+    flex-wrap: nowrap;
     position: relative;
-    text-align: center;
+    margin-top: .4rem;
+    padding: .3rem;
+    font-size: smaller;
+    color: rgb(255,255,255);
+    background-color: #275382;
+}
+
+#projectdescr, #license {
+    padding: .2rem;
+}
+
+#projectdescr {
+    width: 25%;
+}
+
+#projectdescr img {
+    flex-grow: 1;
+    width: 50px;
+    height: auto;
+}
+
+#license {
+    width: 20%;
+    flex-grow: 1;
+    text-align: right;
+}
+
+#fmisc {
+    flex-grow: 4;
 }
 
 .avatar {
     max-width:10%;
     height:auto;
+}
+/* regleaza continutul fiecărei pagini. Atenție! */
+#content {
+    padding: 1rem;
 }
 
 /*===== NAVIGATION ====*/
@@ -704,7 +734,7 @@ a[class$="8"], label[class$="8"] {
 }
 
 /* TABEL RESURSE PENTRU UN USER */
-#resurseTab {
+#resurseTab, #compsTab {
     background-color: rgba(255, 255, 255, .6);
     border-radius: .4em;
     padding: 1rem;
@@ -866,18 +896,25 @@ a[class$="8"], label[class$="8"] {
     justify-content: center;
 }
 
-/* gestionarea tabelelor - http://localhost:8080/administrator/reds */
+/* === TABELE http://localhost:3000/administrator/... ==== */
 #visuals {
     height: 100%;
 }
 
-#content > h1 {
-    text-shadow: #FC0 .1rem .1rem .4rem;
+#content .title {
+    /* color: white; */
+    margin-top: 1rem;
+    margin-left: 3rem;
 }
 
 .tableDisplay {
     font-size: small;
     font-weight: 200;
+}
+
+.dt-avatar {
+    /* margin: auto 0; */
+    text-align: center;
 }
 
 /* GESTIONARE INFOTOKENS */
@@ -1020,7 +1057,6 @@ a[class$="8"], label[class$="8"] {
     cursor: pointer;
     border-radius: 5px;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.3);
-
 }
 
 .disctag:active,
@@ -1096,10 +1132,6 @@ a[class$="8"], label[class$="8"] {
     padding: .4rem;
 }
 
-/*****************************************************
-PROPOSALS
- */
-
 nav.bg-dark, .navbar.solid {
     background-color: #275382 !important;
 }
@@ -1111,14 +1143,10 @@ nav.bg-dark, .navbar.solid {
     color: rgba(255,255,255,.75);
 }
 
-/******/
-
 #form01adres {
     margin-top:50px;
     background:none;
 }
-
-/******/
 
 .p-4.accordion-frame {
     padding: 0 !important;
@@ -1172,8 +1200,6 @@ nav.bg-dark, .navbar.solid {
     border-top-right-radius: 5px;
 }
 
-/******/
-
 .starting-heading{
     padding: 1.5rem;
 }
@@ -1191,8 +1217,6 @@ nav.bg-dark, .navbar.solid {
     padding-right: 25px;
     font-size: 16px;
 }
-
-/*******/
 
 #progressBar{
     width: 100%;
@@ -1212,7 +1236,7 @@ nav.bg-dark, .navbar.solid {
     text-align: center;
     border-bottom: 10px solid #c2c2c2;
     color: #c2c2c2;
-    float:left;
+    float: left;
     padding-bottom: 10px;
     font-weight: 500;
     font-size: 16px;
@@ -1236,12 +1260,10 @@ nav.bg-dark, .navbar.solid {
     height:100% !important;
 }
 
-/*******/
 .jq-icon-error{
     background-color: #275382 !important;
     border:3px solid #fff;
 }
-/*******/
 
 fieldset #nivel{
     display: block;
@@ -1252,13 +1274,10 @@ fieldset #nivel .form-check{
     padding: 5px;
 }
 
-/*******/
-
 #csuri{
     width: 100%;
     padding: 15px;
 }
-/*******/
 
 #submitWrap{
     display:block;
@@ -1273,9 +1292,6 @@ fieldset #nivel .form-check{
 #editor-livresq{
     margin:20px 0;
 }
-/*******/
-/*******/
-/*******/
 
 .search-form .btn-success,
 .search-form .btn-success:hover,
@@ -1293,15 +1309,12 @@ fieldset #nivel .form-check{
 .search-form .btn-success:hover,
 .search-form .btn-success:active,
 .search-form .btn-success:focus,
-
 .search-form .btn-success:hover,
 .search-form .btn-success:active,
 .search-form .btn-success:focus{
     box-shadow: 0 0 0 .2rem rgba(45,79,117,.5) !important;
 }
 
-/*******/
-/*******/
 .search-form{
     /* taken from searchFrm */
     text-align: center;
@@ -1314,8 +1327,9 @@ fieldset #nivel .form-check{
 #searchResIntBtn{
     margin-left:10px;
 }
-/*******/
-/*******/
+
+
+/* Gestionarea CARD-urilor */
 .card{
     padding: 0;
 }
@@ -1350,9 +1364,6 @@ fieldset #nivel .form-check{
     color:#888;
 }
 
-/*******/
-/*******/
-/*******/
 #txthead{
     background: none;
     width: 50%;
@@ -1371,10 +1382,6 @@ fieldset #nivel .form-check{
     padding:10px;
 }
 
-/*******/
-/*******/
-/*******/
-
 .landing{
     position: static;
 }
@@ -1385,17 +1392,14 @@ fieldset #nivel .form-check{
     position: static;
     padding-bottom:10px;
 }
-/*******/
-/*******/
-/*******/
+
 .livresq-buttons > div {
     display: inline-block;
 }
+
 .editor-wrapper{
     margin-top:20px;
 }
-
-/*******/
 
 #genericModal {
     background-color: rgba(0,0,0,.2);
@@ -1412,9 +1416,6 @@ fieldset #nivel .form-check{
 #genericModal .close{
     color: #fff;
 }
-/*******/
-/*******/
-/*******/
 
 .redcontent{
     background: initial;
@@ -1435,6 +1436,7 @@ fieldset #nivel .form-check{
     position: relative;
     padding-top: 2rem;
 }
+
 @media (max-width: 800px){
     .card-title.jumbotron{
         margin-top:1rem;
@@ -1477,9 +1479,17 @@ fieldset #nivel .form-check{
     padding-bottom:2rem;
 }
 
-/*******/
+/* Gestionarea login-ului */
+#localogin {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    margin-top: 4rem;
+    margin-bottom: 4rem;
+    background-color: rgb(233, 232, 232);
+}
 
 
-/**
-END OF PROPOSALS
- */
+/* BS4 MODALS FIX!!! */
+.modal { 
+    background: rgba(0, 0, 0, 0.8);
+}

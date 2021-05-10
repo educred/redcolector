@@ -1,4 +1,4 @@
-import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+import {createElement, pubComm, decodeCharEntities, datasetToObject} from './main.mjs';
 import {AttachesToolPlus} from './uploader.mjs';
 
 var csrfToken = '';
@@ -7,15 +7,9 @@ if(document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
 }
 
-// obiectul io este deja disponibil de la încărcarea paginii
-var pubComm = io('/redcol', {
-    upgrade: true,
-    query: {['_csrf']: csrfToken}
-});
-
-pubComm.on('connect', () => {
-    // console.log(pubComm.id); // indică id-ul de conectare
-});
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
 
 /**
  * Funcția joacă rol de callback și va fi executată de îndată ce DOM-ul este încărcat
@@ -24,13 +18,16 @@ pubComm.on('connect', () => {
 function clbkDOMContentLoaded () {
 
     /* === OBIECTUL RESURSA din `data-content` === */
-    let dataRes = document.querySelector('.resursa').dataset || {};
+    let data = document.querySelector('.resursa').dataset;
+    let dataRes = JSON.parse(JSON.stringify(data)) || null;
+    let content = JSON.parse(dataRes.content) || null;    
 
     /* === RED === */
     var resObi = {
         id: dataRes.id, 
-        contribuitor: dataRes.contributor,
-        content: JSON.parse(dataRes.content)
+        contribuitor: dataRes.contribuitor,
+        uuid: content.uuid,
+        content
     };
 
     /* === AUTORI și AUTORUL PRINCIPAL === */
@@ -282,7 +279,7 @@ function clbkDOMContentLoaded () {
                                         pubComm.on('resursa', (respObj) => {
                                             // semnătura lui respObj:
                                             /*
-                                                file: "http://localhost:8080/repo/5ebaf1ae32061d3fa4b7f0ae/ceb79940-8755-41e7-95fd-ee88e5e193fa/data/Marcus_Aurelius_Louvre_MR561_n02.jpg"
+                                                file: "http://localhost:3000/repo/5ebaf1ae32061d3fa4b7f0ae/ceb79940-8755-41e7-95fd-ee88e5e193fa/data/Marcus_Aurelius_Louvre_MR561_n02.jpg"
                                                 size: 9026609                                        ​
                                                 success: 1                                        ​
                                                 uuid: "ceb79940-8755-41e7-95fd-ee88e5e193fa"
@@ -513,14 +510,16 @@ function clbkDOMContentLoaded () {
      */
     function deleteRes () {
         pubComm.emit('delresid', resObi);
-        // console.log('Am trimis obiectul: ', resObi);
+        // console.log('Am trimis obiectul::content: ', resObi);
         pubComm.on('delresid', (res) => {
-            // alert(res);
+            alert("Am șters: ", res.title);
             if (res) {
-                window.location = '/profile/' + dataRes.id;
+                // window.location = '/profile/' + dataRes.id;
+                window.location = '/profile/resurse';
             }
         });
     }
+    globalThis.deleteRes = deleteRes;
 
     var resursa          = document.getElementById(resObi.id);
     var validateCheckbox = document.getElementById('valid');

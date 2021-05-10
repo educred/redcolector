@@ -4,9 +4,11 @@ const router   = express.Router();
 const moment   = require('moment');
 const Resursa  = require('../models/resursa-red'); // Adu modelul resursei
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
 /* === LANDING :: / === */
 router.get('/', function clbkRootRoute (req, res, next) {
-
     // let localizat = moment(result.date).locale('ro').format('LLL');
     // result.dataRo = `${localizat}`; // formatarea datei pentru limba română.
 
@@ -15,9 +17,8 @@ router.get('/', function clbkRootRoute (req, res, next) {
         // console.log('Numărul resurselor este: ', count);
     });
 
-    // creează Promise
+    /* Adu ultimele 8 RESURSE pe landing */
     let resursePublice = Resursa.find({'generalPublic': true}).sort({"date": -1}).limit(8);
-
     resursePublice.exec().then((result) => {
         let newResultArr = [];
 
@@ -39,13 +40,13 @@ router.get('/', function clbkRootRoute (req, res, next) {
             // HOLDERJS
             {script: '/lib/npm/holder.min.js'},            
             {script: '/lib/npm/bootstrap.bundle.min.js'},
-            {script: '/js/custom.js'}
+            {script: '/js/custom.js'},
+            // {script: '/js/index.js'}
         ];
 
         let modules = [
             {module: '/lib/npm/popper.min.js'},
-            // {module: '/js/main.mjs'},
-            {module: '/js/indexpub.mjs'}
+            {module: '/js/main.mjs'}
         ];
 
         let styles = [
@@ -55,7 +56,7 @@ router.get('/', function clbkRootRoute (req, res, next) {
         res.render('index', {
             title:     "Acasă",
             user:      req.user,
-            logoimg:   "img/rED-logo192.png",            
+            logoimg:   LOGO_IMG,            
             resurse:   newResultArr,
             csrfToken: req.csrfToken(),
             modules,

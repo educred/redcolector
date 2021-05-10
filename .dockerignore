@@ -1,0 +1,16 @@
+# excluzi modulele Node
+node_modules
+# excluzi repo-ul de git local
+.git
+# excluzi .gitignore
+.gitignore
+# excluzi design-ul aplicației
+docker-compose*.yml
+# excluzi /repo pentru că se creează in container
+/repo
+# excluzi .env
+.env
+# excluzi Dockerfile
+Dockerfile
+# excluzi .dockerignore
+.dockerignore

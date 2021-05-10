@@ -1,11 +1,13 @@
 require('dotenv').config();
 /* === DEPENDINȚE === */
-const util     = require('util');
-const express  = require('express');
-const router   = express.Router();
-const mongoose = require('mongoose');
-const moment   = require('moment');
-// const redisClient = require('../redis.config');
+const util        = require('util');
+const express     = require('express');
+const router      = express.Router();
+const mongoose    = require('mongoose');
+const moment      = require('moment');
+const logger      = require('../util/logger');
+const redisClient = require('../redis.config');
+
 // Încarcă mecanismele de verificare ale rolurilor
 let makeSureLoggedIn = require('connect-ensure-login');
 let checkRole        = require('./controllers/checkRole.helper');
@@ -18,13 +20,27 @@ const schema     = require('../models/resursa-red-es7');
 const ES7Helper  = require('../models/model-helpers/es7-helper');
 let editorJs2TXT = require('./controllers/editorJs2TXT');
 
+// CONSTANTE
+const LOGO_IMG = "img/" + process.env.LOGO;
+
+// INDECȘII ES7
+let RES_IDX_ES7 = '', RES_IDX_ALS = '';
+
+redisClient.get("RES_IDX_ES7", (err, reply) => {
+    if (err) console.error;
+    RES_IDX_ES7 = reply;
+});
+redisClient.get("RES_IDX_ALS", (err, reply) => {
+    if (err) console.error;
+    RES_IDX_ALS = reply;
+});
+
 /* === PROFILUL PROPRIU === */
 router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, res) {
     res.render('profile', {        
         title:        "Profil",
         user:         req.user,
-        logoimg:      "/img/red-logo-small30.png",
-        credlogo:     "../img/CREDlogo.jpg",
+        logoimg:      LOGO_IMG,
         csrfToken:    req.csrfToken(),
         activePrfLnk: true
     });
@@ -32,67 +48,74 @@ router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, re
 
 /* === ACCESAREA PROPRIILOR RESURSE :: /resurse === */
 router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (req, res) {
-        // var count = require('./controllers/resincred.ctrl')(req.user);
-        var count = Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((resurse) => {
-            // console.log("[profile::/resurse] Numărul resurselor aduse cu `resincred.ctrl.js` este ", resurse.length);
-            return resurse;
-        });
-        
-        // Promisiunea returnată (`find`). 
-        count.then((result) => {
+        /* === RESURSELE NECESARE LA RANDARE === */
+        let scripts = [       
+            // MOMENT.JS
+            {script: '/lib/npm/moment-with-locales.min.js'},
+            // HOLDERJS
+            {script: '/lib/npm/holder.min.js'},
+            // LOCAL
+            //{script: '/js/form02log.js'},
+            // DATATABLES
+            {script: '/lib/npm/jquery.dataTables.min.js'},
+            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+            {script: '/lib/npm/dataTables.select.min.js'},
+            {script: '/lib/npm/dataTables.buttons.min.js'},
+            {script: '/lib/npm/dataTables.responsive.min.js'},
+            // TIMELINE 3
+            {script: '/lib/timeline3/js/timeline.js'},
+        ];
 
-            // transformă documentele Mongoose în POJOs
-            let newResultArr = result.map(function clbkMapResult (obi) {
-                const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-                // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
-                newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
-                // newResultArr.push(newObi);
-                return newObi;
-            });
+        let styles = [
+            // FONTAWESOME
+            {style: '/lib/npm/all.min.css'},
+            // JQUERY TOAST
+            {style: '/lib/npm/jquery.toast.min.css'},
+            // BOOTSTRAP
+            {style: '/lib/npm/bootstrap.min.css'},
+            {style: '/lib/npm/jquery.dataTables.min.css'},
+            {style: '/lib/npm/responsive.dataTables.min.css'},
+            {style: '/lib/npm/dataTables.bootstrap4.min.css'}
+        ];
+
+        let modules = [
+            // MAIN
+            {module: '/js/main.mjs'}
+        ];
+        /**
+         * Funncție cu rol de callback
+         * Transformă obiectul primit într-un POJO cu date formatate cu moment
+         * @param {Object} obi 
+         */
+        function clbkMapResult (obi) {
+            const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
+            // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
+            newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
+            // newResultArr.push(newObi);
+            return newObi;
+        }
+
+        // Afișează doar ultimele 6 resurse introduse
+        Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((result) => {
+
+            // transformă documentele Mongoose în POJOs cu dată formatată
+            let newResultArr = result.map(clbkMapResult);
 
             /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
-            let scripts = [       
-                // MOMENT.JS
-                {script: '/lib/npm/moment-with-locales.min.js'},
-                // HOLDERJS
-                {script: '/lib/npm/holder.min.js'},
-                // LOCAL
-                {script: '/js/form02log.js'},
-                // DATATABLES
-                {script: '/lib/npm/jquery.dataTables.min.js'},
-                {script: '/lib/npm/dataTables.bootstrap4.min.js'},
-                {script: '/lib/npm/dataTables.select.min.js'},
-                {script: '/lib/npm/dataTables.buttons.min.js'},
-                {script: '/lib/npm/dataTables.responsive.min.js'},
-                // TIMELINE 3
-                {script: '/lib/timeline3/js/timeline.js'},
-            ];
-
-            let styles = [
-                // FONTAWESOME
-                {style: '/lib/npm/all.min.css'},
-                // JQUERY TOAST
-                {style: '/lib/npm/jquery.toast.min.css'},
-                // BOOTSTRAP
-                {style: '/lib/npm/bootstrap.min.css'},
-                {style: '/lib/npm/jquery.dataTables.min.css'},
-                {style: '/lib/npm/responsive.dataTables.min.css'},
-                {style: '/lib/npm/dataTables.bootstrap4.min.css'}
-            ];
-
             res.render('resurse-profil', {                
                 title:     "Profil",
                 user:      req.user,
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resurse:   newResultArr,
                 scripts,
+                modules,
                 styles,
                 activeAdmLnk: true
             });
         }).catch((error) => {
-            console.error(error);
+            console.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
+            logger.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
         });
     }
 );
@@ -122,11 +145,11 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         {module: '/lib/editorjs/inlinecode.js'},
         {module: '/lib/editorjs/table.js'},
         {module: '/lib/editorjs/attaches.js'},
-        {module: '/lib/editorjs/ajax.js'},        
+        {module: '/lib/editorjs/ajax.js'},
+        // MAIN
+        {module: '/js/main.mjs'},
         // REEDIT RES
         {module: '/js/personal-res.mjs'},
-        // MAIN
-        {module: '/js/main.mjs'}
     ];
 
     let styles = [
@@ -144,7 +167,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
     // caută resursa în bază
     const query = Resursa.findById(req.params.idres).populate({path: 'competenteS'});    
     // reformatare obiect resursă și căutarea corespondentului în Elasticsearch cu reindexare, dacă nu există în bază, șterge ghost-ul din ES
-    query.then(resursa => {   
+    query.then((resursa) => {   
         /* === Resursa încă există în MongoDB === */
         if (resursa.id !== null) {
             // transformă obiectul document de Mongoose într-un obiect normal.
@@ -173,85 +196,71 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             obi.activitati = activitatiRehashed;
 
             // Dacă nu este indexată în Elasticsearch deja, indexează aici!
-            esClient.exists({
-                index: process.env.RES_IDX_ALS,
-                id: req.params.idres
-            }).then(resFromIdx => {
-                /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
-                if(resFromIdx.statusCode === 404){
-                    // verifică dacă există conținut
-                    var content2txt = '';
-                    if ('content' in obi) {
-                        content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                    }
-                    // indexează documentul
-                    const data = {
-                        id:               obi._id,
-                        date:             obi.date,
-                        idContributor:    obi.idContributor,
-                        emailContrib:     obi.emailContrib,
-                        uuid:             obi.uuid,
-                        autori:           obi.autori,
-                        langRED:          obi.langRED,
-                        title:            obi.title,
-                        titleI18n:        obi.titleI18n,
-                        arieCurriculara:  obi.arieCurriculara,
-                        level:            obi.level,
-                        discipline:       obi.discipline,
-                        disciplinePropuse:obi.disciplinePropuse,
-                        competenteGen:    obi.competenteGen,
-                        rol:              obi.rol,
-                        abilitati:        obi.abilitati,
-                        materiale:        obi.materiale,
-                        grupuri:          obi.grupuri,
-                        domeniu:          obi.demersuri,
-                        spatii:           obi.spatii,
-                        invatarea:        obi.invatarea,
-                        description:      obi.description,
-                        dependinte:       obi.dependinte,
-                        coperta:          obi.coperta,
-                        content:          content2txt,
-                        bibliografie:     obi.bibliografie,
-                        contorAcces:      obi.contorAcces,
-                        generalPublic:    obi.generalPublic,
-                        contorDescarcare: obi.contorDescarcare,
-                        etichete:         obi.etichete,
-                        utilMie:          obi.utilMie,
-                        expertCheck:      obi.expertCheck
-                    };
+            // esClient.exists({
+            //     index: RES_IDX_ALS,
+            //     id: req.params.idres
+            // }).then(resFromIdx => {
+            //     /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
+            //     if(resFromIdx.statusCode === 404){
+            //         // verifică dacă există conținut
+            //         var content2txt = '';
+            //         if ('content' in obi) {
+            //             content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+            //         }
+            //         // indexează documentul
+            //         const data = {
+            //             id:               obi._id,
+            //             date:             obi.date,
+            //             idContributor:    obi.idContributor,
+            //             emailContrib:     obi.emailContrib,
+            //             uuid:             obi.uuid,
+            //             autori:           obi.autori,
+            //             langRED:          obi.langRED,
+            //             title:            obi.title,
+            //             titleI18n:        obi.titleI18n,
+            //             arieCurriculara:  obi.arieCurriculara,
+            //             level:            obi.level,
+            //             discipline:       obi.discipline,
+            //             disciplinePropuse:obi.disciplinePropuse,
+            //             competenteGen:    obi.competenteGen,
+            //             rol:              obi.rol,
+            //             abilitati:        obi.abilitati,
+            //             materiale:        obi.materiale,
+            //             grupuri:          obi.grupuri,
+            //             domeniu:          obi.demersuri,
+            //             spatii:           obi.spatii,
+            //             invatarea:        obi.invatarea,
+            //             description:      obi.description,
+            //             dependinte:       obi.dependinte,
+            //             coperta:          obi.coperta,
+            //             content:          content2txt,
+            //             bibliografie:     obi.bibliografie,
+            //             contorAcces:      obi.contorAcces,
+            //             generalPublic:    obi.generalPublic,
+            //             contorDescarcare: obi.contorDescarcare,
+            //             etichete:         obi.etichete,
+            //             utilMie:          obi.utilMie,
+            //             expertCheck:      obi.expertCheck
+            //         };
 
-                    ES7Helper.searchIdxAlCreateDoc(schema, data, process.env.RES_IDX_ES7, process.env.RES_IDX_ALS); // https://stackoverflow.com/questions/50609417/elasticsearch-error-cluster-block-exception-forbidden-12-index-read-only-all
-                    //FIXME: EROAREA care apare în consolă 
-                    // {
-                    //     "error": {
-                    //       "root_cause": [
-                    //         {
-                    //           "type": "cluster_block_exception",
-                    //           "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
-                    //         }
-                    //       ],
-                    //       "type": "cluster_block_exception",
-                    //       "reason": "index [resedus0] blocked by: [TOO_MANY_REQUESTS/12/index read-only / allow delete (api)];"
-                    //     },
-                    //     "status": 429
-                    //   }                    
-                }
-                return resFromIdx;
-            }).catch(err => {
-                console.error(err);
-            });
+            //         ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS); // https://stackoverflow.com/questions/50609417/elasticsearch-error-cluster-block-exception-forbidden-12-index-read-only-all                  
+            //     }
+            //     return resFromIdx;
+            // }).catch(err => {
+            //     console.error(err);
+            // });
             return obi;
         } else {
             // Caută resursa și în Elasticsearch. Dacă există indexată, dar a fost ștearsă din MongoDB, șterge-o din indexare, altfel va apărea la căutare
             esClient.exists({
-                index: process.env.RES_IDX_ALS,
+                index: RES_IDX_ALS,
                 id: req.params.idres
             }).then(resFromIdx => {
                 // console.log(resFromIdx);
                 if(resFromIdx.statusCode !== 404){
                     esClient.delete({
                         id: req.params.idres,
-                        index: process.env.RES_IDX_ALS
+                        index: RES_IDX_ALS
                     }).then(dead => {
                         // console.log(dead);
                         // rre('mesaje', `Resursa era încă indexată și am șters-o acum.`);
@@ -261,13 +270,13 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 }
                 return resFromIdx;
             }).catch(err => {
-                console.error(err);
+                console.error(JSON.stringify(error, null, 2));
             });
-            return Promise.reject('Resursa nu mai există!'); // Rejectează promisiunea!
+            return null;
         }
-    }).then(resursa => {
+    }).then((resursa) => {
         /* === ADMIN === */
-        if(req.session.passport.user.roles.admin){
+        if(resursa !== null && req.session.passport.user.roles.admin) {
             // Adaugă checkbox de validare
             if (resursa.expertCheck) {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck" checked>`;
@@ -283,10 +292,9 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             // Setul de date va fi disponibil în `data-content` ca string JSON. Este trimis cu helperul `hbs.registerHelper('json', cb)` definit în app.js
             // Acest lucru este necesar pentru a reedita resursa în client.
             res.render('resursa-admin', {
-                title:     "Administrator",
+                title:     "RED",
                 user:      req.user,                
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
@@ -304,8 +312,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             res.render('resursa-validator', {            
                 title:     "Validator",
                 user:      req.user,               
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
@@ -319,8 +326,7 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
                 title:     "RED",
                 user:      req.user,
                 // style:     "/lib/fontawesome/css/fontawesome.min.css",
-                logoimg:   "/img/red-logo-small30.png",
-                credlogo:  "../img/CREDlogo.jpg",
+                logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
