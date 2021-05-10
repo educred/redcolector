@@ -134,7 +134,7 @@ let sessionMiddleware = session({
 // https://www.npmjs.com/package/express-session
 if (app.get('env') === 'production') {
     app.set('trust proxy', 1);              // trust first proxy
-    sessionMiddleware.cookie.secure = true; // serve secure cookies
+    //sessionMiddleware.cookie.secure = true; // serve secure cookies
 }
 
 // MIDDLEWARE de stabilirea a sesiunii de lucru prin încercări repetate. Vezi: https://github.com/expressjs/session/issues/99
