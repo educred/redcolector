@@ -62,7 +62,7 @@ router.get('/', function clbkLog (req, res, next) {
             res.render('logentry', {
                 title:      "Noutăți",
                 user:       req.user,
-                LOGO_IMG,
+                logoimg:    LOGO_IMG,
                 csrfToken:  req.csrfToken(),
                 logentries: newResultArr,
                 scripts,
