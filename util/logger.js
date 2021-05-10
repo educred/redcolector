@@ -71,15 +71,24 @@ const logger = winston.createLogger({
 winston.addColors(colors);
 
 /* ÎN DEZVOLTARE ADAUGĂ NIVEL DE LOGGING SUPLIMENTAR */
-if (env !== 'development') {
-  logger.add(winston.transports.DailyRotateFile({
-      name:        "Combined logs",
-      filename:    config.logConfig.logFolder + "combined-%DATE%.log",
-      level:       'error', 
-      datePattern: 'YYYY-MM-DD-HH',
-      maxSize:     '20m',
-      maxFiles:    '14d'
-  }))
-}
+// if (env !== 'development') {
+//   logger.add(winston.transports.DailyRotateFile({
+//       name:        "Combined logs",
+//       filename:    config.logConfig.logFolder + "combined-%DATE%.log",
+//       level:       'error', 
+//       datePattern: 'YYYY-MM-DD-HH',
+//       maxSize:     '20m',
+//       maxFiles:    '14d'
+//   }))
+// } else {
+//   logger.add(winston.transports.DailyRotateFile({
+//       name:        "Combined logs",
+//       filename:    config.logConfig.logFolder + "combined-%DATE%.log",
+//       level:       'error', 
+//       datePattern: 'YYYY-MM-DD-HH',
+//       maxSize:     '20m',
+//       maxFiles:    '5d'
+//   }))
+// }
 
 module.exports = logger;
