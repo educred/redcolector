@@ -1,3 +1,117 @@
+ReferenceError: next is not defined
+    at /var/www/red.educred.ro/routes/upload.js:178:25
+Error: EACCES: permission denied, mkdir '/var/www/red.educred.ro/repo/5dc05a3e6b20115bd629aac5'
+    at Object.mkdirSync (node:fs:1325:3)
+    at sync (/var/www/red.educred.ro/node_modules/bagit-fs/node_modules/mkdirp/index.js:72:13)
+    at sync (/var/www/red.educred.ro/node_modules/bagit-fs/node_modules/mkdirp/index.js:78:24)
+    at Function.sync (/var/www/red.educred.ro/node_modules/bagit-fs/node_modules/mkdirp/index.js:78:24)
+    at new BagIt (/var/www/red.educred.ro/node_modules/bagit-fs/index.js:29:10)
+    at BagIt (/var/www/red.educred.ro/node_modules/bagit-fs/index.js:15:40)
+    at /var/www/red.educred.ro/routes/sockets.js:274:31 {
+  errno: -13,
+  syscall: 'mkdir',
+  code: 'EACCES',
+  path: '/var/www/red.educred.ro/repo/5dc05a3e6b20115bd629aac5'
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{ "_id" : ObjectId("60994a345333df1b975aa6d9"), "date" : ISODate("2021-05-10T14:59:00.460Z"), "title" : "Un eford de câteva luni", "idContributor" : "nicu.constantinescu@educred.ro", "content" : { "time" : 1620658740455, "blocks" : [ { "id" : "8AHG184qGi", "type" : "paragraph", "data" : { "text" : "Astăzi a fost instalată versiunea 0.9.7 a aplicației colectorului. Este un efort de câteva luni pentru a actualiza și a îmbunătăți baza de cod. În plus, în vederea unei ușoare portări cu scopul de a mări numărul celor care doresc să se implice în dezvoltare software, întregul cod a fost pe volume gestionabile cu Docker.&nbsp;" } }, { "id" : "kCo-VngD2S", "type" : "paragraph", "data" : { "text" : "Toate eforturile sunt îndreptate în acest moment spre corectarea datelor interne." } }, { "id" : "Pa98uRZg_j", "type" : "paragraph", "data" : { "text" : "Aplicația a suferit și o acualizare a interfeței, dar formularul pentru introducerea resurselor a rămas neschimbat pentru a nu crea nicio discrepanță cu experiența de lucru de până acum." } }, { "id" : "vNbx_wto-A", "type" : "paragraph", "data" : { "text" : "Vă mulțumesc tuturor pentru răbdare. Următoarea etapă după cea a corecturilor și ajustărilor de date, va fi dedicată îmbunătățirii bazei de cod existente dedicate motorului de căutare. Astfel, în acestă versiune căutare nu este disponibilă." } }, { "id" : "hpHKR8Zsg5", "type" : "image", "data" : { "caption" : "", "withBorder" : false, "stretched" : false, "withBackground" : false } } ], "version" : "2.21.0" }, "contorAcces" : 0, "__v" : 0 }
+
+
+
+
+0|app  | TypeError: Cannot read property 'url' of undefined
+0|app  |     at /var/www/red.educred.ro/routes/controllers/editorJs2HTML.js:23:59
+0|app  |     at Array.map (<anonymous>)
+0|app  |     at content2html (/var/www/red.educred.ro/routes/controllers/editorJs2HTML.js:7:24)
+0|app  |     at clbkLogAdd (/var/www/red.educred.ro/routes/log.js:30:34)
+0|app  |     at Array.map (<anonymous>)
+0|app  |     at /var/www/red.educred.ro/routes/log.js:26:21
+0|app  |     at processTicksAndRejections (node:internal/process/task_queues:96:5)
+0|app  | Aplicația a crăpat cu următoarele detalii:  TypeError: Cannot read property 'url' of undefined
+0|app  |     at /var/www/red.educred.ro/routes/controllers/editorJs2HTML.js:23:59
+0|app  |     at Array.map (<anonymous>)
+0|app  |     at content2html (/var/www/red.educred.ro/routes/controllers/editorJs2HTML.js:7:24)
+0|app  |     at clbkLogAdd (/var/www/red.educred.ro/routes/log.js:30:34)
+0|app  |     at Array.map (<anonymous>)
+0|app  |     at /var/www/red.educred.ro/routes/log.js:26:21
+0|app  |     at processTicksAndRejections (node:internal/process/task_queues:96:5)
+0|app  | [10-05-2021 18:00:10] [error] [undefined]: 	Cannot read property 'url' of undefined
+0|app  | [10-05-2021 18:00:10] [error] [undefined]: 	Cannot read property 'url' of undefined
+0|app  | GET /log 302 11.741 ms - 52
+0|app  | GET /500 500 12.943 ms - -
+0|app  | TypeError: Cannot read property 'url' of undefined
+0|app  |     at /var/www/red.educred.ro/routes/controllers/editorJs2HTML.js:23:59
+0|app  |     at Array.map (<anonymous>)
+0|app  |     at content2html (/var/www/red.educred.ro/routes/controllers/editorJs2HTML.js:7:24)
+0|app  |     at clbkLogAdd (/var/www/red.educred.ro/routes/log.js:30:34)
+0|app  |     at Array.map (<anonymous>)
+0|app  |     at /var/www/red.educred.ro/routes/log.js:26:21
+0|app  |     at processTicksAndRejections (node:internal/process/task_queues:96:5)
+0|app  | Aplicația a crăpat cu următoarele detalii:  TypeError: Cannot read property 'url' of undefined
+0|app  |     at /var/www/red.educred.ro/routes/controllers/editorJs2HTML.js:23:59
+0|app  |     at Array.map (<anonymous>)
+0|app  |     at content2html (/var/www/red.educred.ro/routes/controllers/editorJs2HTML.js:7:24)
+0|app  |     at clbkLogAdd (/var/www/red.educred.ro/routes/log.js:30:34)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+0|app  |     at Array.map (<anonymous>)
+0|app  |     at /var/www/red.educred.ro/routes/log.js:26:21
+0|app  |     at processTicksAndRejections (node:internal/process/task_queues:96:5)
+0|app  | [10-05-2021 18:01:30] [error] [undefined]: 	Cannot read property 'url' of undefined
+0|app  | [10-05-2021 18:01:30] [error] [undefined]: 	Cannot read property 'url' of undefined
+
+
+
+
+
+
+
+
 socket.on('delresid'
 
 AM DEZACTIVAT CODUL DE STERGERE DIN INDEX ES!!! REACTIVEAZA!

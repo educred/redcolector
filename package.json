@@ -4,7 +4,7 @@
   "description": "Aplicația pentru colectare de RED-uri",
   "main": "app.js",
   "scripts": {
-    "start": "pm2 app.js",
+    "start": "node app.js",
     "dev": "nodemon --trace-warnings app.js",
     "copy": "webpack --config webpack.config.js",
     "kill": "kill $(lsof -t -i:3000) | exit 0"

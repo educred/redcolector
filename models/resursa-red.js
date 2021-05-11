@@ -179,9 +179,9 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
 
     //- FIXME: Aici este funcția care generează indexul numit `false`
     // NOTE: Vezi ca acest helper sa raspunda cazului in care ai de-a face cu prima resursă, caz în care nu ai nici idx, nici alias-ul său
-    if (RES_IDX_ES7) {
-        ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
-    }
+    // if (RES_IDX_ES7) {
+    //     ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
+    // }
     next();
 });
 

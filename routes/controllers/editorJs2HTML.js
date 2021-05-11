@@ -16,12 +16,14 @@ function content2html (resursa) {
                     </div>\n`;
                     break;
                 case 'image':
+                    obj.data.file.url !== undefined ? obj.data.file.url : '/img/sigmund-TnEe6BdBC2M-unsplash.jpg';
+                    obj.data.caption ? obj.data.caption : '';
                     articleHTML += `<div class="ce-block">
                     <div class="ce-block__content">
                         <div class="ce-paragraph cdx-block">
-                            <figure>
+                            <figure class="text-center">
                                 <img src="${obj.data.file.url}" alt="${obj.data.caption}" width="300"/>
-                                <figcaption class="text-center">
+                                <figcaption>
                                     ${obj.data.caption}
                                 </figcaption>
                             </figure>

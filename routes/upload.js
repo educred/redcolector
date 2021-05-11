@@ -56,9 +56,6 @@ module.exports = function uploader (io) {
             if (err) {
                 logger.error(err);
                 cb(err);
-                const errOb = new Error(err);
-                errOb.httpStatusCode = 500;
-                return next(errOb);
             }
 
             that.getFilename(req, file, function clbkGetFilename (err, fileName) {
@@ -67,9 +64,6 @@ module.exports = function uploader (io) {
                 if (err) {
                     logger.error(err);
                     cb(err);
-                    const errOb = new Error(err);
-                    errOb.httpStatusCode = 500;
-                    return next(errOb);
                 }
 
                 // Extrage informația necesară BAG-ului pentru `Contact-Name`
@@ -99,9 +93,6 @@ module.exports = function uploader (io) {
                     if (err) {
                         // console.error("[upload.js::pipeline] #3-erroare Nu s-a reușit scrierea fișierului în Bag cu următoarele detalii: ", error);
                         logger.error(err);
-                        const errOb = new Error(err);
-                        errOb.httpStatusCode = 500;
-                        return next(errOb);
                     }
 
                     /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
@@ -109,9 +100,6 @@ module.exports = function uploader (io) {
                         if (err) {
                             // console.log("[upload.js] #3-eroare-acces-file Nu am găsit fișierul tocmai scris: ",err);
                             logger.error(err);
-                            const errOb = new Error(err);
-                            errOb.httpStatusCode = 500;
-                            return next(errOb);
                         }
                         const {size} = fs.statSync(`${destination}/data/${file.originalname}`);
                         /* The information you provide in the callback will be merged with multer's file object, and then presented to the user via req.files */
@@ -173,9 +161,6 @@ module.exports = function uploader (io) {
                     } else {
                         // console.error("[upload.js] #A-eroare-toata-linia Nu am putut scrie fișierul cu următoarele detalii ale erorii", err);
                         logger.error(err);
-                        const errOb = new Error(err);
-                        errOb.httpStatusCode = 500;
-                        return next(errOb);
                     }
                 });
             } else {
