@@ -5,8 +5,24 @@
 
 <div id="content">
     <div class="title"><h1>Competențe specifice</h1></div>
-    <section class="container p-4 col-sm-11">
-        <a href="/administrator/compets/new" type="button" class="btn btn-primary">Creează competență nouă </a>
+    <section class="container p-4 col-sm-11 d-flex">
+        <div>
+            <a href="/administrator/compets/new" type="button" class="btn btn-primary">Creează competență nouă</a>
+        </div>
+        <div class="ml-4">
+            <form>
+                <div class="form-row align-items-center">
+                    <div class="form-group col-auto">
+                        {{!-- <label for="fileloadercs">Încarcă</label> --}}
+                        <input type="file" class="form-control-file" id="fileloadercs">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary mb-2">Încarcă fișier</button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
     </section>
     <section class="container-fluid" id="comps-visuals">
         {{!-- Va încărca resursele compilate cu ajutorul template-ului --}}

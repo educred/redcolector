@@ -33,7 +33,7 @@ pubComm.on('allComps', (compets) => {
     // console.log('[comps-visuals.js] competențele aduse sunt ', compets);
     let newResultArr = []; // noul array al obiectelor copmpetență specifică
 
-    // _ WORKING: Verifici dacă fiecare obiect are toate proprietățile. 
+    //_ WORKING: Verifici dacă fiecare obiect are toate proprietățile. 
     let arrPropsNeeded = ['nume', 'ids', 'cod', 'activitati', 'disciplina', 'coddisc', 'nivel', 'nrREDuri'];
     compets.map(function clbkMapResult (obi) {
         obi.dataRo = moment(obi.date).locale('ro').format('LLL');
@@ -52,11 +52,14 @@ pubComm.on('allComps', (compets) => {
     // RANDEAZĂ TABELULresurse
     // https://datatables.net/manual/data/orthogonal-data
     $('.competsTbl').DataTable({
+        processing: true,
+        info: true,
         responsive: true,
         data: newResultArr,
         order: [[2, 'desc']],
         ordering: true,
         info: true,
+        lengthChange: true,
         columns: [
             {
                 title: 'Introdus la',
@@ -114,20 +117,21 @@ pubComm.on('allComps', (compets) => {
             }
         ],
         language: {
-            "sProcessing":   "Procesează...",
-            "sLengthMenu":   "Afișează _MENU_ înregistrări pe pagină",
-            "sZeroRecords":  "Nu am găsit nimic - ne pare rău",
-            "sInfo":         "Afișate de la _START_ la _END_ din _TOTAL_ înregistrări",
-            "sInfoEmpty":    "Afișate de la 0 la 0 din 0 înregistrări",
-            "sInfoFiltered": "(filtrate dintr-un total de _MAX_ înregistrări)",
-            "sInfoPostFix":  "",
-            "sSearch":       "Caută:",
-            "sUrl":          "",
-            "oPaginate": {
-                "sFirst":    "Prima",
-                "sPrevious": "Precedenta",
-                "sNext":     "Următoarea",
-                "sLast":     "Ultima"
+            info: "Afișez pagina _PAGE_ din _PAGES_",
+            sProcessing:   "Procesează...",
+            sLengthMenu:   "Afișează _MENU_ înregistrări pe pagină",
+            sZeroRecords:  "Nu am găsit nimic - ne pare rău",
+            sInfo:         "Afișate de la _START_ la _END_ din _TOTAL_ înregistrări",
+            sInfoEmpty:    "Afișate de la 0 la 0 din 0 înregistrări",
+            sInfoFiltered: "(filtrate dintr-un total de _MAX_ înregistrări)",
+            sInfoPostFix:  "",
+            sSearch:       "Caută:",
+            sUrl:          "",
+            oPaginate: {
+                sFirst:    "Prima",
+                sPrevious: "Precedenta",
+                sNext:     "Următoarea",
+                sLast:     "Ultima"
             }
         }
     });

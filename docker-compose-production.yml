@@ -167,7 +167,7 @@ services:
             target: prod
             args:
                 FRONT_END_PORT: 8080
-        image: redcolector/production
+        image: "redcolector:${APP_VER}"
         container_name: redcolectorproduction
         # working_dir: /redcolector
         stdin_open: true
@@ -180,7 +180,7 @@ services:
         ports:
             - "8080:8080"
         restart: always
-        command: [npm, 'run', 'start']
+        command: ["dumb-init", "node", "app.js"]
         healthcheck:
             test: curl --silent --fail localhost:8080 || exit 1
             interval: 10s

@@ -1,3 +1,31 @@
+
+Actualizarea înregistrărilor pentru o colecție
+
+https://docs.mongodb.com/manual/reference/method/db.collection.updateMany/
+https://stackoverflow.com/questions/7714216/add-new-field-to-every-document-in-a-mongodb-collection
+https://stackoverflow.com/questions/36228599/how-to-use-mongoose-model-schema-with-dynamic-keys
+https://github.com/Automattic/mongoose/issues/1867
+https://mongoosejs.com/docs/guide.html#strict
+
+
+
+
+Lucru pentru a realiza un mecanism de upload al imaginilor folosind Socket.IO
+
+https://www.digitalocean.com/community/tutorials/how-to-add-advanced-photo-uploads-in-node-and-express
+https://bezkoder.com/node-js-upload-resize-multiple-images/
+https://coderszine.com/upload-multiple-image-in-node-js/
+https://medium.com/swlh/video-streaming-using-opencv4nodejs-with-node-js-express-and-socket-io-3806abb049a
+https://www.npmjs.com/package/socketio-file-upload
+https://iabhishek.dev/post/building-a-multimedia-chat-app-using-expres-socketio-redis-and-docker-part-1
+https://iabhishek.dev/post/building-a-multimedia-chat-app-using-express-socketio-redis-and-docker-part-2
+https://iabhishek.dev/post/building-a-multimedia-chat-app-using-express-socketio-redis-and-docker-part-3
+
+https://docs.mongodb.com/manual/tutorial/deploy-replica-set-for-testing/
+https://medium.com/swlh/build-your-own-realtime-database-with-socket-io-and-mongodb-1c561c2bb87
+https://hackernoon.com/enforcing-a-single-web-socket-connection-per-user-with-node-js-socket-io-and-redis-65f9eb57f66a
+
+
 ReferenceError: next is not defined
     at /var/www/red.educred.ro/routes/upload.js:178:25
 Error: EACCES: permission denied, mkdir '/var/www/red.educred.ro/repo/5dc05a3e6b20115bd629aac5'
@@ -13,21 +41,6 @@ Error: EACCES: permission denied, mkdir '/var/www/red.educred.ro/repo/5dc05a3e6b
   code: 'EACCES',
   path: '/var/www/red.educred.ro/repo/5dc05a3e6b20115bd629aac5'
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 { "_id" : ObjectId("60994a345333df1b975aa6d9"), "date" : ISODate("2021-05-10T14:59:00.460Z"), "title" : "Un eford de câteva luni", "idContributor" : "nicu.constantinescu@educred.ro", "content" : { "time" : 1620658740455, "blocks" : [ { "id" : "8AHG184qGi", "type" : "paragraph", "data" : { "text" : "Astăzi a fost instalată versiunea 0.9.7 a aplicației colectorului. Este un efort de câteva luni pentru a actualiza și a îmbunătăți baza de cod. În plus, în vederea unei ușoare portări cu scopul de a mări numărul celor care doresc să se implice în dezvoltare software, întregul cod a fost pe volume gestionabile cu Docker.&nbsp;" } }, { "id" : "kCo-VngD2S", "type" : "paragraph", "data" : { "text" : "Toate eforturile sunt îndreptate în acest moment spre corectarea datelor interne." } }, { "id" : "Pa98uRZg_j", "type" : "paragraph", "data" : { "text" : "Aplicația a suferit și o acualizare a interfeței, dar formularul pentru introducerea resurselor a rămas neschimbat pentru a nu crea nicio discrepanță cu experiența de lucru de până acum." } }, { "id" : "vNbx_wto-A", "type" : "paragraph", "data" : { "text" : "Vă mulțumesc tuturor pentru răbdare. Următoarea etapă după cea a corecturilor și ajustărilor de date, va fi dedicată îmbunătățirii bazei de cod existente dedicate motorului de căutare. Astfel, în acestă versiune căutare nu este disponibilă." } }, { "id" : "hpHKR8Zsg5", "type" : "image", "data" : { "caption" : "", "withBorder" : false, "stretched" : false, "withBackground" : false } } ], "version" : "2.21.0" }, "contorAcces" : 0, "__v" : 0 }
 

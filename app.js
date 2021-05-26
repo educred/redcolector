@@ -163,21 +163,30 @@ app.use(function (req, res, next) {
 app.use(passport.initialize()); // Instanțiază Passport
 app.use(passport.session()); // restaurează starea sesiunii dacă aceasta există
 
-/* === SERVER SOCKETURI === */
+/* === SERVER SOCKET.IO === */
 // #1 Creează server prin atașarea celui existent
 const corsOptsSockets = {
     origin: "",
     methods: ["GET", "POST"],
     allowedHeaders: ["_csrf"],
     credentials: true
-}
+};
+const adapter = require('socket.io-redis');
+const CONFIG_ADAPTER = {
+    host: '',
+    port: 6379
+};
 if (process.env.APP_RUNTIME === 'virtual') {
     corsOptsSockets.origin = 'http://' + process.env.DOMAIN_VIRT + ':' + process.env.PORT;
+    CONFIG_ADAPTER.host = 'redis'
 } else {
     corsOptsSockets.origin = 'http://' + process.env.DOMAIN;
+    CONFIG_ADAPTER.host = '127.0.0.1'
 }
 const io = require('socket.io')(http, {
     cors: corsOptsSockets,
+    maxHttpBufferSize: 1e8,
+    pingTimeout: 30000,
     transports: [ "websocket", "polling" ]
 });
 // #2 Creează un wrapper de middleware Express pentru Socket.io
@@ -185,7 +194,10 @@ function wrap (middleware) {
     return function matcher (socket, next) {
         middleware (socket.request, {}, next);
     };
-}
+};
+// #3 conectarea cu Redis pentru a permite pub/sub
+const redisAdapter = adapter(CONFIG_ADAPTER);
+io.adapter(redisAdapter);
 io.use(wrap(sessionMiddleware));
 // conectarea obiectului sesiune ca middleware în tratarea conexiunilor socket.io (ALTERNATIVĂ, nu șterge)
 // io.use(function clbkIOuseSessions(socket, next) {
@@ -377,6 +389,36 @@ var server = http.listen(port, '0.0.0.0', function cbConnection () {
     console.log('RED Colector ', process.env.APP_VER);
     console.log(`Hostname: ${hostname}, \n port: ${process.env.PORT}. \n proces no: ${process.pid} \n`, `node: ${process.version}`);
 });
+server.on('error', onError);
+
+/**
+ * Event listener for HTTP server "error" event.
+ * https://stackoverflow.com/questions/65823016/i-cant-seem-to-make-a-socket-io-connection
+ */
+
+ function onError(error) {
+    if (error.syscall !== 'listen') {
+      throw error;
+    }
+  
+    var bind = typeof port === 'string'
+      ? 'Pipe ' + port
+      : 'Port ' + port;
+  
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+      case 'EACCES':
+        console.error(bind + ' requires elevated privileges');
+        process.exit(1);
+        break;
+      case 'EADDRINUSE':
+        console.error(bind + ' is already in use');
+        process.exit(1);
+        break;
+      default:
+        throw error;
+    }
+  }
 
 /* === GESTIONAREA evenimentelor pe `process` și a SEMNALELOR === */
 

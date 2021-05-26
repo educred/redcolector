@@ -14,3 +14,7 @@ docker-compose*.yml
 Dockerfile
 # excluzi .dockerignore
 .dockerignore
+# excluzi loguri
+npm-debug.log
+# exclude secrete montate cu npm
+.npmrc

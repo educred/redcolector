@@ -209,6 +209,8 @@ module.exports = function sockets (io) {
         // === RESURSA === ::Primește fișiere, fapt care conduce la crearea Bag-ului. Servește instanței de Editor.js (uploadByFile și uploadByUrl)
         socket.on('resursa', function clbkResursa (resourceFile) {
             //_ TODO: Detectează dimensiunea fișierului și dă un mesaj în cazul în care depășește anumită valoare (vezi API-ul File)
+            //_ FIXME: Există o limitare sub 1Mb la fișierele care sunt scrise. Vezi de ce nu scrie mai mult de 1M. https://github.com/socketio/socket.io/issues/3135
+            //_ WORKING: the default value of maxHttpBufferSize was decreased from 100MB to 1MB (https://socket.io/docs/v3/server-initialization/#maxHttpBufferSize). Reverted! Era un braking change https://socket.io/docs/v3/migrating-from-2-x-to-3-0/index.html
             /* LIMITAREA dimensiunii fișierului am făcut-o cu directivă în NGINX deocamdată */
             /* 
                 Obiectul primit `resourceFile` este `objRes` din `form01adres` și are următoarea semnătură
@@ -240,6 +242,7 @@ module.exports = function sockets (io) {
             var sourceStream = new Readable();      // Creează stream-ul Readable
             sourceStream.push(resourceFile.resF);   // Injectează Buffer-ul care este fișierul, de fapt
             sourceStream.push(null);                // Trimite null în stream pentru a semnala faptul că injectarea fișierului s-a încheiat.
+            
             // construiește obiectul de răspuns.
             const responseObj4AddedFile = {
                 success: 0,

@@ -61,7 +61,8 @@ var User = new Schema({
     comments: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'comment'
-    }
+    },
+    token: String
 },{
     toJSON: {
         virtuals: true

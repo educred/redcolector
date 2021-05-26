@@ -1,14 +1,14 @@
 require('dotenv').config();
-const logger   = require('./util/logger');
-const redis = require('redis');
+const logger       = require('./util/logger');
+const redis        = require('redis');
+
 /* === REDIS - configurare === */
 // creează clientul conform https://github.com/tj/connect-redis/blob/HEAD/migration-to-v4.md
 
 /*
 Am setat o variabilă de mediu `APP_RUNTIME` care va indica dacă aplicația rulează virtualizat sau local.
 Valorile pe care această variabilă de mediu le poate avea sunt: `virtual` sau `local`.
-*/
-
+*/  
 const CONFIG = {
     host: '',
     port: 6379,
@@ -17,8 +17,6 @@ const CONFIG = {
 process.env.APP_RUNTIME === 'virtual' ? CONFIG.host = 'redis' : CONFIG.host = '127.0.0.1';
 
 let redisClient = redis.createClient(CONFIG);
-
-
 
 function clbkRedReady () {
     console.log('Conectare la REDIS', redisClient.server_info.redis_version, 'OK!');

@@ -7,7 +7,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     var uuid    = document.querySelector("meta[property='uuid']").getAttribute("content") || '',
         RED     = {},
         csrfToken = '',
-        sync    = false,     // variabila ține evidența tranzacționării uuid-ului cu serverul. În cazul în care uuid-ul este setat, nu se va mai emite mai jos la prima modificare a editorului (onchange editor.js)
         imagini = new Set(), // un `Set` cu toate imaginile care au fost introduse în document.
         fileRes = new Set(); // un `Set` care unifică fișierele, fie imagini, fie atașamente.
 
@@ -36,25 +35,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     RED.relatedTo       = [];
     RED.etichete        = [];
 
-    /* === UUID === */
-    // este necesar pentru a primi uuid-ul generat de multer atunci când prima resursă încărcată este un fișier
-    pubComm.on('uuid', (token) => {
-        // console.log("[form01adres.mjs] Am primit pe uuid următoarea solicitare: ", token);
-        if (token.requested) {                              /* MULTER:: servește uuid-ul existent lui multer: semnătura `{requested: true}` este a multer-ului (engine customizat) */ 
-            if (uuid !== 'undefined') {                     /* -> `uuid` este deja setat, înseamnă că o primă resursă a fost scrisă pe disc; trimite-l celui care l-a solicitat */
-                pubComm.emit('uuid', uuid);                 /* -> a fost încărcată vreo imagine, atunci, `uuid` este setat. Trimite-l! */
-            } else {
-                pubComm.emit('uuid', '');                   /* -> primul fișier este un atașament, trimite șir vid */
-            }
-        } else if (token === uuid) {                        /* cazul în care nu avem `token.requested`, ci un string cu un uuid trimis de prin `routes::sockets`, verifică să fie ce este în client */
-            if (RED.uuid == 'undefined') RED.uuid = uuid;   /* cazul în care este trimis `uuid`-ul și este același cu cel setat în client deja, dar încă `RED.uuid` este gol */
-            sync = true; // setează la `true` pe `sync`
-        } else if (uuid === 'undefined') {
-            uuid = RED.uuid = token;                        /* cazul în care `uuid` nu a fost încă setat, înseamnă că ai de a face cu prima resursă încărcată, fie atașament, fie imagine */
-            sync = true; // setează la `true` pe `sync`
-        }
-    });
-
     // Este obiectul de configurare al lui `attaches` din Editor.js
     let attachesCfg = {
         class: AttachesToolPlus,            
@@ -66,19 +46,19 @@ import {AttachesToolPlus} from './uploader.mjs';
         }
     };
     
-    var cookie2obj = document.cookie.split(/; */).reduce((obj, str) => {
-        if (str === "") return obj;
-        const eq = str.indexOf('=');
-        const key = eq > 0 ? str.slice(0, eq) : str;
-        let val = eq > 0 ? str.slice(eq + 1) : null;
-        if (val != null) try {
-            val = decodeURIComponent(val);
-        } catch(e) {
-            if (e) console.error(e);
-        }
-        obj[key] = val;
-        return obj;
-    }, {});
+    // var cookie2obj = document.cookie.split(/; */).reduce((obj, str) => {
+    //     if (str === "") return obj;
+    //     const eq = str.indexOf('=');
+    //     const key = eq > 0 ? str.slice(0, eq) : str;
+    //     let val = eq > 0 ? str.slice(eq + 1) : null;
+    //     if (val != null) try {
+    //         val = decodeURIComponent(val);
+    //     } catch(e) {
+    //         if (e) console.error(e);
+    //     }
+    //     obj[key] = val;
+    //     return obj;
+    // }, {});
 
     /* === Integrarea lui EditorJS === https://editorjs.io */
     const editorX = new EditorJS({
@@ -159,7 +139,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                             let objRes = {
                                 user: RED.idContributor, // este de forma "5e31bbd8f482274f3ef29103" [înainte era email-ul]
                                 name: RED.nameUser,      // este de forma "Nicu Constantinescu"
-                                uuid: uuid,              // dacă deja a fost trimisă o primă resursă, înseamnă că în `uuid` avem valoare deja. Dacă nu, la prima încărcare, serverul va emite unul înapoi în client
+                                uuid: uuid,              // uuid-ul setat de server
                                 resF: file,              // este chiar fișierul: lastModified: 1583135975000  name: "Sandro_Botticelli_083.jpg" size: 2245432 type: "image/jpeg"
                                 numR: file.name,         // name: "Sandro_Botticelli_083.jpg"
                                 type: file.type,         // type: "image/jpeg"
@@ -172,19 +152,15 @@ import {AttachesToolPlus} from './uploader.mjs';
                              * @param {Function} reject  callback-ul declanșat la respingerea promisiunii
                              */
                             function executor (resolve, reject) {
-                                // console.log('Cand încarc un fișier, trimit obiectul: ', objRes);                                
-                                // TRIMITE ÎN SERVER
-                                pubComm.emit('resursa', objRes); // TRIMITE RESURSA către server. Serverul creează bag-ul și scrie primul fișier!!! [UUID creat!]
+                                pubComm.emit('resursa', objRes); // TRIMITE RESURSA către server. Serverul creează bag-ul și scrie primul fișier!!!
 
                                 // RĂSPUNSUL SERVERULUI
                                 pubComm.on('resursa', (respObj) => {
-                                    // console.log('În urma încărcării fișierului de imagine am primit de la server: ', respObj);
-
                                     // constituie cale relativă de pe server
                                     var urlAll = new URL(`${respObj.file}`);
                                     var path = urlAll.pathname; // VERIFICĂ `path` SĂ FIE DE FORMA: "/repo/5e31bbd8f482274f3ef29103/5af78e50-5ebb-11ea-9dcc-f50399016f10/data/628px-European_Union_main_map.svg.png"
 
-                                    /* Editor.js se așteaptă ca acesta să fie populat după ce fișierul a fost trimis. */                            
+                                    /* Editor.js așteaptă ca acesta să fie populat după ce fișierul a fost trimis. */                            
                                     const obj4EditorJS = {
                                         success: respObj.success, // 1 succes, 0 eșec
                                         file: {
@@ -193,21 +169,20 @@ import {AttachesToolPlus} from './uploader.mjs';
                                         }
                                     };
 
-                                    // Adaugă imaginea încărcată în `Set`-ul `fileRes`.
-                                    imagini.add(path); // încarcă url-ul imaginii în Set-ul destinat ținerii evidenței acestora. Necesar alegerii copertei
+                                    imagini.add(path);  // Adaugă url-ul imaginii încărcată în `Set`-ul `fileRes`destinat ținerii evidenței acestora. Necesar alegerii copertei.
 
                                     resolve(obj4EditorJS); // REZOLVĂ PROMISIUNEA
                                 });
                             }
                             // construiește promisiunea
                             var promise = new Promise(executor);
-                            // REZOLVĂ PROMISIUNEA!!!                     
+                            // REZOLVĂ PROMISIUNEA!!!                    
                             return promise.then((obi) => {
-                                console.log("form01adress obiectul promisiune la încărcarea unei imagini ", obi);
-                                return obi; // returnează rezultatul promisiunii. Este ceea ce are nevoie Editor.js în caz de succes
+                                return obi; // returnează rezultatul promisiunii. Este ceea ce are nevoie Editor.js în caz de succes/eșec
                             }).catch((error) => {
                                 if (error) {
-                                    pubComm.emit('mesaje', `Nu am reușit încărcarea fișierului pe server cu detaliile: ${error}`);
+                                    console.error(`Nu am reușit încărcarea fișierului pe server cu detaliile: ${error}`);
+                                    // pubComm.emit('mesaje', `Nu am reușit încărcarea fișierului pe server cu detaliile: ${error}`);
                                 }
                             });
                         },
@@ -220,76 +195,72 @@ import {AttachesToolPlus} from './uploader.mjs';
                          * @return o promisiune a cărei rezolvare trebuie să fie un obiect având câmpurile specificate de API -> {Promise.<{success, file: {url}}>}
                          */
                         uploadByUrl(url){
-                            // console.log("[uploadByUrl] În uploadByUrl am primit următorul url drept parametru: ", url);
-
                             decodedURL = decodeURIComponent(url); // Dacă nu faci `decode`, mușcă pentru linkurile HTML encoded cu escape squence pentru caracterele speciale și non latine
-                            let urlObj = check4url(decodedURL); // adună toate informațiile despre fișier
+                            let urlObj = check4url(decodedURL);   // adună toate informațiile despre fișier
+                            
                             /**
                              * Funcția validează răspunsul în funcție de headere și stare
                              * @param {Object} response 
                              */
-                            function validateResponse(response) {
+                            function validateResponseAndSend (response) {
                                 if (!response.ok) {
                                     // pubComm.emit('mesaje', `Am încercat să „trag” imaginea de la URL-ul dat, dar: ${response.statusText}`);
-                                    console.log('[uploadByUrl::validateResponse] Am detectat o eroare: ', response.statusText);
+                                    console.log('[editorX::uploadByUrl::validateResponse] Am încercat să „trag” imaginea de la URL-ul dat, dar: ', response.statusText);
                                 }
                                 // console.log('[uploadByUrl::validateResponse] fetch a adus: ', response); // response.body este deja un ReadableStream
-                                // FIXME: Caută aici să detectezi dimensiunea iar dacă depășește o valoare, încheie aici orice operațiune cu throw Error!!!
-                                return response;
+                                //_ FIXME: Caută să detectezi dimensiunea iar dacă depășește o valoare, încheie aici orice operațiune. Investighează API-ul Editor.js
+                                
+                                let res = response.blob();
+
+                                // obiectul care va fi trimis către server
+                                let objRes = {
+                                    user: RED.idContributor,
+                                    name: RED.nameUser,
+                                    uuid: uuid,
+                                    resF: res,                   // introdu fișierul ca blob
+                                    numR: urlObj.afterLastSlash, // completează obiectul care va fi trimis serverului cu numele fișierului
+                                    type: res.type,              // completează cu extensia
+                                    size: res.size               // completează cu dimensiunea 
+                                };
+
+                                pubComm.emit('resursa', objRes);    // trimite resursa în server (se va emite fără uuid dacă este prima)
+
+                                // promisiune necesară pentru a confirma resursa primită OK!
+                                const promissed = new Promise((resolve, reject) => {                                   
+                                    pubComm.on('resursa', (respObj) => {
+                                        // console.log('[uploadByUrl::pubComm<resursa>)] UUID-ul primit prin obiectul răspuns este: ', respObj.uuid);
+
+                                        let fileLink = new URL(`${respObj.file}`);
+                                        let path = fileLink.pathname; // va fi calea către fișier, fără domeniu
+                                        
+                                        // obiectul necesar lui Editor.js
+                                        const obj4EditorJS = {
+                                            success:  respObj.success,
+                                            file: {
+                                                url:  path, // introducerea url-ului nou format în obiectul de răspuns pentru Editor.js
+                                                size: respObj.size
+                                            }
+                                        };
+
+                                        // Adaugă imaginea încărcată în `Set`-ul `fileRes`. Este necesar comparatorului pentru ștergere
+                                        imagini.add(path);
+
+                                        resolve(obj4EditorJS); // REZOLVĂ PROMISIUNEA
+                                    });
+                                });
+                                // returnează promisiunea așteptată de Editor.js
+                                return promissed.then((obi) => {                                    
+                                    return obi;
+                                }).catch(error => {
+                                    if (error) {
+                                        console.error('Promisiunea așteptată de Editor.js a eșuat cu următoarele detalii: ', error);
+                                    }
+                                });
                             }
 
                             // ADU RESURSA DE PE WEB înainte de a o trimite în server
                             return fetch(decodedURL)
-                                .then(validateResponse)
-                                .then(response => response.blob())
-                                .then(response => {
-                                    // obiectul care va fi trimis către server
-                                    let objRes = {
-                                        user: RED.idContributor,
-                                        name: RED.nameUser,
-                                        uuid: uuid,
-                                        resF: response,                 // introdu fișierul ca blob
-                                        numR: urlObj.afterLastSlash,    // completează obiectul care va fi trimis serverului cu numele fișierului
-                                        type: response.type,            // completează cu extensia
-                                        size: response.size             // completează cu dimensiunea 
-                                    };                   
-                                    
-                                    // console.log("[uploadByUrl::fetch] În server am trimis obiectul de imagine format după fetch: ", objRes);
-
-                                    pubComm.emit('resursa', objRes);    // trimite resursa în server (se va emite fără uuid dacă este prima)
-
-                                    // promisiune necesară pentru a confirma resursa primită OK!
-                                    const promissed = new Promise((resolve, reject) => {                                   
-                                        pubComm.on('resursa', (respObj) => {
-                                            // console.log('[uploadByUrl::pubComm<resursa>)] UUID-ul primit prin obiectul răspuns este: ', respObj.uuid);
-
-                                            let fileLink = new URL(`${respObj.file}`);
-                                            let path = fileLink.pathname; // va fi calea către fișier, fără domeniu
-                                            
-                                            // obiectul necesar lui Editor.js
-                                            const obj4EditorJS = {
-                                                success:  respObj.success,
-                                                file: {
-                                                    url:  path, // introducerea url-ului nou format în obiectul de răspuns pentru Editor.js
-                                                    size: respObj.size
-                                                }
-                                            };
-
-                                            // Adaugă imaginea încărcată în `Set`-ul `fileRes`. Este necesar comparatorului pentru ștergere
-                                            imagini.add(path);
-
-                                            resolve(obj4EditorJS); // REZOLVĂ PROMISIUNEA
-                                        });
-                                    });
-                                    // returnează promisiunea așteptată de Editor.js
-                                    return promissed.then((obi) => {                                    
-                                        return obi;
-                                    }).catch(error => {
-                                        if (error) {
-                                            console.log('Promisiunea așteptată de Editor.js a eșuat cu următoarele detalii: ', error);
-                                        }
-                                    });
-                                })
+                                .then(validateResponseAndSend)
                                 .catch((error) => {
                                     if (error) {
                                         console.log('Am eșuat în aducerea resursei cu `fetch` cu următoarele detalii: ', error);
@@ -369,19 +340,15 @@ import {AttachesToolPlus} from './uploader.mjs';
             }
         },
         onChange: changeContent
-        /**
-         * Previously saved data that should be rendered
-         */
-        // data: {}
     });
 
     /**
      * Funcția este listener pentru modificările aduse conținutului din editor -> proprietatea `onChange` a obiectului `editorX`.
+     * De fiecare dată când se modifică conținutul, actualizează `RED.content`.
      * Apelează `check4url()` pentru a verifica dacă este url
      * Apelează `pickCover()` pentru a genera galeria imaginilor care trebuie selectate.
      */
     function changeContent () {
-        // de fiecare dată când se modifică conținutul, actualizează `RED.content`.
         editorX.save().then((content) => {    
             /* === ACTUALIZEAZĂ `RED.content` cu noua valoare === */
             RED.content = null;    // Dacă există deja, mai întâi setează `content` la `null` 
@@ -418,8 +385,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                             // break;
                     }
                 }
-            });
-            
+            });  
 
             let fileResArr = Array.from(fileRes);
 
@@ -459,7 +425,10 @@ import {AttachesToolPlus} from './uploader.mjs';
     }
 
     pubComm.on('delfile', (message) => {
-        console.log("[form01adres.mjs] Am șters cu următoarele detalii: ", message);
+        if (imagini.has(message)) {
+            imagini.delete(message);
+        }
+        console.info("[form01adres.mjs] Am șters cu următoarele detalii: ", message);
     });
 
     // este setul opțiunilor pentru selecție de limbă în cazul minorităților
@@ -481,18 +450,6 @@ import {AttachesToolPlus} from './uploader.mjs';
         ['eng', 'engleză'],
         ['fra', 'franceză']
     ]);
-
-    /**
-     * Funcția `encodeHTMLentities()` convertește un string în entități html.
-     * @param {String} str Este un string de cod HTML care nu este escaped
-     */
-    function encodeHTMLentities (str) {
-        var buf = [];			
-        for (var i = str.length-1; i >= 0; i--) {
-            buf.unshift(['&#', str[i].charCodeAt(), ';'].join(''));
-        }    
-        return buf.join('');
-    }
 
     /**
      * Funcția `selectOpts` generează opțiuni pentru un element `select`
@@ -546,7 +503,8 @@ import {AttachesToolPlus} from './uploader.mjs';
             });
         }
     }
-    globalThis.creeazaTitluAlternativ = creeazaTitluAlternativ;
+    globalThis.creeazaTitluAlternativ = creeazaTitluAlternativ; // trimite în global funcția
+    
     /**
      * Funcția `creeazaTitluAlternativHelper()` servește funcției `creeazaTitluAlternativ()`.
      * Are rolul de a genera întreaga structură DOM necesară inserării unui nou titlu alternativ.
@@ -607,12 +565,18 @@ import {AttachesToolPlus} from './uploader.mjs';
     //     }
     // });
 
-    //TODO: Generează automat datele din data=* dacă se poate!!!
+    /** 
+     * IERARHIA DISCIPILINELOR -> sunt luate în considerare și minoritățile
+     * În baza acestui obiect sunt create vizual elementele de selecție
+    */
     const mapCodDisc = new Map();
 
-    // La `parent` va fi codul care este precizat în `data-*` de la `Aria/arii curriculare` din HTML - client
+    /*
+    // La `parent` va fi codul care este precizat în `data-*` de la `Aria/arii curriculare` din pagina HTML încărcată
     // REGULĂ: array-urile disciplinelor nu trebuie să aibă coduri copiate de la array-ul altei discipline (produce ghosturi și orfani pe ecran)
     // REGULĂ: pentru a se face colocarea sub-disciplinelor la o disciplină, cele din array trebuie să pornească cu un fragment de caractere identic.
+    */
+
     // CLASA 0
     mapCodDisc.set("0", 
         [
@@ -660,12 +624,14 @@ import {AttachesToolPlus} from './uploader.mjs';
                 nume:             "Comunicarea în limba modernă",
                 coduriDiscipline: ["lbmod0"]            
             },
+
             /* === MATEMATICĂ ȘI ȘTIINȚE ALE NATURII === */
             {
                 parent:           ["matstnat"], 
                 nume:             "Matematică și explorarea mediului",
                 coduriDiscipline: ["mateMed0"]
             },
+
             /* === OM ȘI SOCIETATE === */
             {
                 parent:           ["omsoc"], 
@@ -1152,7 +1118,6 @@ import {AttachesToolPlus} from './uploader.mjs';
             },
             /* === CURRICULUM LA DECIZIA ȘCOLII (DISCIPLINE OPȚIONALE) === */
             {
-                cod:              "opt3", 
                 parent:           ["currsc"], 
                 nume:             "Opționale",
                 coduriDiscipline: [
@@ -1600,7 +1565,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             },
             /* === Curriculum la decizia școlii === */
             {
-                parent: "cds", 
+                parent: ["cds"], 
                 nume: "Curriculum la decizia școlii ",
                 coduriDiscipline: [
                     'cdsIst5', 
@@ -1904,7 +1869,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             },
             /* === Curriculum la decizia școlii === */
             {
-                parent: "cds", 
+                parent: ["cds"], 
                 nume: "Curriculum la decizia școlii ",
                 coduriDiscipline: [
                     'cdsAba6',
@@ -2218,7 +2183,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             },
             /* === Curriculum la decizia școlii === */
             {
-                parent: "cds", 
+                parent: ["cds"], 
                 nume: "Curriculum la decizia școlii ",
                 coduriDiscipline: [
                     'cdsIst7', 
@@ -2521,7 +2486,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             },
             /* === Curriculum la decizia școlii === */
             {
-                parent: "cds", 
+                parent: ["cds"], 
                 nume: "Curriculum la decizia școlii ",
                 coduriDiscipline: [
                     'cdsIst8', 
@@ -2543,21 +2508,23 @@ import {AttachesToolPlus} from './uploader.mjs';
 
     /**
      * Funcția este un helper și are rolul de a face o căutare în `Map`-ul `mapCodDisc` 
-     * pentru a extrage numele disciplinei pilon
-     * @param {Object} `obidisc` //{nivel: n, cod: obi.codsdisc} 
+     * pentru a extrage numele complet al (meta)disciplinei pentru a forma un element de meniu.
+     * Este folosită în `clbkIncarcDiscipline()`
+     * @param {Object} `obidisc` Primește numărul clasei și {nivel: n, cod: obi.codsdisc} 
+     * @return {String} numele complet al disciplinei
      */
     function extragNumeDisciplina (obidisc) {
         let disciplina;
-        mapCodDisc.forEach ((v, k, m) => {
-            // caută în clasa specificată de obidisc.nivel, înregistrarea în map de tip Array cu obiecte
-            if (obidisc.nivel === k) {
-                // pentru setul găsit
+        mapCodDisc.forEach ((v, idx) => {
+            // caută în clasa specificată de valoarea lui obidisc.nivel, înregistrarea în map de tip Array cu obiecte
+            if (obidisc.nivel === idx) {
+                // pentru array-ul de la indexul respectiv ai la dispoziție obiecte reprezentând fiecare câte o metadisciplină
                 let obi;
                 for (obi of v) {  
-                    // caută în array-ul codurilor disciplinelor arondate unei arii a unui an              
+                    // caută în array-ul codurilor disciplinelor arondate unei metadiscipline pe cea menționată în `obidisc.cod`        
                     if (obi.coduriDiscipline.includes(obidisc.cod)) {
-                        // dacă am găsit-o, returnează!
-                        disciplina = obi.nume;                    
+                        // dacă am găsit-o, returnează numele complet al disciplinei
+                        disciplina = obi.nume;
                     }
                 }
             }
@@ -2565,7 +2532,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         return disciplina;
     }
 
-    /* === Constituirea selectorului pentru disciplină === */
+    /* === SELECTORUL DISCIPLINEI [Bootstrap 4 Vertical pills] === */
     var niveluri   = document.querySelectorAll('.nivel'); // array de clase selectate
     var discipline = document.querySelector('#discipline');
     // Constituirea FRAGMENTULUI de DOM [Bootstrap 4 Vertical pills](https://getbootstrap.com/docs/4.0/components/navs/#javascript-behavior)
@@ -2576,14 +2543,14 @@ import {AttachesToolPlus} from './uploader.mjs';
     multilevdisc.appendChild(tabcontent);
     discipline.appendChild(multilevdisc);
 
-    const DISCMAP = new Map(); // colector de structuri {nivel: "5", 5: {art5: [], bio5: []}} generate de `structDiscipline({cl:event.target.value, data});`
-
-    // SETUL DISCIPLINELOR CARE AU FOST BIFATE
-    var disciplineSelectate = new Set(); // selecția disciplinelor
+    // SETURI DE DATE NECESARE GESTIONĂRII INTERFEȚEI (Vertical Pillbox)
+    const DISCMAP = new Map(); // primește disciplinele aferente unei clase ca înregistrare unică => {nivel: "5", 5: {art5: [], bio5: []}} generate de `structDiscipline({cl:event.target.value, data});` 
+    var disciplineSelectate = new Set(); // SETUL DISCIPLINELOR CARE AU FOST BIFATE pentru a fi afișate în vederea unei evidențe vizuale.
     var discSelected = document.querySelector('#disciplineselectate'); // zona de afișare a disciplinelor care au fost selectate
 
     /**
-     * Funcția e listener pentru fiecare checkbox disciplină. Odată selectată disciplina, aceasta va fi afișată într-o zonă de selecție
+     * Funcția e listener pentru fiecare checkbox disciplină. 
+     * Odată selectată disciplina, aceasta va fi afișată într-o zonă de confirmare vizuală prin badge-uri Bootstrap
      * @param {NodeElement} `evt` fiind chiar elementul obiect
      */
     function clickPeDisciplina (evt) {
@@ -2594,98 +2561,121 @@ import {AttachesToolPlus} from './uploader.mjs';
             compSpecPaginator.classList.add('d-block');
         }
 
-        let e = evt || window.event;
-        // DACĂ EXISTĂ CODUL ÎN `disciplineSelectate`, șterge-l
-        if (disciplineSelectate.has(e.dataset.nume) == false) {
-            disciplineSelectate.add(e.dataset.nume); // adaugă disciplina în `Set`-ul `disciplineSelectate`
-            
-            let inputCheckBx      = new createElement('input', '', ['form-check-input'], {type: "checkbox", 'data-nume': e.dataset.nume, autocomplete: "off", value: e.dataset.nume, onclick: ""}).creeazaElem();
-            let labelBtn          = new createElement('label', '', ['discbtn','btn', 'btn-sm', e.dataset.nume], {}).creeazaElem(e.value);
+        let e = evt || window.event,
+            dcode = e.dataset.nume;
+
+        // DACĂ în `disciplineSelectate` nu există disciplina, adaug-o în set, construiește un badge Bootstrap 4 care să indice numele disciplinei și clasa
+        if (!disciplineSelectate.has(dcode)) {
+            disciplineSelectate.add(dcode); // adaugă disciplina în `Set`-ul `disciplineSelectate`            
+            let inputCheckBx      = new createElement('input', '', ['form-check-input'], {type: "checkbox", 'data-nume': e.dataset.nume, autocomplete: "off", value: dcode}).creeazaElem();
+            let labelBtn          = new createElement('label', '', ['discbtn','btn', 'btn-sm', dcode], {}).creeazaElem(e.value);
             labelBtn.textContent += ` `; //adaugă un spațiu între numar și textul butonului.
-            let clasaInfo         = new createElement('span', '', ['badge','badge-light'], {}).creeazaElem(e.dataset.nume.split('').pop());
+            let clasaInfo         = new createElement('span', '', ['badge','badge-light'], {}).creeazaElem(dcode.split('').pop());
             labelBtn.appendChild(clasaInfo); // adaugă numărul care indică clasa pentru care a apărut disciplina (vezi bootstrap badges)
-            let divBtnGroupToggle = new createElement('div',   '', ['disciplina', 'btn-group-toggle', e.dataset.nume], {"data-toggle": "buttons", onclick: ""}).creeazaElem();           
+            let divBtnGroupToggle = new createElement('div',   '', ['disciplina', 'btn-group-toggle', dcode], {"data-toggle": "buttons"}).creeazaElem();           
             
-            labelBtn.appendChild(inputCheckBx); // injectează checkbox-ul în label
-            divBtnGroupToggle.appendChild(labelBtn); // injectează label-ul în div
+            labelBtn.appendChild(inputCheckBx);          // injectează checkbox-ul în label
+            divBtnGroupToggle.appendChild(labelBtn);     // injectează label-ul în div
             discSelected.appendChild(divBtnGroupToggle); // adaugă div-ul în discselected
         } else {
-            disciplineSelectate.delete(e.dataset.nume);
-            let elemExistent = document.querySelector(`.${e.dataset.nume}`);
-            discSelected.removeChild(elemExistent);
+            disciplineSelectate.delete(dcode); // șterge disciplina din set 
+            let elemExistent = document.querySelector(`.${dcode}`);
+            if (elemExistent) {
+                discSelected.removeChild(elemExistent);
+            }
         }
     }
 
-    // window.clickPeDisciplina = clickPeDisciplina; // HACK: expunere pe global!
-    globalThis.clickPeDisciplina = clickPeDisciplina; // WORKING: Este un HACK: !!!
+    // window.clickPeDisciplina = clickPeDisciplina; //_ HACK: expunere pe global!
+    globalThis.clickPeDisciplina = clickPeDisciplina; // WORKING: expune funcția în obiectul global pentru a putea fi accesată la momentul declanșării unui eveniment click
 
     /**
-     * Funcția este calback pentru butonul de alegere a clasei (input type checkbox)
-     * Folosită de `alegeClasa()`
+     * Funcția este callback pentru checkbox de clasă (input type checkbox)
+     * Încarcă disciplinele aferente clasei selectate în Map-ul `DISCMAP`.
+     * Folosită de `alegeClasa()`.
+     * Folosește `existaAria()` pentru a verifica dacă a fost selectată aria curriculară
+     * Folosește `structDiscipline` pentru a coloca discipline în seturi, dacă primele trei caractere de codare sunt identice
+     * Folosește `extragNumeDisciplina()`
      * @param event 
      */
-    function clbkIncarcDiscipline (event) {
-        // Verifică dacă a fost selectată aria curriculară. Dacă nu, afișează eroare
-        existaAria();
+    function clbkIncarcDiscipline (event) { 
+        existaAria();   // Dacă nu a fost selectată aria, afișează eroare
 
         // constituie un obiect `data` din `data=*` pentru fiecare clasă::<input class="form-check-input nivel" type="checkbox" id="inlineCheckbox0...8" value="cl0...8"
         const data = JSON.parse(JSON.stringify(event.target.dataset));
-        // remodelează disciplinele după seturi aparținând unei discipline generate din primele trei caractele ale data=*
-        const STRUCTURE = structDiscipline({cl:event.target.value, data}); // event.target.value este value="cl5"
-        // console.log("Structure este: ",STRUCTURE);
+        // remodelează disciplinele pe seturi. Pentru fiecare se creează o cheie ce definește o adevărată metadisciplină. 
+        // Metadisciplina este generată din primele trei caractere ale atributului data=* aferent fiecărui checkbox de clasă din pagină.
+        const STRUCTURE = structDiscipline({cl:event.target.value, data}); // `event.target.value` care este un string de tipul "cl5"
 
-        // încărcarea setului de discipline pentru input-ul unei clase pentru care s-a dat click
+        // încărcarea setului de discipline aferente la momentul bifării checkbox-ului clasei
         if (!DISCMAP.has(STRUCTURE.nivel)) {
             DISCMAP.set(STRUCTURE.nivel, STRUCTURE.rezultat);
-        } // prin click pe clase, se vor încărca progresiv toate, dacă se va da click pe toate.
+        } // prin bifararea mai multor clase, se vor încărca progresiv toate datele aferente disciplinelor.
 
-        // Info primare pentru constituire interfață
-        let n = STRUCTURE.nivel; // -> 8, de exemplu
-        let objSeturi = STRUCTURE.rezultat[n]; //16 seturi -> {art5: [], bio5: []}
-        // console.dir("S-au generat următoarele seturi pentru fiecare disciplină ", objSeturi);
-        
-        /* === CLASA ESTE DEBIFATĂ!!! => șterge-i disciplinele asociate (posibilă selecție anterioară) === */
+        // Date primare pentru constituirea interfeței
+        let n         = STRUCTURE.nivel,       // 8, reprezentând clasa a VIII-a, de exemplu
+            objSeturi = STRUCTURE.rezultat[n], // 16 seturi -> {art5: [], bio5: []} => fiecare va fi un buton din Vertical pills
+            clsCodes  = STRUCTURE.claseDisc,   // lista tuturor codurilor de disciplină pentru o anumită clasă
+            menuSet   = new Set(),             // set pentru a evita cazul dublării elementelor de meniu
+            elemSet   = new Set();             // set cu disciplinele selectabile după ce s-a selectat metadisciplina
+
+        /*
+        === O CLASĂ ESTE DEBIFATĂ!!! ===
+        ===> șterge-i disciplinele asociate (cazul posibilei selecții anterioare) 
+        ===> șterge-i tag-urile asociate 
+        */
         if(event.target.checked === false) {
-            let cheiclase = Object.keys(objSeturi); // ['art5', 'bio5']
-            let dicscls;
-            // găsește elementul <input checkbox> pentru fiecare disciplină, iar dacă există șterge-l din DOM
-            for (dicscls of cheiclase) {
-                // console.log("Am șters din elemente pe cel cu clasa: ", dicscls);
-                let elemExistent = document.querySelector(`.${dicscls}`); // k este codul disciplinei care a fost pus drept clasă în vederea modelării cu CSS (culoare, etc)
-                if (elemExistent) {
-                    tablist.removeChild(elemExistent); // șterge disciplina din array-ul elementelor DOM
+            // șterge din ierarhie tot ce este atribuit cheii `STRUCTURE.nivel`
+            if (DISCMAP.has(STRUCTURE.nivel)) {
+                DISCMAP.delete(STRUCTURE.nivel);
+            }
+
+            // Generează array cu numele metadisciplinelor ce formează fiecare câte un buton din coloană. De ex: ['art5', 'bio5']
+            let cheimetadiscipline = Object.keys(objSeturi),
+                metadisc,
+                dcode;
+
+            // găsește elementul <input checkbox> pentru fiecare disciplină, iar dacă există, selectează-l după clasă și șterge-l din structura DOM (Vertical pills)
+            for (metadisc of cheimetadiscipline) {
+                let elemExistent = document.querySelector(`.${metadisc}`); // codul metadisciplinei a fost pus drept clasă pentru selecție și în vederea modelării cu CSS (culoare, etc)
+                tablist.removeChild(elemExistent); // șterge disciplina din array-ul elementelor DOM
+            }
+
+            // pentru fiecare cod care este și clasă de element, șterge din set, dar și din interfață
+            for (dcode of clsCodes) {
+                if (disciplineSelectate.has(dcode)) {
+                    disciplineSelectate.delete(dcode); // șterge disciplina din set 
+                    let elemExistent = document.querySelector(`.${dcode}`);
+                    if (elemExistent) {
+                        discSelected.removeChild(elemExistent);
+                    }
                 }
             }
             // CURĂȚĂ ELEMENTELE VERTICALE DE MENIU prin ștergerea din DOM
-            tabcontent.innerHTML='';
+            tabcontent.innerHTML = '';
             // Șterge datele din info primare
-            n = ''; // nivelul gol
+            n = undefined; // nivelul gol
             objSeturi = null; // obiectele disciplinelor la `null`
         /* === CLASA ESTE BIFATĂ!!! === */
         } else {
-            
-            // FIXME: gestionează cazul în care formularul a fost reîncărcat și au rămas bifate clasele, 
-            // dar disciplinele nu s-au încărcat pentru că nu s-a dat niciun click 
-
-            /* === AFIȘEAZĂ DISCIPLINELE ARONDATE UNEI CLASE DE DISCIPLINĂ === */
-            // pentru fiecare clasă de disciplină din `objSeturi`, generează disciplinele arondate
-            let prop;
+        /* === AFIȘEAZĂ DISCIPLINELE ARONDATE UNEI (META)DISCIPLINE (buton meniu) === */
+        
+        // REVIEW: Ai un BigO logaritmic (code smell pentru refactor A.S.A.P.).
+        //for #1 -> pentru fiecare metadisciplină din `objSeturi`, generează disciplinele arondate
+            let prop;            
             for (prop in objSeturi) {
                 // asigură-te că nu sunt introduse și proprietăți moștenite
                 if (objSeturi.hasOwnProperty(prop)) {
                     const setArr = objSeturi[prop]; // constituie un array de array-uri cu discipline
 
-                    let menuSet = new Set(); // set pentru a evita cazul dublării elementelor de meniu
-                    let elemSet = new Set(); // set cu disciplinele selectabile după ce s-a selectat clasa de discipline
-
+        //for #2 --> pentru fiecare obiect, care reprezintă un set de (meta)discipline ale unui clase selectate, creează butonul de meniu aferent
                     let obi;
                     for (obi of setArr) {
-                        /* === PENTRU TOATE DISCIPLINELE ARONDATE LA ACEEAȘI CLASĂ DE DISCIPLINĂ, SE CREEAZĂ UN SINGUR ELEMENT DE MENIU === */
-                        // caută numele disciplinei și afișează în locul codului `prop`. Valorile sunt extrase din `mapCodDisc` -> funcția `extragNumeArie`
-                        let numeDisciplina = extragNumeDisciplina({nivel: n, cod: obi.codsdisc}); //{ codsdisc: "artViz0", nume: "Arte vizuale și abilități practice"}
-                        // obi -> { codsdisc: "lbcomRom5", nume: "Limba și literatura română" }
-
+                        /* === PENTRU TOATE DISCIPLINELE ARONDATE LA ACEEAȘI METADISCIPLINĂ, SE CREEAZĂ UN SINGUR ELEMENT DE MENIU === */
+                        // caută numele întreg aș disciplinei care este afișată în locul codului `prop`. Valorile sunt extrase din `mapCodDisc` -> funcția `extragNumeArie`
+                        let numeDisciplina = extragNumeDisciplina({nivel: n, cod: obi.codsdisc}); // Ex: { codsdisc: "artViz0", nume: "Arte vizuale și abilități practice"}
                         var dicpanes;
+
                         // === Creează un element de meniu vertical pentru fiecare disciplină sau clasă de discipline ===
                         if (!menuSet.has(numeDisciplina)) {
                             menuSet.add(numeDisciplina);                            
@@ -2699,9 +2689,10 @@ import {AttachesToolPlus} from './uploader.mjs';
                             tablist.appendChild(serdiscbtn);
                         }
 
-                        /* === CHECKBOX-UL FIECĂREI DISCIPLINE === */
+        //for #3 ---> Pune checkbox pe fiecare disciplină
                         let obidisc;
-                        for (obidisc of objSeturi[prop]) {
+                        // for (obidisc of objSeturi[prop]) {
+                        for (obidisc of setArr) {
                             if (!elemSet.has(obidisc.codsdisc)) {
                                 elemSet.add(obidisc.codsdisc); // introdu în `Set`-ul `elemSet` fiecare disciplină
                                 //console.log(obidisc); // Object { codsdisc: "lbcomRom5", nume: "Limba și literatura română" }
@@ -2745,7 +2736,7 @@ import {AttachesToolPlus} from './uploader.mjs';
      * Funcția are rolul să structureze sub-disciplinele în raport cu Disciplina mare la care sunt arondate
      * Disciplina va fi codificată extrăgând un fragment din numele care este precizat în valorile setului extras din data=*
      * @param {Object} discs Este un obiect cu toate disciplinele din setul data=* aferent unei clase
-     * @returns {Object} Returnează {nivel: <nivel>, rezultat: <Object> }
+     * @returns {Object} {nivel: <nivel>, rezultat: <Object>, claseDisc: <Array> }
      */
     function structDiscipline (discs = {}) {
         // discs are semnătura `cl: "cl5", data: {artDansc5: "Dans clasic",  artDesen5: "Desen"} }`
@@ -2758,16 +2749,20 @@ import {AttachesToolPlus} from './uploader.mjs';
         if (discs.cl) {
             nivelNo = discs.cl.split('').pop(); // scoate numărul aferent clasei!!!
         }
+        // structura obiectului returnat
         const obj = {
             nivel: nivelNo,
             rezultat: {}
         };
-        let claseDisc = new Set(); // constituie un Set cu discipline (are comportament de reducer)
+        let claseDisc = new Set(), // constituie un Set cu discipline a cărui cod a fost reformulat pentru a putea coloca (vezi reducer, mai jos)
+            dcodes    = new Set(); // constituir un Set cu toate codurile complete pentru disciplină. Este necesar pentru a gestiona ștergerea din meniu și taguri   
 
         obj.rezultat = arrOfarr.reduce((ac, elem, idx, arr) => {
             let classNameRegExp = /[a-z]+((\d)?|[A-Z])/gm; // orice caracter mic urmat, fie de un număr, fie de o literă mare
             // console.log('Fără shift numele clasei de disciplină arată așa: ', elem[0].match(classNameRegExp));
             
+            dcodes.add(elem[0]); // adaugă codul atribuit numelui disciplinei
+
             let className = elem[0].match(classNameRegExp).shift(); // Generează numele claselor extrăgând din elementul 0 al touple-ului, fragmentul ce corespunde șablonului RegExp
 
             if (className.slice(-1) !== obj.nivel) {
@@ -2796,6 +2791,8 @@ import {AttachesToolPlus} from './uploader.mjs';
             }
             return ac;
         },{});
+
+        obj.claseDisc = Array.from(dcodes);
 
         return obj;
     }
@@ -2975,18 +2972,17 @@ import {AttachesToolPlus} from './uploader.mjs';
         }
     }
 
-    globalThis.manageInputClick = manageInputClick; // HACK: Caută o soluție mai elegantă!!!
+    globalThis.manageInputClick = manageInputClick; //_ WORKING: Caută o soluție mai elegantă!!!
 
     function addMeDeleteMe () {
         let rowData = XY.getData();
     } 
     /* === MAGIA ESTE GATA, APLAUZE!!! === */
 
-
-
     /** 
      * Funcția are rolul de a genera tabelul competențelor specifice și este callback pentru 
      * pubComm.on('csuri', clbkTabelGenerator); din disciplineBifate()
+     * @param {Array} csuri este un array cu obiecte competențe specifice
      */
     function clbkTabelGenerator (csuri) { 
         // console.log('[form01] Am csuri? ', csuri);
@@ -2994,12 +2990,14 @@ import {AttachesToolPlus} from './uploader.mjs';
         const CSlist = JSON.parse(csuri);   // transformă stringul în array JS
         
         // modelarea tabelului 
-        $(document).ready(function() {
+        // $(document).ready(function() {
             // console.log(globalThis.$.fn.DataTable);
             var table = $('#competenteS').DataTable({
                 responsive: true,
-                "order": [[ 0, "asc" ]],
-                "dom": '<"toolbar">frtip',
+                processing: true,
+                info: true,
+                order: [[ 0, "asc" ]],
+                dom: '<"toolbar">frtip',
                 data: CSlist,
                 columnDefs: [{
                     orderable: false,
@@ -3028,20 +3026,22 @@ import {AttachesToolPlus} from './uploader.mjs';
                     // {title: "activitati", "data": "activitati[, * ]"}
                 ],
                 language: {
-                    "sProcessing":   "Procesează...",
-                    "sLengthMenu":   "Afișează _MENU_ înregistrări pe pagină",
-                    "sZeroRecords":  "Nu am găsit nimic - ne pare rău",
-                    "sInfo":         "Afișate de la _START_ la _END_ din _TOTAL_ înregistrări",
-                    "sInfoEmpty":    "Afișate de la 0 la 0 din 0 înregistrări",
-                    "sInfoFiltered": "(filtrate dintr-un total de _MAX_ înregistrări)",
-                    "sInfoPostFix":  "",
-                    "sSearch":       "Caută:",
-                    "sUrl":          "",
-                    "oPaginate": {
-                        "sFirst":    "Prima",
-                        "sPrevious": "Precedenta",
-                        "sNext":     "Următoarea",
-                        "sLast":     "Ultima"
+                    processing: "Procesez volumul de date...",
+                    info: "Afișez pagina _PAGE_ din _PAGES_",
+                    sProcessing:   "Procesează...",
+                    sLengthMenu:   "Afișează _MENU_ înregistrări pe pagină",
+                    sZeroRecords:  "Nu am găsit nimic - ne pare rău",
+                    sInfo:         "Afișate de la _START_ la _END_ din _TOTAL_ înregistrări",
+                    sInfoEmpty:    "Afișate de la 0 la 0 din 0 înregistrări",
+                    sInfoFiltered: "(filtrate dintr-un total de _MAX_ înregistrări)",
+                    sInfoPostFix:  "",
+                    sSearch:       "Caută:",
+                    sUrl:          "",
+                    oPaginate: {
+                        sFirst:    "Prima",
+                        sPrevious: "Precedenta",
+                        sNext:     "Următoarea",
+                        sLast:     "Ultima"
                     }
                 }
             });
@@ -3073,7 +3073,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                     activitatiRepopulareChecks(); // restabilirea stării de dinaintea închiderii rândului cu lista de activități
                 }
             });
-        });
+        // });
         // modelarea tabelului END
     }
 
@@ -3081,6 +3081,7 @@ import {AttachesToolPlus} from './uploader.mjs';
      * Funcția `diciplineBifate` este listener pentru butonul „Alege competențele specifice” - `#actTable`
      * Are rolul de a aduce competențele specifice pentru disciplinele bifate folosind socketurile.
      * Apelează funcțiile `tabelFormater(data)` și `activitatiRepopulareChecks()` la momentul când se apasă pe butonul plus
+     * @return {Array} `values`
      */
     function disciplineBifate () {
         // un array necesar pentru a captura valorile input checkbox-urilor bifate
@@ -3152,7 +3153,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     }
 
     /* === MECANISMUL DE AVANS AL FORMULARULUI */
-
     let progressTxt1 = document.querySelector('#progressText1');
     let progressTxt2 = document.querySelector('#progressText2');
     let progressTxt3 = document.querySelector('#progressText3');
@@ -3348,7 +3348,6 @@ import {AttachesToolPlus} from './uploader.mjs';
         /* === RED.description === */
         // Adaugă descrierea
         RED.description   = descriere.value;
-        // FIXME: Trunchiază aici textul la 1000 de caractere. Fă sanetizare și în server!!!
 
         /* === RED.rol === */
         // Adaugă rolul pe care îl îndeplinește
@@ -3682,23 +3681,22 @@ import {AttachesToolPlus} from './uploader.mjs';
     var submitBtn = document.querySelector('#submit');
     submitBtn.addEventListener('click', (evt) => {
         pas4();
-        // FIXME: Mai întâi verifică dacă are o imagine la copertă. Dacă nu are, generează una cu https://github.com/imsky/holder  https://www.cssscript.com/generating-custom-image-placeholders-with-pure-javascript-placeholder-js/
+        //_ FIXME: Mai întâi verifică dacă are o imagine la copertă. Dacă nu are, generează una cu https://github.com/imsky/holder  https://www.cssscript.com/generating-custom-image-placeholders-with-pure-javascript-placeholder-js/
         closeBag(evt); // ÎNCHIDE BAG-ul după ce ai verificat că ai o imagine la copertă, fie că este a utilizatorului, fie că este generată
         pubComm.emit('red', RED); // vezi în routes.js -> socket.on('red', (RED) => {...
-        // aștept răspunsul de la server și redirecționez utilizatorul către resursa tocmai creată.
-        pubComm.on('confirm', (redID) => {
-            console.log("[form01adres::3599::pubcom.on('ingest')] Răspunsul de la server este: ", redID);
-            if (redID) {
-                setTimeout(() => {
-                    window.location = '/profile/' + redID;
-                }, 1000);
-            } else {
-                setTimeout(() => {
-                    window.location = '/profile/resurse';
-                }, 1000);
-            }
-        });
     });
 
-/* === FUNCȚIILE HELPER === */
+// aștept răspunsul de la server și redirecționez utilizatorul către resursa tocmai creată.
+pubComm.on('confirm', (redID) => {
+    console.log("[form01adres::3599::pubcom.on('ingest')] Răspunsul de la server este: ", redID);
+    if (redID) {
+        setTimeout(() => {
+            window.location = '/profile/' + redID;
+        }, 2000);
+    } else {
+        setTimeout(() => {
+            window.location = '/profile/resurse';
+        }, 2000);
+    }
+});
 

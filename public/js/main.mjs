@@ -134,6 +134,18 @@ function decodeCharEntities (str) {
 }
 
 /**
+ * Funcția `encodeHTMLentities()` convertește un string în entități html.
+ * @param {String} str Este un string de cod HTML care nu este escaped
+ */
+function encodeHTMLentities (str) {
+    var buf = [];			
+    for (var i = str.length-1; i >= 0; i--) {
+        buf.unshift(['&#', str[i].charCodeAt(), ';'].join(''));
+    }    
+    return buf.join('');
+}
+
+/**
  * Funcția are rolul de a extrage setul de date atașat unui element prin data-*
  * @param {Object} elem 
  */
