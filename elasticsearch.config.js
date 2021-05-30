@@ -8,7 +8,6 @@ const ES7Helper   = require('./models/model-helpers/es7-helper');
 Am setat o variabilă de mediu `APP_RUNTIME` care va indica dacă aplicația rulează virtualizat sau local.
 Valorile pe care această variabilă de mediu le poate avea sunt: `virtual` sau `local`.
 */
-
 const CONFIG = {
     node: '',
     maxRetries:     5,
@@ -25,7 +24,7 @@ const client = new Client(CONFIG);
 
 // Afișare date în consolă
 client.info().then((r) => {
-    console.log("Conectare reușită la Elasticsearch ", r.body.version.number, " Stare: ", r.meta.connection.status, "Clusterul: ", r.body.cluster_name);
+    console.log("Conectare reușită la Elasticsearch ", r.body.version.number, " Stare:", r.meta.connection.status, "a clusterului:", r.body.cluster_name);
 }).catch((error) => {
     console.log(`A apărut o eroare de conectare la Elasticsearch`);
     logger.error(error);

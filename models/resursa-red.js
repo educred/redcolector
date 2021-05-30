@@ -113,6 +113,12 @@ var ResursaSchema = Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'badge'
     }],
+    rating: {
+        type: Number,
+        min: 0,
+        max: 5,
+        default: 0
+    }
 },
 {
     toJSON:   { virtuals: true },  // So `res.json()` and other `JSON.stringify()` functions include virtuals

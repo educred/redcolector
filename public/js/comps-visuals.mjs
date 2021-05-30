@@ -28,6 +28,7 @@ let divCompetsTabelare = document.createElement('table');  // creează tabel
 divCompetsTabelare.classList.add('competsTbl', 'display', 'table', 'table-striped', 'table-bordered');            // adaugă clasă la tabel
 competsTbl.appendChild(divCompetsTabelare);                   // append tabel la div-ul gazdă
 
+/* === AFIȘAREA TABELARĂ A RESURSELOR === */
 pubComm.emit('allComps'); // adu-mi resursele 
 pubComm.on('allComps', (compets) => {
     // console.log('[comps-visuals.js] competențele aduse sunt ', compets);
@@ -136,5 +137,30 @@ pubComm.on('allComps', (compets) => {
         }
     });
 });
-
 resVisuals.appendChild(competsTbl); // injectează tabelul resurselor tabelare
+
+/**
+ * Funcția este apelată pentru fiecare fișier din array-ul `FileList`
+ *
+ */
+function fileSender (file) {
+    pubComm.emit('loadCompSet', file);
+}
+pubComm.on('loadCompSet', (r) => {
+    if (r == false) {
+        alert("Nu am încărcat setul. Are erori!");
+    }
+    alert(`Am încărcat ${r} competențe specifice cu activitățile lor`);
+    location.reload();
+});
+/* === TRIMITE CSV LA SERVER === */
+/**
+ * Funcția joacă rol de listener pentru butonul de trimitere a fișierului către server
+ * Apelează `fileSender()` pentru fiecare file din `FileList`
+ */
+function sendCsv () {
+    let files = document.getElementById('fileloadercs').files;
+    Array.from(files).forEach(fileSender);
+}
+
+globalThis.sendCsv = sendCsv;

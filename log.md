@@ -1,3 +1,13 @@
+Am introdus în modelul datelor specificația de rating cu următoarele detalii.
+
+    rating: {
+        type: Number,
+        min: 0,
+        max: 5,
+        default: 0
+    }
+
+
 
 Actualizarea înregistrărilor pentru o colecție
 

@@ -1,13 +1,13 @@
 {
   "name": "redcolector",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "Aplicația pentru colectare de RED-uri",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon --trace-warnings app.js",
     "copy": "webpack --config webpack.config.js",
-    "kill": "kill $(lsof -t -i:3000) | exit 0"
+    "kill": "kill $(lsof -t -i:8080) | exit 0"
   },
   "scriptsComments": {
     "dev": "Pentru Windows trebuie rulată comanda nodemon -L app.js"

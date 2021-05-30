@@ -379,7 +379,7 @@ console.info("Memoria RAM alocată la pornire este de: ", formatBytes(process.me
 if( process.env.NODE_ENV === 'production') {
     console.info("Aplicația rulează în modul", app.get("env"));
 } else if (process.env.NODE_ENV === 'development') {
-    console.info("Aplicația rulează în modul ", app.get("env"));
+    console.info("Aplicația rulează în modul", app.get("env"));
 }
 
 /* === Pornește serverul! === */
@@ -387,7 +387,7 @@ let port = process.env.PORT || 8080;
 let hostname = os.hostname();
 var server = http.listen(port, '0.0.0.0', function cbConnection () {
     console.log('RED Colector ', process.env.APP_VER);
-    console.log(`Hostname: ${hostname}, \n port: ${process.env.PORT}. \n proces no: ${process.pid} \n`, `node: ${process.version}`);
+    console.log(`Hostname: ${hostname}, \n port: ${process.env.PORT}, \n proces no: ${process.pid}, \n node: ${process.version}, \n mongoose: ${mongoose.version}.`);
 });
 server.on('error', onError);
 
