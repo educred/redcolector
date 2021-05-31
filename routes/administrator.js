@@ -43,6 +43,11 @@ let scriptsArr = [
     // MOMENT.JS
     {script: '/lib/npm/moment-with-locales.min.js'},
     {script: '/lib/timeline3/js/timeline.js'},
+    // zip
+    {script: '/lib/jszip.min.js'},
+    // PDF
+    {script: '/lib/pdfmake.min.js'},
+    {script: '/lib/vfs_fonts.js'}
 
     // Scripturile caracteristice fiecărei rute vor fi injectate per rută
 ];
@@ -64,6 +69,9 @@ let modulesArr = [
     {module: '/lib/npm/dataTables.bootstrap4.min.js'},
     {module: '/lib/npm/dataTables.select.min.js'},
     {module: '/lib/npm/dataTables.buttons.min.js'},
+    {module: '/lib/npm/buttons.print.min.js'},
+    {module: '/lib/npm/buttons.html5.min.js'},
+    {module: '/lib/npm/buttons.bootstrap4.min.js'},
     {module: '/lib/npm/dataTables.responsive.min.js'}
 ];
 
@@ -416,6 +424,7 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
     }
 });
 
+/* === /administrator/compets === */
 router.get('/compets', function clbkAdmCompets (req, res) {
     // DOAR ADMINISTRATORII VAD TOATE COMPETENȚELE SPECIFICE ODATĂ
     if(req.session.passport.user.roles.admin){
@@ -441,6 +450,7 @@ router.get('/compets', function clbkAdmCompets (req, res) {
     }
 });
 
+/* === /administrator/compets/new === */
 router.get('/compets/new', function clbkAdmCompetsID (req, res) {
     // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
     if(req.session.passport.user.roles.admin){
@@ -470,6 +480,7 @@ router.get('/compets/new', function clbkAdmCompetsID (req, res) {
     }
 });
 
+/* === /administrator/compets/:id === */
 router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
     // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
     if(req.session.passport.user.roles.admin){
@@ -532,7 +543,5 @@ router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
         res.redirect('/401');
     }
 });
-
-
 
 module.exports = router;

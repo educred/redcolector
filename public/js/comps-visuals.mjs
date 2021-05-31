@@ -61,6 +61,10 @@ pubComm.on('allComps', (compets) => {
         ordering: true,
         info: true,
         lengthChange: true,
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ],
         columns: [
             {
                 title: 'Introdus la',

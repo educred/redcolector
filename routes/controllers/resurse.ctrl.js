@@ -65,8 +65,6 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
         {module: '/js/redincredall.mjs'} 
     ];
 
-
-
     // REVIEW: Verifică dacă indexul de căutare există
     if (RES_IDX_ALS) {
         console.log('[resurse.ctrl.js]::Verificarea existenței alias-ului ES aduce val: ', RES_IDX_ALS);
@@ -75,8 +73,6 @@ exports.loadRootResources = function loadRootResources (req, res, next) {
         let err = new Error('[resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix');
         next(err);
     }
-
-
     
     /* ===> VERIFICAREA CREDENȚIALELOR <=== */
     if(req.session.passport.user.roles.admin){
