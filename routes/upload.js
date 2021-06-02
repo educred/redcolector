@@ -216,7 +216,9 @@ module.exports = function uploader (io) {
             "application/x-zip-compressed": ".zip",
             "multipart/x-zip": ".zip",
             "application/vnd.oasis.opendocument.text": ".odt",
-            "application/vnd.oasis.opendocument.presentation": ".odp"
+            "application/vnd.oasis.opendocument.presentation": ".odp",
+            "video/mp4": ".mp4",
+            "video/m4v": ".m4v"
         };
         
         // caută dacă există o cheie cu mimetype-ul acceptat
