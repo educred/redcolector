@@ -14,7 +14,7 @@ const redisClient = require('../redis.config');
 const esClient    = require('../elasticsearch.config');
 const Resursa     = require('../models/resursa-red');           // Adu modelul resursei
 const UserSchema  = require('../models/user');                  // Adu schema unui user
-const Log         = require('../models/logentry');              // Asu modelul unui articol de blog
+const Log         = require('../models/logentry');              // Adu modelul unui articol de blog
 const Competente  = require('../models/competenta-specifica');  // Adu modelul competenței
 const editorJs2HTML= require('../routes/controllers/editorJs2HTML');
 // necesare pentru constituirea și gestionarea repo-ului de git
@@ -300,8 +300,6 @@ module.exports = function sockets (io) {
                             socket.emit('resursa', responseObj4AddedFile);
                         });  
                     });
-
-                  
                 });
             } else {
                 //_ TODO: ne vom folosi de acest caz pentru a crea o imagine pe disc pentru o intrare de blog
@@ -1131,7 +1129,7 @@ module.exports = function sockets (io) {
         // socket.on('es7reidx', reidxincr);
         
         // === DEL ES7 INDEX ===
-        // socket.on('es7delidx', deleteIndex);
+        socket.on('es7delidx', deleteIndex);
 
         // === STATS::MONGODB ===
         socket.on('mgdbstat', () => {
@@ -1153,7 +1151,7 @@ module.exports = function sockets (io) {
 
         /**
          * Funcția `statDataMgdb` joacă rol de callback pentru 
-         * `mongoose.connection.db.listCollections().toArray(statDataMgdb)`
+         * `mongoose.connection.db.listCollections().toArray(statDataMgdb)` a evenimentului `socket.on('mgdbstat'`
          * Are rolul de a oferi clientului date privind numele colecțiilor
          * din MongoDB, indexul corespondent din Elasticseach și numărul documentelor fiecărora
          * <- `objectsOps` -> `searchOne()` face parte din setul de utilitare `/util/objectsOps.js`
@@ -1162,7 +1160,8 @@ module.exports = function sockets (io) {
          */
         async function statDataMgdb (err, names) {
             if (err) {
-                logger.error(`[socket::mgdbstat::statDataMgdb()] A apărut eroarea: ${err}`);
+                console.log(`[socket::mgdbstat::statDataMgdb()] A apărut eroarea: ${err}`);
+                logger.error(err);
             };
 
             // populează un array cu date despre indecșii din ES7,

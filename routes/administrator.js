@@ -60,7 +60,6 @@ let styles = [
     {style: '/lib/timeline3/css/fonts/font.roboto-megrim.css'},
     {style: '/lib/timeline3/css/timeline.css'}
 ];
-
 let modulesArr = [
     // MAIN
     {module: '/js/main.mjs'},

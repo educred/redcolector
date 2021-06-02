@@ -3084,6 +3084,11 @@ import {AttachesToolPlus} from './uploader.mjs';
      * @return {Array} `values`
      */
     function disciplineBifate () {
+        // Ascunde restul elementelor de selecție pentru a elimina tentația de a reveni. Data Tables se dă peste cap
+        document.getElementById("arrileC").style.display = "none";
+        document.getElementById("claseleSel").style.display = "none";
+        document.getElementById("discsSel").style.display = "none";
+
         // un array necesar pentru a captura valorile input checkbox-urilor bifate
         let values = [];
 

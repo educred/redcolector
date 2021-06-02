@@ -186,9 +186,9 @@
               {{!-- ARIE - Selector În caz de selecție multiplă, avem un caz de transdisciplinaritate--}}
 
             <fieldset>
-                <div class="form-group row">
+                <div class="form-group row" id="arrileC">
                     <label for="arii-curr" class="col-sm-4 col-form-label">Alege una sau mai multe arii curriculare relevante pentru resursa propusă</label>
-                    <div class="col-sm-8">
+                    <div class="col-sm-8" id="ariiCurr">
                         <select id="arii-curr" class="form-control custom-select" size="8" multiple>
                             <option data-lbcom   ="lbcom"    value="Limbă și comunicare">Limbă și comunicare</option>
                             <option data-matstnat="matstnat" value="Matematică și științe ale naturii">Matematică și științe ale naturii</option>
@@ -214,7 +214,7 @@
             {{!-- Selectări arie - END --}}
 
             {{!-- Selectarea nivelului de școlarizare --}}
-            <fieldset>
+            <fieldset id="claseleSel">
               <legend class="field-legend text-muted">Clasa</legend>
               {{!-- Orice modificare aduci, ține sincronizat și resursepublice.js -> vezi Map-ul; Acesta este nomenclatorul codurilor pe discipline. Mai este necesară și actualizarea Map-ului `pamCodDisc2Arie` --}}
               <div id="nivel">
@@ -1213,7 +1213,7 @@
                   {{!-- Afișarea disciplinelor selectate END --}}
                 </div>
 
-                <div class="form-group row">
+                <div class="form-group row" id="discsSel">
                   {{!-- Încărcarea DISCIPLINELOR --}}
                   <div id="discipline">
                     {{!-- disciplinele sunt adaugate programatic in functie de clasa selectată --}}

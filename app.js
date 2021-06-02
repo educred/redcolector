@@ -375,11 +375,11 @@ function formatBytes (bytes) {
 }
 
 // Afișează informații utile la start
-console.info("Memoria RAM alocată la pornire este de: ", formatBytes(process.memoryUsage().rss));
+console.info("Memoria RAM alocată la pornire este de:  \x1b[32m", formatBytes(process.memoryUsage().rss), `\x1b[37m`);
 if( process.env.NODE_ENV === 'production') {
-    console.info("Aplicația rulează în modul", app.get("env"));
+    console.info("Aplicația rulează în modul \x1b[32m", app.get("env"), `\x1b[37m`);
 } else if (process.env.NODE_ENV === 'development') {
-    console.info("Aplicația rulează în modul", app.get("env"));
+    console.info("Aplicația rulează în modul \x1b[32m", app.get("env"), `\x1b[37m`);
 }
 
 /* === Pornește serverul! === */
@@ -387,7 +387,7 @@ let port = process.env.PORT || 8080;
 let hostname = os.hostname();
 var server = http.listen(port, '0.0.0.0', function cbConnection () {
     console.log('RED Colector ', process.env.APP_VER);
-    console.log(`Hostname: ${hostname}, \n port: ${process.env.PORT}, \n proces no: ${process.pid}, \n node: ${process.version}, \n mongoose: ${mongoose.version}.`);
+    console.log(`Hostname: \x1b[32m ${hostname}\x1b[37m, \n port: \x1b[32m${process.env.PORT}\x1b[37m, \n proces no: \x1b[32m${process.pid}\x1b[37m, \n node: \x1b[32m${process.version}\x1b[37m, \n mongoose: \x1b[32m${mongoose.version}\x1b[37m.`);
 });
 server.on('error', onError);
 
@@ -396,29 +396,28 @@ server.on('error', onError);
  * https://stackoverflow.com/questions/65823016/i-cant-seem-to-make-a-socket-io-connection
  */
 
- function onError(error) {
+function onError(error) {
     if (error.syscall !== 'listen') {
-      throw error;
-    }
-  
-    var bind = typeof port === 'string'
-      ? 'Pipe ' + port
-      : 'Port ' + port;
-  
-    // handle specific listen errors with friendly messages
-    switch (error.code) {
-      case 'EACCES':
-        console.error(bind + ' requires elevated privileges');
-        process.exit(1);
-        break;
-      case 'EADDRINUSE':
-        console.error(bind + ' is already in use');
-        process.exit(1);
-        break;
-      default:
         throw error;
     }
-  }
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
 
 /* === GESTIONAREA evenimentelor pe `process` și a SEMNALELOR === */
 

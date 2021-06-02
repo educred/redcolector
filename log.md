@@ -1,3 +1,37 @@
+[es7-helper.js::deleteIndex] Datele primite sunt:  { idx: 'users' }
+ResponseError: illegal_argument_exception
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:337:23)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:264:11)
+    at IncomingMessage.emit (node:events:377:35)
+    at endReadableNT (node:internal/streams/readable:1312:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  meta: {
+    body: { error: [Object], status: 400 },
+    statusCode: 400,
+    headers: {
+      warning: '299 Elasticsearch-7.13.0-5ca8591c6fcdb1260ce95b08a8e023559635c6f3 "Elasticsearch built-in security features are not enabled. Without authentication, your cluster could be accessible to anyone. See https://www.elastic.co/guide/en/elasticsearch/reference/7.13/security-minimal-setup.html to enable security."',
+      'content-type': 'application/json; charset=UTF-8',
+      'content-length': '253'
+    },
+    meta: {
+      context: null,
+      request: [Object],
+      name: 'elasticsearch-js',
+      connection: [Object],
+      attempts: 0,
+      aborted: false
+    }
+  }
+}
+[01-06-2021 13:10:24] [error] [undefined]:      illegal_argument_exception
+[01-06-2021 13:10:24] [error] [undefined]:      illegal_argument_exception
+
+
+
+
+
+
+
 Am introdus în modelul datelor specificația de rating cu următoarele detalii.
 
     rating: {

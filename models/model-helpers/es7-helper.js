@@ -13,7 +13,7 @@ const resursaRedES7 = require('../resursa-red-es7'); // '-es7' indică faptul c�
 const logger = require('../../util/logger');
 
 /* INDECȘII ES7 */
-// Pornești setând valori de pornire. Atenție, aici se face hardcodarea denumirilor indecșilor. Fiecare index este varianta la plural a numelui schemei la export
+// Setezi valori de inițializare. Atenție, aici se face hardcodarea denumirilor indecșilor. Fiecare index este varianta la plural a numelui schemei la export
 let RES_IDX_ES7 = 'resursedus0', RES_IDX_ALS = 'resursedu', USR_IDX_ES7 = 'users0', USR_IDX_ALS = 'users';
 redisClient.get("RES_IDX_ES7", (err, reply) => {
     if (err) console.error;
@@ -155,26 +155,61 @@ exports.recExists = async function recExists (id, idx) {
     }
 };
 
-exports.deleteIndex = function deleteIndex (idx) {
-    console.log('[es7-helper.js::deleteIndex] Deleting old index ...', idx);
 
+/**
+ * Funcția are rolul de a șterge indexul precizat prin string ca argument.
+ * @param {Object} data Numele indexului și a alias-ului care trebuie șterse `{idx: "nume", alsr: "numeals"}`
+ * @returns 
+ */
+exports.deleteIndex = function deleteIndex (data) {
+    console.log('[es7-helper.js::deleteIndex] Datele primite sunt: ', data);
+    // dacă există și alias pentru index, șterge alias-ul și indexul
+    if (data.alsr) {
+        delAlias(data);
+        delIdx(data);
+    }
+    return delIdx(data);
+};
+
+/**
+ * Funcția are rol de helper pentru `deleteIndex()`
+ * Sterge un index
+ * @param {Object} data Numele indexului și a alias-ului care trebuie șterse `{idx: "nume", alsr: "numeals"}`
+ * @returns 
+ */
+function delIdx (data) {
     return esClient.indices.delete({
-        index: idx,
-        ignore: [404]
+        index: data.idx
     }).then((body) => {
-        if (!body.error) {
-            console.log('\x1b[32m' + 'Am șters indexul fără probleme' + '\x1b[37m');
-        } else {                        
-            console.log('\x1b[33m' + 'Nu am reușit să șterg indexul' + '\x1b[37m');
-            console.log(JSON.stringify(body, null, 4));
-            logger.error(error);
+        if (body.error) {            
+            // console.log('\x1b[33m' + 'Nu am reușit să șterg indexul' + '\x1b[37m');
+            // console.log(JSON.stringify(body, null, 4));
+            logger.error(body.error);
         }
     }).catch((err) => {
-        // console.trace(err.message);
-        logger.error(error);
-        next(error);
+        // console.error(err);
+        logger.error(err);
     });
-};
+}
+/**
+ * Funcția are rol de helper pentru `deleteIndex()`
+ * Sterge un alias
+ * @param {Object} data Numele indexului și a alias-ului care trebuie șterse `{idx: "nume", alsr: "numeals"}`
+ * @returns 
+ */
+function delAlias (data) {
+    return esClient.indices.deleteAlias({
+        index: data.idx,
+        name: data.alsr
+    }).then((body) => {
+        if (body.error) {
+            logger.error(body.error);
+        }
+    }).catch((err) => {
+        // console.error(err);
+        logger.error(err);
+    });
+}
 
 /**
  *Funcția are rolul de a șterge un index primit ca valoare și aliasul său

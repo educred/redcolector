@@ -2,7 +2,6 @@ require('dotenv').config();
 const logger      = require('./util/logger');
 const redisClient = require('./redis.config');
 const { Client }  = require('@elastic/elasticsearch');
-const ES7Helper   = require('./models/model-helpers/es7-helper');
 
 /*
 Am setat o variabilă de mediu `APP_RUNTIME` care va indica dacă aplicația rulează virtualizat sau local.
@@ -24,7 +23,7 @@ const client = new Client(CONFIG);
 
 // Afișare date în consolă
 client.info().then((r) => {
-    console.log("Conectare reușită la Elasticsearch ", r.body.version.number, " Stare:", r.meta.connection.status, "a clusterului:", r.body.cluster_name);
+    console.log("Conectare reușită la Elasticsearch \x1b[32m", r.body.version.number, "\x1b[37m Stare:\x1b[32m", r.meta.connection.status, "\x1b[37m a clusterului:\x1b[32m", r.body.cluster_name, "\x1b[37m");
 }).catch((error) => {
     console.log(`A apărut o eroare de conectare la Elasticsearch`);
     logger.error(error);
