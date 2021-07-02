@@ -2,6 +2,7 @@ require('dotenv').config();
 const esClient     = require('../../elasticsearch.config');
 const redisClient  = require('../../redis.config');
 const Resursa      = require('../resursa-red');
+const logger       = require('../../util/logger');
 
 // const mongoose     = require('../../mongoose.config');
 // const CompetentaS  = require('../competenta-specifica');
@@ -10,33 +11,11 @@ const editorJs2TXT = require('../../routes/controllers/editorJs2TXT');
 
 // setările noului index
 const resursaRedES7 = require('../resursa-red-es7'); // '-es7' indică faptul că sunt setările și mappingul noului index
-const logger = require('../../util/logger');
+let {getStructure} = require('../../util/es7');
 
 /* INDECȘII ES7 */
-// Setezi valori de inițializare. Atenție, aici se face hardcodarea denumirilor indecșilor. Fiecare index este varianta la plural a numelui schemei la export
-let RES_IDX_ES7 = 'resursedus0', RES_IDX_ALS = 'resursedu', USR_IDX_ES7 = 'users0', USR_IDX_ALS = 'users';
-redisClient.get("RES_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ES7 = reply;
-});
-redisClient.get("RES_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ALS = reply;
-});
-redisClient.get("USR_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    USR_IDX_ES7 = reply;
-});
-redisClient.get("USR_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    USR_IDX_ALS = reply;
-});
-
-// Exportă numele indecșilor și ale alias-urilor ca sursă unică de adevăr!!!
-exports.esnames = function () {
-    console.log("BAAAAAU");
-    return {RES_IDX_ES7, RES_IDX_ALS, USR_IDX_ES7, USR_IDX_ALS};
-};
+let {RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = ''} = getStructure();
+console.log('es7-helper raportează', RES_IDX_ES7, RES_IDX_ALS, USR_IDX_ES7, USR_IDX_ALS);
 
 var procesate = 0;
 // stabilirea denumirii indexului zero pentru resurse și a alias-ului.

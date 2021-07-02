@@ -30,7 +30,7 @@ client.info().then((r) => {
 });
 
 /**
- *Funcția are rol de callback pentru then-ul din care se încarcă în REDIS numele indecților și ale alias-urilor
+ *Funcția are rol de callback pentru then-ul din care se încarcă în REDIS numele indecșilor și ale alias-urilor
  *Funcția investighează ce indecși există deja, dacă aceștia au o formă *canonică*, iar dacă nu (motive istorice)
  *corectează prin constituirea unui index nou după forma canonică (`numeindex0`), pentru care creează și alias, după care reindexează
  * @param {Object} r
@@ -61,12 +61,12 @@ function clbkIndices (r) {
             // setează valorile în Redis
             switch (alsr) {
                 case "users":
-                    redisClient.set("USR_IDX_ES7", d);
-                    redisClient.set("USR_IDX_ALS", alsr);
+                    redisClient.set( process.env.APP_NAME + ":red:" + "USR_IDX_ES7", d); // se creează o cheie redcolector:red:USR_IDX_ES7
+                    redisClient.set( process.env.APP_NAME + ":red:" + "USR_IDX_ALS", alsr);
                     break;
                 case "resedus":
-                    redisClient.set("RES_IDX_ES7", d);
-                    redisClient.set("RES_IDX_ALS", alsr);
+                    redisClient.set( process.env.APP_NAME + ":red:" + "RES_IDX_ES7", d);
+                    redisClient.set( process.env.APP_NAME + ":red:" + "RES_IDX_ALS", alsr);
                     break;
             }
         }

@@ -171,11 +171,13 @@ const corsOptsSockets = {
     allowedHeaders: ["_csrf"],
     credentials: true
 };
+// conectează-te cu Redis
 const adapter = require('socket.io-redis');
 const CONFIG_ADAPTER = {
     host: '',
     port: 6379
 };
+// Cazul rulării pe volume și cel curent (nodemon?!)
 if (process.env.APP_RUNTIME === 'virtual') {
     corsOptsSockets.origin = 'http://' + process.env.DOMAIN_VIRT + ':' + process.env.PORT;
     CONFIG_ADAPTER.host = 'redis'
@@ -195,7 +197,7 @@ function wrap (middleware) {
         middleware (socket.request, {}, next);
     };
 };
-// #3 conectarea cu Redis pentru a permite pub/sub
+// #3 conectarea cu Redis
 const redisAdapter = adapter(CONFIG_ADAPTER);
 io.adapter(redisAdapter);
 io.use(wrap(sessionMiddleware));
@@ -477,7 +479,7 @@ function shutdownserver () {
     });
 }
 
-
+module.exports = app;
 
 /* === LOGGER MORGAN === */
 // app.use(devlog('dev', {

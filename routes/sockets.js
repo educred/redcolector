@@ -22,25 +22,11 @@ const globby      = require('globby');
 const git         = require('isomorphic-git');
 const logger      = require('../util/logger');
 const objectsOps  = require('../util/objectsOps');
+let {getStructure} = require('../util/es7');
 
 // INDECȘII ES7
-let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
-redisClient.get("RES_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ES7 = reply;
-});
-redisClient.get("RES_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ALS = reply;
-});
-redisClient.get("USR_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    USR_IDX_ES7 = reply;
-});
-redisClient.get("USR_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    USR_IDX_ALS = reply;
-});
+let {RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = ''} = getStructure();
+console.log('sockets.js raporteaza', RES_IDX_ES7, RES_IDX_ALS, USR_IDX_ES7, USR_IDX_ALS);
 
 // funcțiile de căutare
 const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
