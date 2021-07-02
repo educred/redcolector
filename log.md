@@ -1,3 +1,50 @@
+Patch Update Backwards-compatible bug fixes.
+❯◯ datatables.net                1.10.24  ❯  1.10.25  https://datatables.net
+ ◯ datatables.net-buttons        1.7.0    ❯  1.7.1    https://datatables.net
+ ◯ datatables.net-buttons-dt     1.7.0    ❯  1.7.1    https://datatables.net
+ ◯ datatables.net-responsive     2.2.7    ❯  2.2.9    https://datatables.net
+ ◯ datatables.net-responsive-dt  2.2.7    ❯  2.2.9    https://datatables.net
+ ◯ express-session               1.17.1   ❯  1.17.2   https://github.com/expressjs/session#readme
+ ◯ globby                        11.0.3   ❯  11.0.4   https://github.com/sindresorhus/globby#readme
+ ◯ isomorphic-git                1.8.2    ❯  1.8.10   https://isomorphic-git.org/
+ ◯ papaparse                     5.3.0    ❯  5.3.1    http://papaparse.com
+ ◯ winston-daily-rotate-file     4.5.3    ❯  4.5.5    https://github.com/winstonjs/winston-daily-rotate-file#readme
+ ◯ autoprefixer devDep           10.2.5   ❯  10.2.6   https://github.com/postcss/autoprefixer#readme
+  
+ Minor Update New backwards-compatible features.
+ ◉ @elastic/elasticsearch  7.12.0  ❯  7.13.0  http://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
+ ◉ express-rate-limit      5.2.6   ❯  5.3.0   https://github.com/nfriedly/express-rate-limit
+❯◉ mongoose                5.12.7  ❯  5.13.0  https://mongoosejs.com
+ ◯ socket.io               4.0.1   ❯  4.1.2   https://github.com/socketio/socket.io#readme
+ ◯ socket.io-client        4.0.1   ❯  4.1.2   https://github.com/socketio/socket.io-client#readme
+ ◯ autocannon devDep       7.2.0   ❯  7.3.0   https://github.com/mcollina/autocannon#readme
+ ◯ eslint devDep           7.25.0  ❯  7.29.0  https://eslint.org
+ ◯ webpack devDep          5.36.2  ❯  5.42.0  https://github.com/webpack/webpack
+ ◯ webpack-cli devDep      4.6.0   ❯  4.7.2   https://github.com/webpack/webpack-cli/tree/master/packages/webpack-cli
+  
+ Major Update Potentially breaking API changes. Use caution.
+ ◯ bootstrap                   4.6.0    ❯  5.0.2   https://getbootstrap.com/
+ ◯ connect-redis               5.2.0    ❯  6.0.0   https://github.com/visionmedia/connect-redis#readme
+ ◯ datatables.net-bs4          1.10.24  ❯  3.2.2   https://datatables.net
+ ◯ dotenv                      8.2.0    ❯  10.0.0  https://github.com/motdotla/dotenv#readme
+ ◯ fs-extra                    9.1.0    ❯  10.0.0  https://github.com/jprichardson/node-fs-extra
+ ◯ mocha                       8.3.2    ❯  9.0.1   https://mochajs.org/
+ ◯ passport-twitter            0.1.5    ❯  1.0.4   https://github.com/jaredhanson/passport-twitter#readme
+ ◯ pm2                         4.5.6    ❯  5.1.0   http://pm2.keymetrics.io/
+ ◯ copy-webpack-plugin devDep  8.1.1    ❯  9.0.1   https://github.com/webpack-contrib/copy-webpack-plugin
+
+ Non-Semver Versions less than 1.0.0, caution.
+❯◉ i18n  0.13.2  ❯  0.13.3  http://github.com/mashpie/i18n-node
+
+
+
+
+
+
+
+https://redislabs.com/blog/goodbye-cache-redis-as-a-primary-database/
+
+
 [es7-helper.js::deleteIndex] Datele primite sunt:  { idx: 'users' }
 ResponseError: illegal_argument_exception
     at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:337:23)
