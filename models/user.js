@@ -36,6 +36,8 @@ var User = new Schema({
     avatar: String,
     email: {
         type: String,
+        required: true,
+        unique: true,
         index: true
     },
     googleID: String,
@@ -93,7 +95,7 @@ User.post('save', function clbkUsrSave (doc, next) {
             family_name: doc.googleProfile.family_name
         }
     };
-    ES7Helper.searchIdxAndCreateDoc(schema, data, process.env.USR_IDX_ES7, process.env.USR_IDX_ALS);
+    // ES7Helper.searchIdxAndCreateDoc(schema, data, process.env.USR_IDX_ES7, process.env.USR_IDX_ALS);
     next(); 
 });
 
@@ -192,15 +194,5 @@ User.static.findByCredentials = async (email, password) => {
     }
     return user;
 };
-
-// Metoda este accesibilă instanțelor (instance methods).
-User.methods.generateAuthToken = async function () {
-    // accesezi userul prin legătura this. De aceea este nevoie de `function`
-    const user = this;
-    const token = jwt.sign({_id: user._id.toString()}, process.env.JWT_SECRET);
-    return token;
-}
-
-User.plugin(passportLocalMongoose);
 
 module.exports = User;

@@ -1,4 +1,4 @@
-import {pubComm} from './main.mjs';
+import {pubComm, createElement} from './main.mjs';
 
 // var csrfToken = '';
 
@@ -51,8 +51,6 @@ pubComm.on('person', (data) => {
             icon: 'error',
             hideAfter: 7000
         });
-        // TODO: reindexează userul!
-        // pubComm.emit('person', {'reindex': '1'});
     }
 });
 
@@ -456,7 +454,7 @@ pubComm.on('addRole', (resurce) => {
     console.log('[admin.mjs::evenimentul `addRole`]', resurce);
 });
 
-// DATELE STATISTICE
+// DATELE STATISTICE PRIVIND COLECȚIILE
 pubComm.emit('stats', {descriptors: ['reds', 'users', 'compets']}); // Se pasează descriptorii pentru care se dorește aducerea datelor corespondente. Prin convenție, fiecare descriptor înseamnă un set de date.
 // la primirea datelor statistice, se generează articole.
 pubComm.on('stats', (stats) => {
@@ -541,7 +539,88 @@ var es7StatsTmpl  = document.querySelector('#es7tpl'),      // ref către templa
     systemMgdb    = document.querySelector('#system-mgdb'), // ref către locul de inserție al template-ului `mdb4StatsTmpl`
     mgdbTab       = document.querySelector('#mgdb-tab'),    // ref buton tab meniu (MongoDB 4)
 
-    mdlTmpl       = document.querySelector("#mdl");         // ref către template-ul de afișare al modalului
+    mdlTmpl       = document.querySelector("#mdl"),         // ref către template-ul de afișare al modalului
+    mdl           = mdlTmpl.content;                        // ref la conținut template modal
+
+/**
+ *La apelare, funcția are rolul de a crea un nou tr în tabelul din template-ul `es7statsTmpl` (în pagină `es7tpl`)
+ *
+ * id va fi vechiul d[0], iar obiectul cu date va fi vechiul d[1]
+ */
+function createRow4Idx (id, data, tBody) {
+    // console.log("ID-ul este", id, "iar datele sunt", data);
+    let delopts = {
+        clone: mdl.cloneNode(true),
+        id:    id,
+        para1: `modl-delidx-${id}`,
+        para2: `Ștergi indexul?`,
+        para3: 'Fii foarte atent pentru că la ștergerea indexului se va dispărea și alias-ul. Ești sigur că vrei să ștergi?',
+        para4: 'Șterge',
+        para5: 'Renunță'
+    };
+    // Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație.
+    generateModal(delopts); // clone (trebuie făcută o clonă/iterație) para1: id; para2: title; para3: body; para4: confirmation text; para5: close text  
+
+    let trow = document.createElement('tr'); // inițiază rândul        
+    trow.id  = "tr-" + id;  // atribuie id
+    
+    /* ==== ACȚIUNI pe index ==== BEGIN */
+    let td0           = document.createElement('td');    // introdu acțiunile asupra indexurilor => primul TD     
+    let actIdx        = document.createElement('p');     // acțiunile vor fi introduse într-un paragraf gazdă
+    actIdx.classList  = "actidx";
+
+    let btnRidx       = document.createElement('button'); // reindexare [REINDEX]
+    btnRidx.classList = "btn btn-warning";
+    btnRidx.id        = 'ridx-' + id;
+    btnRidx.innerText = "Reindexare";
+
+    let btnBkup       = document.createElement('button'); // backup     [BACKUP]
+    btnBkup.classList = "btn btn-info m-2";
+    btnBkup.id        = "bkpidx-" + id;
+    btnBkup.innerText = "Backup";
+
+    //- FIXME: Adaugă eveniment și listener
+    let btnDel        = document.createElement('button'); // ștergere   [DELETE]
+    btnDel.classList  = "btn btn-danger m-2";
+    btnDel.type       = "button";
+    btnDel.id         = "delidx-" + id;
+    btnDel.setAttribute('data-toggle', 'modal');
+    btnDel.setAttribute('data-target', `#modl-delidx-${id}`);
+    btnDel.innerText  = "Șterge";
+
+    actIdx.appendChild(btnRidx);
+    actIdx.appendChild(btnBkup);
+    actIdx.appendChild(btnDel);
+
+    td0.appendChild(actIdx);
+    /* ==== ACȚIUNI pe index ==== END */
+
+    let td1 = document.createElement('td'); // nume index     
+    td1.textContent = id;
+    
+    let td2 = document.createElement('td'); // uuid index
+    td2.textContent = data.uuid;
+    
+    let td3 = document.createElement('td'); // nr documente în index
+    td3.textContent = data.total.docs.count;
+    
+    let td4 = document.createElement('td'); // nr documente șterse
+    td4.textContent = data.total.docs.deleted;
+
+    let td5 = document.createElement('td'); // dimensiunea indexului
+    td5.textContent = bytesToSize(data.total.store.size_in_bytes); 
+
+    trow.appendChild(td0);
+    trow.appendChild(td1);
+    trow.appendChild(td2);
+    trow.appendChild(td3);
+    trow.appendChild(td4);
+    trow.appendChild(td5);
+    // tBody.appendChild(trow);
+    // _FIXME: AICI AR TREBUI SĂ AM DEJA STRUCTURA
+    tBody.appendChild(trow);
+};
+
 
 /* NOTE: ==== Listener pentru buton tab Elasticsearch 7 `system-elk` ==== */
 // #1 Emite eveniment aducere date specifice Elasticsearch
@@ -552,11 +631,12 @@ elkTab.addEventListener('click', (event) => {
 // #2 Tratează datele primite
 pubComm.on('elkstat', (data = {}) => {
     systemElk.innerHTML = ''; // clear tab!!!
+    // console.log("Datele care trebuie afișate sunt", data.health);
 
-    let es7statsTmpl      = es7StatsTmpl.content,                                 // ref la template statses7
-        cloneEs7statsTmpl = es7statsTmpl.cloneNode(true),                         // clonează template-ul
-        mdl               = mdlTmpl.content,                                      // ref la conținut template modal
-        hdet              = cloneEs7statsTmpl.querySelector('#es7healthdetails'), // Starea clusterului
+    let es7statsTmpl      = es7StatsTmpl.content,               // ref la template statses7
+        cloneEs7statsTmpl = es7statsTmpl.cloneNode(true),       // clonează template-ul
+        hdet              = cloneEs7statsTmpl.querySelector('#es7healthdetails'), 
+        tBody             = cloneEs7statsTmpl.querySelector('tbody'),
         dh;
 
     // Încarcă datele generale despre starea clusterul ES7
@@ -581,83 +661,15 @@ pubComm.on('elkstat', (data = {}) => {
     // Pentru fiecare indice construiește câte un rând în tabel.
     if (data.indices) {
         // Indexurile -> informații despre fiecare index în parte
-        let tBody = cloneEs7statsTmpl.querySelector('tbody'),
-            indicesArr = Object.entries(data.indices), 
-            d;
+        let indicesArr = Object.entries(data.indices), d;
 
         // generează rânduri în tabel pentru fiecare indice ES7
         for (d of indicesArr) {
-            // Adu un modal prin care să confirmi ștergerea!!!
-            let delopts = {
-                clone: mdl.cloneNode(true),
-                id:    d[0],
-                para1: `modl-delidx-${d[0]}`,
-                para2: `Ștergi indexul?`,
-                para3: 'Fii foarte atent pentru că la ștergerea indexului se va dispărea și alias-ul. Ești sigur că vrei să ștergi?',
-                para4: 'Șterge',
-                para5: 'Renunță'
-            };
-            // Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație.
-            generateModal(delopts); // clone (trebuie făcută o clonă/iterație) para1: id; para2: title; para3: body; para4: confirmation text; para5: close text                
-
-            let trow = document.createElement('tr'); // inițiază rândul
-            trow.id  = "tr-" + d[0];                 // atribuie id
-            
-            /* ==== ACȚIUNI pe index ==== BEGIN */
-            let td0           = document.createElement('td');    // introdu acțiunile asupra indexurilor => primul TD     
-            let actIdx        = document.createElement('p');     // acțiunile vor fi introduse într-un paragraf gazdă
-            actIdx.classList  = "actidx";
-
-            let btnRidx       = document.createElement('button'); // reindexare [REINDEX]
-            btnRidx.classList = "btn btn-warning";
-            btnRidx.id        = 'ridx-' + d[0];
-            btnRidx.innerText = "Reindexare";
-
-            let btnBkup       = document.createElement('button'); // backup     [BACKUP]
-            btnBkup.classList = "btn btn-info m-2";
-            btnBkup.id        = "bkpidx-" + d[0];
-            btnBkup.innerText = "Backup";
-
-            //- FIXME: Adaugă eveniment și listener
-            let btnDel        = document.createElement('button'); // ștergere   [DELETE]
-            btnDel.classList  = "btn btn-danger m-2";
-            btnDel.type       = "button";
-            btnDel.id         = "delidx-" + d[0];
-            btnDel.setAttribute('data-toggle', 'modal');
-            btnDel.setAttribute('data-target', `#modl-delidx-${d[0]}`);
-            btnDel.innerText  = "Șterge";
-
-            actIdx.appendChild(btnRidx);
-            actIdx.appendChild(btnBkup);
-            actIdx.appendChild(btnDel);
-
-            td0.appendChild(actIdx);
-            /* ==== ACȚIUNI pe index ==== END */
-
-            let td1 = document.createElement('td'); // nume index     
-            td1.textContent = d[0];
-            
-            let td2 = document.createElement('td'); // uuid index
-            td2.textContent = d[1].uuid;
-            
-            let td3 = document.createElement('td'); // nr documente în index
-            td3.textContent = d[1].total.docs.count;
-            
-            let td4 = document.createElement('td'); // nr documente șterse
-            td4.textContent = d[1].total.docs.deleted;
-
-            let td5 = document.createElement('td'); // dimensiunea indexului
-            td5.textContent = bytesToSize(d[1].total.store.size_in_bytes); 
-
-            trow.appendChild(td0);
-            trow.appendChild(td1);
-            trow.appendChild(td2);
-            trow.appendChild(td3);
-            trow.appendChild(td4);
-            trow.appendChild(td5);
-            tBody.appendChild(trow);
+            // console.log("d[0] este", d[0], "iar d[1]", d[1]);
+            createRow4Idx(d[0], d[1], tBody);
         }
 
+        // integrează template-ul completat al tuturor rândurilor adăugate în DOM
         systemElk.appendChild(cloneEs7statsTmpl);
     } else {
         // În cazul în care obiectul este gol
@@ -674,7 +686,6 @@ pubComm.on('elkstat', (data = {}) => {
  * @param evt 
  */
 function idxactions (evt) {
-
     let idx, id, endIdx, vs, alsr; 
     // [`idx`::es7 index] | [`id`::`evt.target.id`] | [`endIdx`::indexul la care începe nr versiunii] | [`vs`::versiunea extrasă] | [`alsr`::alias index necesar versionării]
 
@@ -723,6 +734,19 @@ function idxactions (evt) {
 }
 // Atașează receptorul pe elementul <section id="system-elk">
 systemElk.addEventListener('click', idxactions);
+
+// Primire date în cazul reindexării.
+pubComm.on("es7reidx", function clbkEs7reidx (data) {
+    if (data.deleted == true) {
+        console.log("Am primit următoarele date!", data); // {newidx: nvs, oldidx: idx, deleted: r.body.acknowledged}
+
+        // _TODO: Șterge înregistrarea anterioară și introdu-o pe cea nouă.
+        let elem = document.querySelector(`#tr-${data.oldidx}`);
+        elem.parentNode.removeChild(elem);
+
+        pubComm.emit('elkstat', '');
+    }
+})
 
 /**
  * Rolul funcției este să populeze template-ul modalului 
@@ -869,55 +893,54 @@ pubComm.on('mgdbstat', (data) => {
 
 systemMgdb.addEventListener('click', collsactions, false);
 
+/**
+ * Funcția joacă rolul de listener pentru evenimentele click ale tab-ului `systemMgdb`.
+ * 
+ * @param {*} evt
+ */
 function collsactions (evt) {
     let cmd, col, idxExist, endIdx, vs = 0, alsr;
 
     let infoarr = evt.target.id.split("-"); // realizează un array cu numele tuturor componentelor de lucru
     // console.log("Datele de lucru sunt: ", infoarr);
+
+    // extrage identificatorul tipului operațiunii (ex. `reidxes-resursedus` => `reidxes`)
+    cmd = infoarr[0];
+
     // extrage numele colecției pe care operezi din id-ul elementului (ex. `reidxes-resursedus` => `resursedus`)
     col = infoarr[1];
-    // extrage numele indexului din ElasticSearch dacă acesta există.
-    if (infoarr[2]) {
-        idxExist = infoarr[2];
-    }
-    // extrage identificatorul tipului operațiunii (ex. `reidxes-resursedus` => `reidxes`)
-    cmd = evt.target.id.split("-").shift();
 
-    /*
-        Creează valorile de lucru pentru index, alias-ul său și numărul versiunii
-        verifică dacă numele indexului are cifre în coadă. Primul caz este că nu are (indecși vechi sau constituiți greșit)
-    */
-    if (idxExist.search(/\d{1,}/g) === -1) {
-        // declanșează crearea unui index nou pentru că cel care există nu are alias (indecși vechi sau constituiți greșit)
-    } else {
-        endIdx = idxExist.search(/\d{1,}/g); // indexul de la care începe cifra versiunii
-        vs     = idxExist.slice(endIdx);     // versiunea extrasă din numele indexului
-        alsr   = idxExist.slice(0, endIdx);  // aliasul este numele indexului fără versiune// aliasul este chiar numele colecției
-    };
-    console.log("Alias-ul ar trebui să fie ", col, ' dar este [', alsr,'], iar versiunea indexului este: ', vs);
+    // extrage numele indexului din ElasticSearch dacă acesta există.
+    idxExist = infoarr[2] ?? '';
+
+    // console.log(`[admin.mjs] infoarr[0] și infoarr[1] este`, infoarr[0], infoarr[1], `iar infoarr[2] este`, infoarr[2]);
 
     /* Tratarea evenimentului în funcție de comanda specificată în ID */
     switch (cmd) {
         case "reidxes":
-            // reindexează în ES în funcție de indexul care există deja și versiunea la care este
-            // #1 verifică dacă numele colecției este același cu numele indexului existent în ES (cazul dorit pentru a armoniza numele colecției cu indexul în ES7)
-            if (col === alsr) {
-                // dacă indexul nu este vechi, fă reindexare cu ce există
-                // REVIEW: vezi de unde își formează numele indexul la momentul în care este creat! Este posibil ca mereu să se creeze unul greșit!!!
+            /*
+                BUTONUL DE REINDEXARE!!!
+                Creează valorile de lucru pentru index, alias-ul său și numărul versiunii
+                verifică dacă numele indexului are cifre în coadă. Primul caz este că nu are (indecși vechi sau constituiți greșit)
+            */
+            // if (idxExist.search(/\d{1,}/g) === -1) {
+            //     // _FIXME: E o stare de gravă eroare. Numele indexului ES este fără versiune, sau alias-ul poartă numărul versiunii. ȘTERGE ȘI REFĂ!
+            //     // declanșează crearea unui index nou pentru că cel care există nu are alias (indecși vechi sau constituiți greșit)
+            // }
+
+            // endIdx = idxExist.search(/\d{1,}/g); // indexul de la care începe cifra versiunii
+            // vs     = idxExist.slice(endIdx);     // versiunea extrasă din numele indexului
+            // alsr   = idxExist.slice(0, endIdx);  // aliasul este numele indexului fără versiune// aliasul este chiar numele colecției            
+            // let nvs    = ++vs,                   // numărul versiunii incrementat 
+            //     nidx   = col + nvs;              // numele noului index cu versiunea incrementată
 
 
-                // CONFIRM!!! CREEAZĂ O SINGURĂ SURSĂ DE ADEVĂR PRIVID NUMELE COLECȚIILOR ȘI ALE INDECȘILOR!!!!
-
-
-
-                console.log('Emit pe es7reidx', {idx: col, alsr});
-                // pubComm.emit('es7reidx', {idx: col, alsr});
-            }
-            console.log('Emit pe es7reidx', {idx: col, alsr, oldidx: idxExist});
-            // pubComm.emit('es7reidx', {idx: col, alsr, oldidx: idxExist});
             break;
         case "idxes":
-            console.log("Indexezi de la 0, nu?!");
+            // INDEXARE DE LA 0
+            // let nidx = col + vs;  // numele noului index cu versiunea incrementată
+            // console.log('Emit pe mgdb2es7', {idx: col + vs, alsr: col});
+            pubComm.emit('mgdb2es7', {idx: col + vs, alsr: col});            
             break;
     }
 }

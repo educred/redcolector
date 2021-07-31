@@ -1,3 +1,444 @@
+Update-uri
+
+Patch Update Backwards-compatible bug fixes.
+ ◉ isomorphic-git    1.9.1   ❯  1.9.2   https://isomorphic-git.org/
+ ◉ mocha             9.0.2   ❯  9.0.3   https://mochajs.org/
+ ◉ mongoose          5.13.2  ❯  5.13.5  https://mongoosejs.com
+ ◉ socket.io         4.1.2   ❯  4.1.3   https://github.com/socketio/socket.io#readme
+ ◉ socket.io-client  4.1.2   ❯  4.1.3   https://github.com/socketio/socket.io-client#readme
+ ◉ supertest         6.1.3   ❯  6.1.4   https://github.com/visionmedia/supertest#readme
+  
+ Minor Update New backwards-compatible features.
+ ◉ autocannon devDep    7.3.0   ❯  7.4.0   https://github.com/mcollina/autocannon#readme
+ ◉ autoprefixer devDep  10.2.6  ❯  10.3.1  https://github.com/postcss/autoprefixer#readme
+ ◉ eslint devDep        7.30.0  ❯  7.32.0  https://eslint.org
+ ◉ webpack devDep       5.43.0  ❯  5.47.1  https://github.com/webpack/webpack
+  
+ Major Update Potentially breaking API changes. Use caution.
+❯◉ globby  11.0.4  ❯  12.0.0  https://github.com/sindresorhus/globby#readme
+
+
+
+[es7-helper] Rezultatul creării indicelui {
+  body: { acknowledged: true, shards_acknowledged: true, index: 'users0' },
+  statusCode: 200,
+  headers: {
+    warning: '299 Elasticsearch-7.13.4-c5f60e894ca0c61cdbae4f5a686d9f08bcefc942 "Elasticsearch built-in security features are not enabled. Without authentication, your cluster could be accessible to anyone. See https://www.elastic.co/guide/en/elasticsearch/reference/7.13/security-minimal-setup.html to enable security."',
+    'content-type': 'application/json; charset=UTF-8',
+    'content-length': '65'
+  },
+  meta: {
+    context: null,
+    request: { params: [Object], options: {}, id: 13 },
+    name: 'elasticsearch-js',
+    connection: {
+      url: 'http://127.0.0.1:9200/',
+      id: 'VExS2n4DS8KpqxkqKr_njg',
+      headers: {},
+      deadCount: 0,
+      resurrectTimeout: 0,
+      _openRequests: 0,
+      status: 'alive',
+      roles: [Object]
+    },
+    attempts: 0,
+    aborted: false
+  }
+}
+[es7-helper] Rezultatul creării alias-ului {
+  body: { acknowledged: true },
+  statusCode: 200,
+  headers: {
+    warning: '299 Elasticsearch-7.13.4-c5f60e894ca0c61cdbae4f5a686d9f08bcefc942 "Elasticsearch built-in security features are not enabled. Without authentication, your cluster could be accessible to anyone. See https://www.elastic.co/guide/en/elasticsearch/reference/7.13/security-minimal-setup.html to enable security."',
+    'content-type': 'application/json; charset=UTF-8',
+    'content-length': '21'
+  },
+  meta: {
+    context: null,
+    request: { params: [Object], options: {}, id: 14 },
+    name: 'elasticsearch-js',
+    connection: {
+      url: 'http://127.0.0.1:9200/',
+      id: 'VExS2n4DS8KpqxkqKr_njg',
+      headers: {},
+      deadCount: 0,
+      resurrectTimeout: 0,
+      _openRequests: 0,
+      status: 'alive',
+      roles: [Object]
+    },
+    attempts: 0,
+    aborted: false
+  }
+}
+Am indexat un număr de 0 documente
+
+
+
+
+
+
+
+
+[es7-helper.js::deleteIndex] Datele primite sunt:  { idx: 'users0', alsr: 'users' }
+[13-07-2021 09:23:43] [error] [undefined]:      aliases_not_found_exception: [aliases_not_found_exception] Reason: aliases [users] missing
+[13-07-2021 09:23:43] [error] [undefined]:      aliases_not_found_exception: [aliases_not_found_exception] Reason: aliases [users] missing
+[13-07-2021 09:23:43] [error] [undefined]:      index_not_found_exception: [index_not_found_exception] Reason: no such index [users0]
+[13-07-2021 09:23:43] [error] [undefined]:      index_not_found_exception: [index_not_found_exception] Reason: no such index [users0]
+   
+   
+   
+   
+    exports.reidx = function reidx (data) {
+            let idx = data.alsr + data.vs,  // Formula este `alsr` + `vs` = numele indexului.
+                nvs = '';                   // noua versiune
+            /*
+            === CREEAZĂ INDEXUL ȘI ALIASUL === INDEXARE DE LA 0
+            // Verifică dacă nu cumva există aliasul deja. Șterge-l.
+            // Verifică dacă nu cumva există indexul cu numele alias-ului! Șterge-l
+            // Creează indexul nou cu mappingul nou.
+            */
+        
+            // Verifică existența alias-ului
+            let valEx = esClient.indices.existsAlias({name: RES_IDX_ALS});
+        
+            valEx.then((r) => {
+                console.log("Verificarea existenței alias-ului: ", r.statusCode);
+                // verifică dacă aliasul există. Dacă există, setează o variabilă cu numele actualului index.
+                if (r.statusCode == 200) {
+                    // verifică cui index aparține alias-ul. 
+                    esClient.cat.aliases({
+                        name: RES_IDX_ALS,
+                        format: "json"     
+                    }, (err, r) => {
+                        if (err) console.log(err);
+                        console.log("Rezultatul interogării alias-urilor ", r.body[0].index);
+                        RES_IDX_ES7 = r.body[0].index;
+                        console.log("Acum RES_IDX_ES7 are valoarea: ", RES_IDX_ES7);
+                        
+                        // creează unul nou incrementând cifra din componența numelui
+                        let baseNameIdx = RES_IDX_ES7.slice(0, -1);
+                        let increasedV = parseInt(RES_IDX_ES7.slice(-1));
+                        increasedV++;
+                        let newBaseName = baseNameIdx + increasedV;
+                        // Crează nou index. La momentul creării indexului, se va crea și alias-ul, care are același nume precum cel vechi.
+                        esClient.indices.create({
+                            index: newBaseName,
+                            body: resursaRedES7
+                        }).then(r => {
+                            console.log("Am creat indexul nou cu următorul detaliu: ", r.body);
+                            
+                            //TODO: Aici vei face reindexarea înregistrărilor din baza de date
+                            const cursor = Resursa.find({}).populate('competenteS').cursor();
+                            cursor.eachAsync(doc => {
+                                let obi = Object.assign({}, doc._doc);
+                                // verifică dacă există conținut
+                                var content2txt = '';
+                                if ('content' in obi) {
+                                    content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+                                }
+                                // indexează documentul
+                                const data = {
+                                    id:               obi._id,
+                                    date:             obi.date,
+                                    idContributor:    obi.idContributor,
+                                    emailContrib:     obi.emailContrib,
+                                    uuid:             obi.uuid,
+                                    autori:           obi.autori,
+                                    langRED:          obi.langRED,
+                                    title:            obi.title,
+                                    titleI18n:        obi.titleI18n,
+                                    arieCurriculara:  obi.arieCurriculara,
+                                    level:            obi.level,
+                                    discipline:       obi.discipline,
+                                    disciplinePropuse:obi.disciplinePropuse,
+                                    competenteGen:    obi.competenteGen,
+                                    rol:              obi.rol,
+                                    abilitati:        obi.abilitati,
+                                    materiale:        obi.materiale,
+                                    grupuri:          obi.grupuri,
+                                    domeniu:          obi.demersuri,
+                                    spatii:           obi.spatii,
+                                    invatarea:        obi.invatarea,
+                                    description:      obi.description,
+                                    dependinte:       obi.dependinte,
+                                    coperta:          obi.coperta,
+                                    content:          content2txt,
+                                    bibliografie:     obi.bibliografie,
+                                    contorAcces:      obi.contorAcces,
+                                    generalPublic:    obi.generalPublic,
+                                    contorDescarcare: obi.contorDescarcare,
+                                    etichete:         obi.etichete,
+                                    utilMie:          obi.utilMie,
+                                    expertCheck:      obi.expertCheck
+                                };
+                                // creează înregistrare nouă pentru fiecare document în parte
+                                esClient.create({
+                                    id:      data.id,
+                                    index:   RES_IDX_ALS,
+                                    refresh: true,
+                                    body:    data
+                                });
+                                // Ține contul documentelor procesate
+                                ++procesate;                   
+                            }).then((r) => {
+                                console.log("Am indexat un număr de ", procesate, " documente");
+                                process.exit();               
+                            }).catch(e => {
+                                if (e) {
+                                    console.error(e, "M-am oprit la ", procesate, " documente");
+                                };
+                                process.exit();
+                            });
+                        }).catch(e => {
+                            if (e) throw e;
+                        });
+        
+                        // Șterge indexul vechi
+                        esClient.indices.delete({
+                            index: RES_IDX_ES7
+                        }, (error, r) => {
+                            if (error) console.error(error);
+                            console.log("Am șters indexul ", RES_IDX_ES7, " vechi cu următoarele detalii: ", r.statusCode);
+                        });
+                    });
+                } else { 
+                    // dacă alias-ul nu există, verifică dacă nu cumva există vreun index cu numele alias-ului. Dacă, da, șterge-l!
+                    esClient.indices.exists({index: RES_IDX_ALS}).then(r => {
+                        if (r.statusCode == 200){
+                            console.log("În schimb există indexul cu numele alias-ului!");
+                            esClient.indices.delete({
+                                index: RES_IDX_ALS
+                            }).then(r => {
+                                console.log("Rezultatul ștergerii indexului care avea numele alias-ului", r.statusCode);
+                                // are ca efect ștergerea indexului, cât și a alias-urilor acestuia.
+                            });
+                        }
+                    }).catch(e => console.error);
+                    
+                    // Verifică dacă nu cumva există deja indexul pe care vrei să-l creezi. 
+                    // Dacă există, creează index nou cu versiune incrementată
+                    // Reindexează înregistrările din baza de date și abia când totul este OK, șterge-l!
+                    esClient.indices.exists({
+                        index: RES_IDX_ES7
+                    }).then(r => {
+                        if(r.statusCode == 200){
+                            console.log("Indexul deja există și se procedează la crearea unuia nou.");
+                            
+                            // creează-l din nou incrementând cifra din componența numelui
+                            let baseNameIdx = RES_IDX_ES7.slice(0, -1);
+                            let increasedV = parseInt(RES_IDX_ES7.slice(-1));
+                            increasedV++;
+                            let newBaseName = baseNameIdx + increasedV;
+                            console.log("Noul nume al indexului este: ", newBaseName);
+        
+                            // Crează nou index. La momentul creării indexului, se va crea și alias-ul, care are același nume precum cel vechi.
+                            esClient.indices.create({
+                                index: newBaseName,
+                                body: resursaRedES7
+                            }).then(r => {
+                                console.log("Am creat indexul nou cu următorul detaliu: ", r.body);
+                                
+                                // _TODO: Aici vei face reindexarea înregistrărilor din baza de date
+                                const cursor = Resursa.find({}).populate('competenteS').cursor();
+                                cursor.eachAsync(doc => {
+                                    let obi = Object.assign({}, doc._doc);
+                                    // verifică dacă există conținut
+                                    var content2txt = '';
+                                    if ('content' in obi) {
+                                        content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+                                    }
+                                    // indexează documentul
+                                    const data = {
+                                        id:               obi._id,
+                                        date:             obi.date,
+                                        idContributor:    obi.idContributor,
+                                        emailContrib:     obi.emailContrib,
+                                        uuid:             obi.uuid,
+                                        autori:           obi.autori,
+                                        langRED:          obi.langRED,
+                                        title:            obi.title,
+                                        titleI18n:        obi.titleI18n,
+                                        arieCurriculara:  obi.arieCurriculara,
+                                        level:            obi.level,
+                                        discipline:       obi.discipline,
+                                        disciplinePropuse:obi.disciplinePropuse,
+                                        competenteGen:    obi.competenteGen,
+                                        rol:              obi.rol,
+                                        abilitati:        obi.abilitati,
+                                        materiale:        obi.materiale,
+                                        grupuri:          obi.grupuri,
+                                        domeniu:          obi.demersuri,
+                                        spatii:           obi.spatii,
+                                        invatarea:        obi.invatarea,
+                                        description:      obi.description,
+                                        dependinte:       obi.dependinte,
+                                        coperta:          obi.coperta,
+                                        content:          content2txt,
+                                        bibliografie:     obi.bibliografie,
+                                        contorAcces:      obi.contorAcces,
+                                        generalPublic:    obi.generalPublic,
+                                        contorDescarcare: obi.contorDescarcare,
+                                        etichete:         obi.etichete,
+                                        utilMie:          obi.utilMie,
+                                        expertCheck:      obi.expertCheck
+                                    };
+                                    esClient.create({
+                                        id:      data.id,
+                                        index:   RES_IDX_ALS,
+                                        refresh: true,
+                                        body:    data
+                                    });
+                                    // Îne contul celor procesate
+                                    ++procesate;                        
+                                }).then((r) => {
+                                    console.log("Am indexat un număr de ", procesate, " documente");                       
+                                }).catch(e => {
+                                    if (e) {
+                                        console.error(e, "M-am oprit la ", procesate, " documente");
+                                    };
+                                    process.exit();
+                                });
+                            }).catch(e => {
+                                if (e) {
+                                    console.error(e)
+                                };
+                            });
+        
+                            // Șterge indexul vechi
+                            esClient.indices.delete({
+                                index: RES_IDX_ES7
+                            }, (error, r) => {
+                                if (error) console.error(error);
+                                console.log("Am șters indexul vechi cu următoarele detalii: ", r);
+                            });
+                        }
+                    })
+                    // Creează indexul nou
+                    esClient.indices.create({
+                        index: RES_IDX_ES7,
+                        body: resursaRedES7
+                    }).then((result) => {
+                        console.log("Am creat nou index cu următorul rezultat: ", result.body);
+                        const cursor = Resursa.find({}).populate('competenteS').cursor();
+                        cursor.eachAsync(doc => {
+                            let obi = Object.assign({}, doc._doc);
+                            // verifică dacă există conținut
+                            var content2txt = '';
+                            if ('content' in obi) {
+                                content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+                            }
+                            // indexează documentul
+                            const data = {
+                                id:               obi._id,
+                                date:             obi.date,
+                                idContributor:    obi.idContributor,
+                                emailContrib:     obi.emailContrib,
+                                uuid:             obi.uuid,
+                                autori:           obi.autori,
+                                langRED:          obi.langRED,
+                                title:            obi.title,
+                                titleI18n:        obi.titleI18n,
+                                arieCurriculara:  obi.arieCurriculara,
+                                level:            obi.level,
+                                discipline:       obi.discipline,
+                                disciplinePropuse:obi.disciplinePropuse,
+                                competenteGen:    obi.competenteGen,
+                                rol:              obi.rol,
+                                abilitati:        obi.abilitati,
+                                materiale:        obi.materiale,
+                                grupuri:          obi.grupuri,
+                                domeniu:          obi.demersuri,
+                                spatii:           obi.spatii,
+                                invatarea:        obi.invatarea,
+                                description:      obi.description,
+                                dependinte:       obi.dependinte,
+                                coperta:          obi.coperta,
+                                content:          content2txt,
+                                bibliografie:     obi.bibliografie,
+                                contorAcces:      obi.contorAcces,
+                                generalPublic:    obi.generalPublic,
+                                contorDescarcare: obi.contorDescarcare,
+                                etichete:         obi.etichete,
+                                utilMie:          obi.utilMie,
+                                expertCheck:      obi.expertCheck
+                            };
+                            // creează înregistrare nouă pentru fiecare document
+                            esClient.create({
+                                id:      data.id,
+                                index:   RES_IDX_ALS,
+                                refresh: true,
+                                body:    data
+                            });
+                            // Ține contul celor procesate
+                            ++procesate;
+                        }).then((r) => {
+                            console.log("Am indexat un număr de ", procesate, " documente");
+                            process.exit();                       
+                        }).catch(e => {
+                            if (e) {
+                                console.error(e, "M-am oprit la ", procesate, " documente");
+                            };
+                            process.exit();
+                        });
+                    }).catch(e => console.error);
+                }
+            }).catch(e => console.error);
+        }
+
+
+
+
+Alias-ul resedus există? R:  true , iar indexul ar trebui să fie:  resedus1
+Alias-ul resedus aparține indexului:  resedus1
+Noul nume al indexului este:  resedus2
+Am creat indexul nou cu următorul detaliu:  { acknowledged: true, shards_acknowledged: true, index: 'resedus2' }
+[es7-helper] Am eșuat crearea noului index cu următoarele detalii:  ReferenceError: alsr is not defined
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:360:39
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+[08-07-2021 11:59:15] [error] [undefined]:      alsr is not defined
+[08-07-2021 11:59:15] [error] [undefined]:      alsr is not defined
+
+
+
+[es7-helper.js::deleteIndex] Datele primite sunt:  { idx: 'resedus2', alsr: 'resedus' }
+[08-07-2021 11:58:32] [error] [undefined]:      index_not_found_exception: [index_not_found_exception] Reason: no such index [resedus2]
+[08-07-2021 11:58:32] [error] [undefined]:      index_not_found_exception: [index_not_found_exception] Reason: no such index [resedus2]
+
+
+
+Am creat indexul nou cu următorul detaliu:  { acknowledged: true, shards_acknowledged: true, index: 'resedus2' }
+[es7-helper] Am eșuat crearea noului index cu următoarele detalii:  ResponseError: script_exception: [script_exception] Reason: compile error
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:337:23)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:264:11)
+    at IncomingMessage.emit (node:events:406:35)
+    at endReadableNT (node:internal/streams/readable:1329:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  meta: {
+    body: { error: [Object], status: 400 },
+    statusCode: 400,
+    headers: {
+      warning: '299 Elasticsearch-7.13.3-5d21bea28db1e89ecc1f66311ebdec9dc3aa7d64 "Elasticsearch built-in security features are not enabled. Without authentication, your cluster could be accessible to anyone. See https://www.elastic.co/guide/en/elasticsearch/reference/7.13/security-minimal-setup.html to enable security."',
+      'content-type': 'application/json; charset=UTF-8',
+      'content-length': '506'
+    },
+    meta: {
+      context: null,
+      request: [Object],
+      name: 'elasticsearch-js',
+      connection: [Object],
+      attempts: 0,
+      aborted: false
+    }
+  }
+}
+[08-07-2021 11:52:30] [error] [undefined]:      script_exception: [script_exception] Reason: compile error
+[08-07-2021 11:52:30] [error] [undefined]:      script_exception: [script_exception] Reason: compile error
+
+Pentru că funcționalitățile pachetului `uuid` au început să se regăsească în pachetul `crypto` al Node.js, am migrat funcționalitățile pentru generarea UUID-ului.
+
+
+
 Patch Update Backwards-compatible bug fixes.
 ❯◯ datatables.net                1.10.24  ❯  1.10.25  https://datatables.net
  ◯ datatables.net-buttons        1.7.0    ❯  1.7.1    https://datatables.net
@@ -827,7 +1268,7 @@ DataTables warning: table id=DataTables_Table_0 - Requested unknown parameter 'g
  ◯ autocannon devDep           6.1.0   ❯  7.0.1   https://github.com/mcollina/autocannon#readme
  ◯ autoprefixer devDep         9.8.6   ❯  10.1.0  https://github.com/postcss/autoprefixer#readme
  ◯ copy-webpack-plugin devDep  6.0.3   ❯  7.0.0   https://github.com/webpack-contrib/copy-webpack-plugin
- ◯ node-sass devDep            4.14.1  ❯  5.0.0   https://github.com/sass/node-sass
+ ◯ node-sass devDep            4.14.1  ❯  5.0.0   https://github.comrăpădit în 1985, la vârsta de 54 de ani. O coincidenţă stranie face ca ziua de naştere a lui Toma Caragiu, 21 august, să fie data la care Marin Moraru a urcat la Ceruri./sass/node-sass
  ◯ postcss-cli devDep          7.1.1   ❯  8.3.1   https://github.com/postcss/postcss-cli#readme
  ◯ webpack devDep              4.44.1  ❯  5.11.0  https://github.com/webpack/webpack
  ◯ webpack-cli devDep          3.3.12  ❯  4.3.0   https://github.com/webpack/webpack-cli#readme

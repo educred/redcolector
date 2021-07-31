@@ -1,5 +1,13 @@
 require('dotenv').config();
-const RedModel = require('../../models/resursa-red');
+const mongoose      = require('mongoose');
+const jwt           = require('jsonwebtoken');
+const RedModel      = require('../../models/resursa-red');
+const passport      = require('passport');
+const localStrategy = require('passport-local').Strategy;
+const UserSchema    = require('../../models/user');
+const UserDetails   = mongoose.model('users', UserSchema, 'users');
+const {clbkLogin}   = require('../authLocal/authL');
+const logger        = require('../../util/logger');
 
 // Cere helperul `checkRole` cu care verifică dacă există rolurile necesare accesului
 let checkRole = require('../controllers/checkRole.helper');
@@ -152,28 +160,57 @@ exports.delRED = function delRED (req, res, next) {
 };
 
 // @desc   creează un utilizator
-// @route  POST /api/v1/user
+// @route  POST /api/v1/user/create
 // @access privat
-exports.userLogin = function userLogin (req, res, next) {
-        // ACL
-        let roles = ["user", "validator", "cred"];
-        res.status(201).send({user: true});
+exports.createUser = function createUser (req, res, next) {
+        // Crearea contului!!!
+        // metoda este atașată de pluginul `passport-local-mongoose` astfel: schema.statics.register
+        UserDetails.register(
+                new UserDetails({
+                        _id: mongoose.Types.ObjectId(),
+                        username: req.body.email,  // _NOTE: Verifică dacă username și email chiar vin din body
+                        email: req.body.email,
+                        roles: {
+                                admin: false,
+                                public: false,
+                                rolInCRED: ['general']
+                        }
+                }), 
+                req.body.password, 
+                function clbkAuthLocal (err, user) {
+                        if (err) {
+                                logger.error(err);
+                                console.log('[signup::post]', err);
+                        };
+                        // dacă nu este nicio eroare, testează dacă s-a creat corect contul, făcând o autentificare
+                        var authenticate = UserDetails.authenticate();
+                                authenticate(req.body.email, req.body.password, function clbkAuthTest (err, result) {
+                                if (err) {
+                                        logger.error(err);
+                                        console.error('[signup::post::authenticate]', err);
+                                        return next(err);
+                                }
+                                // în cazul în care autentificarea a reușit, trimite userul să se logheze.
+                                if (result) {
+                                        res.status(201).send({user: result});
+                                }
+                        });
+                }
+        );
 }
 
 // @desc   login
 // @route  POST /api/v1/user/login
 // @access privat
 exports.userLogin = function userLogin (req, res, next) {
-        // ACL
-        let roles = ["user", "validator", "cred"];
-        res.status(200).send({logged: true});
+	console.log('Am ajuns pe /api/v1/user/login');
 }
 
 // @desc   logout
 // @route  POST /api/v1/user/logout
 // @access privat
-exports.userLogin = function userLogin (req, res, next) {
-        // ACL
-        let roles = ["user", "validator", "cred"];
-        res.status(200).send({logout: true});
+exports.userLogout = function userLogout (req, res, next) {
+	// ACL
+	let roles = ["user", "validator", "cred"];
+	res.status(200).send({logout: true});
 }

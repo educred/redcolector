@@ -11,7 +11,7 @@ module.exports = (passport) => {
         cb(null, obj);
     });
 
-    // Încarcă funcția care tratează autentificarea cu Google pentru strategia dedicată
+    // Încarcă funcția care tratează autentificarea cu Google pentru strategia Google Oauth2
     let cbGoogleStrategy = require('./googleStrategy.helper');
     // Strategia de access pentru conturile de Google
     passport.use(new GoogleStrategy({
@@ -22,6 +22,11 @@ module.exports = (passport) => {
             passReqToCallback: true
         }, cbGoogleStrategy
     ));
+
+    // Pentru strategia `passport-jwt` se va face require la `authJWT.js`
+    require('../authJWT/authJWT');
+
+    require('../authLocal/authL');
 
     // returnează un obiect ale cărui metode vor fi tot atâtea middleware-uri
     return {

@@ -1,21 +1,29 @@
 require('dotenv').config();
 const esClient     = require('../../elasticsearch.config');
-const redisClient  = require('../../redis.config');
 const Resursa      = require('../resursa-red');
+const User         = require('../user');
 const logger       = require('../../util/logger');
+
+    // io.on('connect', socket => {
+    //     console.log("Id-ul conectat este: ", socket.id);
+    //     console.log(socket.handshake);
+    //     // console.log(socket.handshake.query._csrf);
+    //     socket.on('testconn', function cbMesaje (mesaj) {
+    //         const detaliiConn = pubComm.server.eio.clients[socket.id]; // obține detaliile de conexiune individuale
+    //         console.log('Serverul a primit următorul mesaj: ', mesaj, detaliiConn.upgraded);
+    //     });
+    // });
 
 // const mongoose     = require('../../mongoose.config');
 // const CompetentaS  = require('../competenta-specifica');
 // const ES7schemaRED = require('../resursa-red-es7');
 const editorJs2TXT = require('../../routes/controllers/editorJs2TXT'); 
 
-// setările noului index
+// mapping-urile indecșilor
 const resursaRedES7 = require('../resursa-red-es7'); // '-es7' indică faptul că sunt setările și mappingul noului index
-let {getStructure} = require('../../util/es7');
-
-/* INDECȘII ES7 */
-let {RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = ''} = getStructure();
-console.log('es7-helper raportează', RES_IDX_ES7, RES_IDX_ALS, USR_IDX_ES7, USR_IDX_ALS);
+const userES7 = require('../user-es7');
+// utilități pentru Elasticsearch
+let {getStructure}  = require('../../util/es7'); // `getStructure()` este o promisiune a cărui rezultat sunt setările indecșilor și ale alias-urilor (vezi `elasticsearch.config.js`, unde sunt setați)
 
 var procesate = 0;
 // stabilirea denumirii indexului zero pentru resurse și a alias-ului.
@@ -134,20 +142,26 @@ exports.recExists = async function recExists (id, idx) {
     }
 };
 
-
 /**
  * Funcția are rolul de a șterge indexul precizat prin string ca argument.
  * @param {Object} data Numele indexului și a alias-ului care trebuie șterse `{idx: "nume", alsr: "numeals"}`
  * @returns 
  */
 exports.deleteIndex = function deleteIndex (data) {
-    console.log('[es7-helper.js::deleteIndex] Datele primite sunt: ', data);
+    // console.log('[es7-helper.js::deleteIndex] Datele primite sunt: ', data);
     // dacă există și alias pentru index, șterge alias-ul și indexul
     if (data.alsr) {
-        delAlias(data);
-        delIdx(data);
-    }
-    return delIdx(data);
+        delAlias(data).then((r) => {
+            // console.log(`[es7-helper::delAlias] Rezultatul ștergerii alias-ului dupa returnare`, r);
+            if (r === 200 || r === 404) {
+                delIdx(data.idx); // șterge indexul
+            }
+        }).catch((error) => {
+            if (error) {
+                logger.error(error);
+            }
+        });
+    };
 };
 
 /**
@@ -156,9 +170,9 @@ exports.deleteIndex = function deleteIndex (data) {
  * @param {Object} data Numele indexului și a alias-ului care trebuie șterse `{idx: "nume", alsr: "numeals"}`
  * @returns 
  */
-function delIdx (data) {
-    return esClient.indices.delete({
-        index: data.idx
+function delIdx (idx) {
+    esClient.indices.delete({
+        index: idx
     }).then((body) => {
         if (body.error) {            
             // console.log('\x1b[33m' + 'Nu am reușit să șterg indexul' + '\x1b[37m');
@@ -166,10 +180,10 @@ function delIdx (data) {
             logger.error(body.error);
         }
     }).catch((err) => {
-        // console.error(err);
         logger.error(err);
     });
 }
+
 /**
  * Funcția are rol de helper pentru `deleteIndex()`
  * Sterge un alias
@@ -181,18 +195,19 @@ function delAlias (data) {
         index: data.idx,
         name: data.alsr
     }).then((body) => {
-        if (body.error) {
-            logger.error(body.error);
-        }
+        // console.log(`[es7-helper::delAlias] Rezultatul ștergerii alias-ului`, body);
+        return body.statusCode;
     }).catch((err) => {
-        // console.error(err);
+        if (err.meta.statusCode === 404) {
+            // console.error(`[es7-helper::delAlias] Alias-ul nu exista. Stare: `, err.meta.statusCode);
+            return err.meta.statusCode;
+        }
         logger.error(err);
     });
 }
 
 /**
- *Funcția are rolul de a șterge un index primit ca valoare și aliasul său
- *Urmat de crearea unui index și a alias-ului său
+ *Funcția are rolul de a șterge un index primit ca valoare și aliasul său urmat de crearea unui index și a alias-ului său
  *Opțional, poți schimba denumirea indexului nou
  * @param {Object} schema Este schema ES7 în baza căreia creezi index nou
  * @param {String} oldIdx Numele indexului vechi
@@ -281,249 +296,155 @@ exports.delAndCreateNew = async function delAndReindex (schema, oldIdx, vs = '',
     }
 }
 
-/* 
-Strategia este să păstrezi alias-ul și să ștergi indexul. Apoi recreezi indexul și asociezi aliasul vechi.
-*/
-//- FIXME: termină de adaptat reidx pentru reidxincr 
-exports.reidx = function reidx (data) {
+let pscript =  '';
+/**
+ * Funcția are rolul de a face o reindexare cu date existente în indexul vechi.
+ * Numărul versiunii va fi incrementat ori de câte ori este apelată.
+ * @param {Object} data Numele aliasului și numărul versiunii la care este indexul
+ * @param {Object} socket Este obiectul socket necasar comunicării
+ */
+exports.reidxincr = function reidxincr (data, socket) {
+    // Reindexarea se va face ori de câte ori este modificat mapping-ul (vezi variabila `resursaRedES7`). 
+    // În funcție de modificarea mapping-ului trebuie adaptat scriptul painless care să opereze modificările de structură (vezi variabila `pscript`).
+    
     let idx = data.alsr + data.vs,  // Formula este `alsr` + `vs` = numele indexului.
         nvs = '';                   // noua versiune
-    /*
-    === CREEAZĂ INDEXUL ȘI ALIASUL === INDEXARE DE LA 0
-    // Verifică dacă nu cumva există aliasul deja. Șterge-l.
-    // Verifică dacă nu cumva există indexul cu numele alias-ului! Șterge-l
-    // Creează indexul nou cu mappingul nou.
+
+    // promisiune de verificare alias pentru cazul în care nu ar fi alias deja
+    esClient.indices.existsAlias({name: data.alsr})
+        .then((r) => {
+            if (r.statusCode == 200) {
+                // dacă aliasul există, procedează la reindexare
+                // dacă este un alias care se termină cu un număr, atunci înseamnă că e un install vechi. Șterge indexul, sterge alias-ul. Reindexează de la 0.
+                // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html#indices-aliases-api-rename-alias-ex
+                /*
+                    #1 Adaugă un index nou 
+                    #2 reindexează înregistrările pe noul index 
+                        - https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#_reindex
+                        - https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/7.x/reindex_examples.html
+                    #3 Leagă indexul nou de alias-ul existent
+                    #4 Șterge indexul vechi
+                */
+                
+                // verifică cărui index aparține alias-ul.
+                esClient.cat.aliases({
+                    name: data.alsr,
+                    format: "json"     
+                }, (err, r) => {
+                    if (err) {
+                        console.log("De la aliases", err);
+                        logger.error(err);
+                    };
+
+                    // în cazul în care indexul primit este egal cu cel verificat pentru alias creează noul index
+                    if (idx === r.body[0].index) {
+                        
+                        // incrementează versiunea
+                        let nrvs = parseInt(data.vs);
+                        let newvs = ++nrvs;
+                        nvs = data.alsr + newvs; // `nvd` e prescurtare de la `new version`
+
+                        // CREEAZĂ INDEXUL nou pasând la index, numele noului index, iar la body, mapping-ul modificat (variabila `resursaRedES7`) al indexului
+                        // _FIXME: Vezi că ai `body` setat fix doar pe mapping-ul resurselor. Fă mecanism pentru detectarea mapping-ului corect pentru datele primite.
+                        esClient.indices.create({
+                            index: nvs,
+                            body: resursaRedES7
+                        }).then(async (r) => {
+
+                            // REINDEXEAZĂ
+                            let body4reindex = {
+                                source: {
+                                    index: idx
+                                },
+                                dest: {
+                                    index: nvs
+                                }
+                                // ,
+                                // script: {
+                                //     lang: 'painless',
+                                //     source: pscript
+                                // }
+                            };
+                            await esClient.reindex({
+                                waitForCompletion: true,
+                                refresh: true,
+                                body: body4reindex
+                            });
+
+                            // ATAȘEZ alias-ul noului index creat
+                            // https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#_indices_putalias
+                            await esClient.indices.putAlias({
+                                index: nvs,
+                                name: data.alsr
+                            });
+                            
+                            // ȘTERGE indexul vechi
+                            esClient.indices.delete({
+                                index: idx
+                            }, (error, r) => {
+                                if (error) {
+                                    logger.error(error);
+                                    console.log("Când să șterg indicele, am avut o eroare");
+                                };
+
+                                // _TODO: trimite datele noului index
+                                socket.emit('es7reidx', {newidx: nvs, oldidx: idx, deleted: r.body.acknowledged}); // trimit clientului datele
+                            });
+
+                        }).catch((err) => {
+                            if (err) {
+                                console.log("[es7-helper] Am eșuat crearea noului index cu următoarele detalii: ", err)
+                                logger.error(err);
+                            };
+                        });
+                    }
+                });
+            } else {
+                // dacă nu există, emite un mesaj de atenționare că ar trebui indexat de la 0. Vezi `reidxfrom0`
+                socket.emit('es7reidx', 'Nu s-a putut face reindexarea.');
+                console.log('Nu există alias-ul pentru care să se reindexeze!!!');
+            }
+        }).catch((err) => {
+            logger.log(err);
+            console.log('La reindexarea incrementală a apărut următoarea eroare: ', err.message);
+        });
+};
+
+exports.mgdb2es7 = function mgdb2es7 (es7, socket) {
+    /** 
+     * {
+     *  idx: "nume_index",
+     *  alsr: "nume_alias"
+     * }
     */
 
-    // Verifică existența alias-ului
-    let valEx = esClient.indices.existsAlias({name: RES_IDX_ALS});
+    esClient.indices.create({
+        index: es7.idx,
+        body: resursaRedES7
+    }).then((r) => {
+        // console.log("[es7-helper::esClient.indices.create] Rezultatul creării indicelui", r);
 
-    valEx.then((r) => {
-        console.log("Verificarea existenței alias-ului: ", r.statusCode);
-        // verifică dacă aliasul există. Dacă există, setează o variabilă cu numele actualului index.
+        // _FIXME: NU creează alias-ul
         if (r.statusCode == 200) {
-            // verifică cui index aparține alias-ul. 
-            esClient.cat.aliases({
-                name: RES_IDX_ALS,
-                format: "json"     
-            }, (err, r) => {
-                if (err) console.log(err);
-                console.log("Rezultatul interogării alias-urilor ", r.body[0].index);
-                RES_IDX_ES7 = r.body[0].index;
-                console.log("Acum RES_IDX_ES7 are valoarea: ", RES_IDX_ES7);
-                
-                // creează unul nou incrementând cifra din componența numelui
-                let baseNameIdx = RES_IDX_ES7.slice(0, -1);
-                let increasedV = parseInt(RES_IDX_ES7.slice(-1));
-                increasedV++;
-                let newBaseName = baseNameIdx + increasedV;
-                // Crează nou index. La momentul creării indexului, se va crea și alias-ul, care are același nume precum cel vechi.
-                esClient.indices.create({
-                    index: newBaseName,
-                    body: resursaRedES7
-                }).then(r => {
-                    console.log("Am creat indexul nou cu următorul detaliu: ", r.body);
-                    
-                    //TODO: Aici vei face reindexarea înregistrărilor din baza de date
-                    const cursor = Resursa.find({}).populate('competenteS').cursor();
-                    cursor.eachAsync(doc => {
-                        let obi = Object.assign({}, doc._doc);
-                        // verifică dacă există conținut
-                        var content2txt = '';
-                        if ('content' in obi) {
-                            content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                        }
-                        // indexează documentul
-                        const data = {
-                            id:               obi._id,
-                            date:             obi.date,
-                            idContributor:    obi.idContributor,
-                            emailContrib:     obi.emailContrib,
-                            uuid:             obi.uuid,
-                            autori:           obi.autori,
-                            langRED:          obi.langRED,
-                            title:            obi.title,
-                            titleI18n:        obi.titleI18n,
-                            arieCurriculara:  obi.arieCurriculara,
-                            level:            obi.level,
-                            discipline:       obi.discipline,
-                            disciplinePropuse:obi.disciplinePropuse,
-                            competenteGen:    obi.competenteGen,
-                            rol:              obi.rol,
-                            abilitati:        obi.abilitati,
-                            materiale:        obi.materiale,
-                            grupuri:          obi.grupuri,
-                            domeniu:          obi.demersuri,
-                            spatii:           obi.spatii,
-                            invatarea:        obi.invatarea,
-                            description:      obi.description,
-                            dependinte:       obi.dependinte,
-                            coperta:          obi.coperta,
-                            content:          content2txt,
-                            bibliografie:     obi.bibliografie,
-                            contorAcces:      obi.contorAcces,
-                            generalPublic:    obi.generalPublic,
-                            contorDescarcare: obi.contorDescarcare,
-                            etichete:         obi.etichete,
-                            utilMie:          obi.utilMie,
-                            expertCheck:      obi.expertCheck
-                        };
-                        // creează înregistrare nouă pentru fiecare document în parte
-                        esClient.create({
-                            id:      data.id,
-                            index:   RES_IDX_ALS,
-                            refresh: true,
-                            body:    data
-                        });
-                        // Ține contul documentelor procesate
-                        ++procesate;                   
-                    }).then((r) => {
-                        console.log("Am indexat un număr de ", procesate, " documente");
-                        process.exit();               
-                    }).catch(e => {
-                        if (e) {
-                            console.error(e, "M-am oprit la ", procesate, " documente");
-                        };
-                        process.exit();
-                    });
-                }).catch(e => {
-                    if (e) throw e;
-                });
+            esClient.indices.putAlias({
+                index: es7.idx,
+                name:  es7.alsr
+            }).then((r) => {
 
-                // Șterge indexul vechi
-                esClient.indices.delete({
-                    index: RES_IDX_ES7
-                }, (error, r) => {
-                    if (error) console.error(error);
-                    console.log("Am șters indexul ", RES_IDX_ES7, " vechi cu următoarele detalii: ", r.statusCode);
-                });
-            });
-        } else { 
-            // dacă alias-ul nu există, verifică dacă nu cumva există vreun index cu numele alias-ului. Dacă, da, șterge-l!
-            esClient.indices.exists({index: RES_IDX_ALS}).then(r => {
-                if (r.statusCode == 200){
-                    console.log("În schimb există indexul cu numele alias-ului!");
-                    esClient.indices.delete({
-                        index: RES_IDX_ALS
-                    }).then(r => {
-                        console.log("Rezultatul ștergerii indexului care avea numele alias-ului", r.statusCode);
-                        // are ca efect ștergerea indexului, cât și a alias-urilor acestuia.
-                    });
-                }
-            }).catch(e => console.error);
-            
-            // Verifică dacă nu cumva există deja indexul pe care vrei să-l creezi. 
-            // Dacă există, creează index nou cu versiune incrementată
-            // Reindexează înregistrările din baza de date și abia când totul este OK, șterge-l!
-            esClient.indices.exists({
-                index: RES_IDX_ES7
-            }).then(r => {
-                if(r.statusCode == 200){
-                    console.log("Indexul deja există și se procedează la crearea unuia nou.");
-                    
-                    // creează-l din nou incrementând cifra din componența numelui
-                    let baseNameIdx = RES_IDX_ES7.slice(0, -1);
-                    let increasedV = parseInt(RES_IDX_ES7.slice(-1));
-                    increasedV++;
-                    let newBaseName = baseNameIdx + increasedV;
-                    console.log("Noul nume al indexului este: ", newBaseName);
+                // console.log("[es7-helper] Rezultatul creării alias-ului", r);
 
-                    // Crează nou index. La momentul creării indexului, se va crea și alias-ul, care are același nume precum cel vechi.
-                    esClient.indices.create({
-                        index: newBaseName,
-                        body: resursaRedES7
-                    }).then(r => {
-                        console.log("Am creat indexul nou cu următorul detaliu: ", r.body);
-                        
-                        //TODO: Aici vei face reindexarea înregistrărilor din baza de date
-                        const cursor = Resursa.find({}).populate('competenteS').cursor();
-                        cursor.eachAsync(doc => {
-                            let obi = Object.assign({}, doc._doc);
-                            // verifică dacă există conținut
-                            var content2txt = '';
-                            if ('content' in obi) {
-                                content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                            }
-                            // indexează documentul
-                            const data = {
-                                id:               obi._id,
-                                date:             obi.date,
-                                idContributor:    obi.idContributor,
-                                emailContrib:     obi.emailContrib,
-                                uuid:             obi.uuid,
-                                autori:           obi.autori,
-                                langRED:          obi.langRED,
-                                title:            obi.title,
-                                titleI18n:        obi.titleI18n,
-                                arieCurriculara:  obi.arieCurriculara,
-                                level:            obi.level,
-                                discipline:       obi.discipline,
-                                disciplinePropuse:obi.disciplinePropuse,
-                                competenteGen:    obi.competenteGen,
-                                rol:              obi.rol,
-                                abilitati:        obi.abilitati,
-                                materiale:        obi.materiale,
-                                grupuri:          obi.grupuri,
-                                domeniu:          obi.demersuri,
-                                spatii:           obi.spatii,
-                                invatarea:        obi.invatarea,
-                                description:      obi.description,
-                                dependinte:       obi.dependinte,
-                                coperta:          obi.coperta,
-                                content:          content2txt,
-                                bibliografie:     obi.bibliografie,
-                                contorAcces:      obi.contorAcces,
-                                generalPublic:    obi.generalPublic,
-                                contorDescarcare: obi.contorDescarcare,
-                                etichete:         obi.etichete,
-                                utilMie:          obi.utilMie,
-                                expertCheck:      obi.expertCheck
-                            };
-                            esClient.create({
-                                id:      data.id,
-                                index:   RES_IDX_ALS,
-                                refresh: true,
-                                body:    data
-                            });
-                            // Îne contul celor procesate
-                            ++procesate;                        
-                        }).then((r) => {
-                            console.log("Am indexat un număr de ", procesate, " documente");                       
-                        }).catch(e => {
-                            if (e) {
-                                console.error(e, "M-am oprit la ", procesate, " documente");
-                            };
-                            process.exit();
-                        });
-                    }).catch(e => {
-                        if (e) {
-                            console.error(e)
-                        };
-                    });
 
-                    // Șterge indexul vechi
-                    esClient.indices.delete({
-                        index: RES_IDX_ES7
-                    }, (error, r) => {
-                        if (error) console.error(error);
-                        console.log("Am șters indexul vechi cu următoarele detalii: ", r);
-                    });
-                }
-            })
-            // Creează indexul nou
-            esClient.indices.create({
-                index: RES_IDX_ES7,
-                body: resursaRedES7
-            }).then((result) => {
-                console.log("Am creat nou index cu următorul rezultat: ", result.body);
+                // _FIXME: NU SE FACE INDEXAREA CORECT. SUNT INDEXATE DOCs DIN COLECȚIA FIXA A RESURSELOR. FĂ UN MOTOR DE DISCRIMINARE
+                // Inițiază un cursor MongoDB
                 const cursor = Resursa.find({}).populate('competenteS').cursor();
-                cursor.eachAsync(doc => {
+                cursor.eachAsync(async (doc) => {
                     let obi = Object.assign({}, doc._doc);
                     // verifică dacă există conținut
                     var content2txt = '';
                     if ('content' in obi) {
                         content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
                     }
+
                     // indexează documentul
                     const data = {
                         id:               obi._id,
@@ -559,48 +480,43 @@ exports.reidx = function reidx (data) {
                         utilMie:          obi.utilMie,
                         expertCheck:      obi.expertCheck
                     };
-                    // creează înregistrare nouă pentru fiecare document
-                    esClient.create({
+                    await esClient.create({
                         id:      data.id,
-                        index:   RES_IDX_ALS,
+                        index:   es7.idx,
                         refresh: true,
                         body:    data
                     });
-                    // Ține contul celor procesate
-                    ++procesate;
-                }).then((r) => {
-                    console.log("Am indexat un număr de ", procesate, " documente");
-                    process.exit();                       
-                }).catch(e => {
-                    if (e) {
-                        console.error(e, "M-am oprit la ", procesate, " documente");
-                    };
-                    process.exit();
+                    // Ține contul documentelor procesate
+                    ++procesate;                    
                 });
-            }).catch(e => console.error);
+                console.log(`Am indexat un număr de ${procesate} documente`);
+            }).catch((e) => {
+                console.error("Nu s-a putut face indexarea", e);
+            });
         }
-    }).catch(e => console.error);
+    }).catch(e => {
+        console.error(e, `M-am oprit la ${procesate} documente`);
+    });
 }
 
-exports.reidxincr = function reidxincr () {
-        // promisiune de verificare alias
-        let valEx = esClient.indices.existsAlias({name: RES_IDX_ALS});
-        valEx.then((r) => {
-            if (r.statusCode == 200) {
-                // dacă aliasul există, procedează la reindexare
-                // verifică cui index aparține alias-ul.
-                esClient.cat.aliases({
-                    name: RES_IDX_ALS,
-                    format: "json"     
-                }, (err, r) => {
-                    if (err) console.error;
-                    console.log("Rezultatul interogării alias-urilor ", r.body[0].index);
-                });
-            } else {
-                // dacă nu există, emite un mesaj de atenționare că ar trebui indexat de la 0. Vezi `reidxfrom0`
-                console.log('Nu există alias-ul pentru care să se reindexeze!!!');
-            }
-        }).catch((err) => {
-            console.log('La reindexarea incrementală a apărut următoarea eroare: ', err.message);
-        });
-};
+/*
+CE dorim să indexăm in ES
+Unde creăm structura de evidență a fișierelor ce reprezintă mapping-urile? R: Un Map creat chiar în /models și pe care apoi îl încarci aici.
+Cum fac require dinamic la fișierele de mapping? Cum faci un require dinamic în Node?
+*/
+
+
+/**
+ *Funcția creează index, alias-ul acestuia în baza unui mapping existent
+ *
+ * @param {*} data
+ */
+function createIdxAls (data) {
+    /*
+        {
+            idx: "nume_index",
+            als: "nume_alias",
+            mpg: "nume_mapping"
+        }
+    */
+}

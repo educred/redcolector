@@ -3,6 +3,7 @@ global.CronJob = require('./util/cron'); // CRON -> programarea side ops-urilor
 
 const os             = require('os');
 const path           = require('path');
+const crypto         = require('crypto');
 const devlog         = require('morgan');
 const logger         = require('./util/logger');
 const compression    = require('compression');
@@ -20,27 +21,23 @@ const responseTime   = require('response-time');
 const RedisStore     = require('connect-redis')(session);
 
 const hbs            = require('express-hbs');
-const app            = express();
-const http           = require('http').createServer(app);
+// const app            = express();
+// const http           = require('http').createServer(app);
 
 const cors           = require('cors');
 const favicon        = require('serve-favicon');
-const { v1: uuidv1 } = require('uuid'); // https://github.com/uuidjs/uuid#deep-requires-now-deprecated
-const i18n           = require('i18n');
+
+// CREAREA APLICAȚIEI
+const httpserver = require('./util/httpserver');
+const app        = httpserver.app();
+const http       = httpserver.http(app);
 
 /* === TIMP RĂSPUNS ÎN HEADER === */
 app.use(responseTime());
 
-/* === ÎNCĂRCAREA RUTELOR NEPORTEJATE === */
-let login          = require('./routes/login');
-let signupLoco     = require('./routes/signup');
-
-/* === I18N === */
-i18n.configure({
-    locales: ['en', 'hu', 'de', 'ua', 'pl'],
-    cookie: 'locale',
-    directory: __dirname + "/locales"
-});
+/* === ÎNCĂRCAREA RUTELOR NEPROTEJATE === */
+let login      = require('./routes/login');
+let signupLoco = require('./routes/signup');
 
 /* === MONGOOSE === */
 const mongoose = require('./mongoose.config');
@@ -71,16 +68,16 @@ app.use(helmet({
 })); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
 // https://helmetjs.github.io/docs/dont-sniff-mimetype/
 
+/* === PROXY SUPPORT === */
+app.enable('trust proxy');
+
 // Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
 // see https://expressjs.com/en/guide/behind-proxies.html
 // app.set('trust proxy', 1);
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
 });
-
-/* === PROXY SUPPORT === */
-app.enable('trust proxy');
 
 // apply to all requests
 app.use('/api/', limiter);
@@ -107,15 +104,12 @@ app.use(flash()); // acum ai acces în rute la `req.flash()`.
 /* === SESIUNI === */
 app.use(cookies()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names
 
-/* === INIȚIALIZARE I18N === */
-app.use(i18n.init); // instanțiere modul i18n - este necesar ca înainte de a adăuga acest middleware să fie cerut cookies
-
 // creează sesiune - https://expressjs.com/en/advanced/best-practice-security.html
 let sessionMiddleware = session({
     name: process.env.APP_NAME,
     secret: process.env.COOKIE_ENCODING,
     genid: function(req) {
-        return uuidv1(); // use UUIDs for session IDs
+        return crypto.randomUUID({disableEntropyCache : true}); // pentru ID-urile de sessiune, folosește UUID-uri
     },
     store: new RedisStore({client: redisClient}),
     unref:  true,
@@ -160,47 +154,13 @@ app.use(function (req, res, next) {
 });
 
 /* === PASSPORT === */
+const UserPassport = require('./routes/controllers/user.ctrl')(passport);
 app.use(passport.initialize()); // Instanțiază Passport
-app.use(passport.session()); // restaurează starea sesiunii dacă aceasta există
+app.use(passport.session());    // restaurează starea sesiunii dacă aceasta există
 
-/* === SERVER SOCKET.IO === */
-// #1 Creează server prin atașarea celui existent
-const corsOptsSockets = {
-    origin: "",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["_csrf"],
-    credentials: true
-};
-// conectează-te cu Redis
-const adapter = require('socket.io-redis');
-const CONFIG_ADAPTER = {
-    host: '',
-    port: 6379
-};
-// Cazul rulării pe volume și cel curent (nodemon?!)
-if (process.env.APP_RUNTIME === 'virtual') {
-    corsOptsSockets.origin = 'http://' + process.env.DOMAIN_VIRT + ':' + process.env.PORT;
-    CONFIG_ADAPTER.host = 'redis'
-} else {
-    corsOptsSockets.origin = 'http://' + process.env.DOMAIN;
-    CONFIG_ADAPTER.host = '127.0.0.1'
-}
-const io = require('socket.io')(http, {
-    cors: corsOptsSockets,
-    maxHttpBufferSize: 1e8,
-    pingTimeout: 30000,
-    transports: [ "websocket", "polling" ]
-});
-// #2 Creează un wrapper de middleware Express pentru Socket.io
-function wrap (middleware) {
-    return function matcher (socket, next) {
-        middleware (socket.request, {}, next);
-    };
-};
-// #3 conectarea cu Redis
-const redisAdapter = adapter(CONFIG_ADAPTER);
-io.adapter(redisAdapter);
-io.use(wrap(sessionMiddleware));
+// CREAREA SOCKET.IO
+const io = require('./util/socketserver')(http, sessionMiddleware);
+
 // conectarea obiectului sesiune ca middleware în tratarea conexiunilor socket.io (ALTERNATIVĂ, nu șterge)
 // io.use(function clbkIOuseSessions(socket, next) {
 //     sessionMiddleware(socket.request, socket.request.res, next);
@@ -215,17 +175,8 @@ require('./routes/sockets')(io);
 let upload = require('./routes/upload')(io);
 app.use('/upload', upload);
 // SIGNUP
-app.use('/signup', signupLoco); // SIGNUP!!!
-
+app.use('/signup', signupLoco);
 // LOGIN
-const UserSchema = require('./models/user');
-const { shutdown, server_info } = require('./redis.config');
-const UserDetails = mongoose.model('users', UserSchema);
-
-/* === PASSPORT middleware === */
-passport.use(UserDetails.createStrategy()); // echivalentul lui passport.use(new LocalStrategy(Account.authenticate()));
-passport.serializeUser(UserDetails.serializeUser());
-passport.deserializeUser(UserDetails.deserializeUser());
 app.use('/login', login);
 
 /* LOGGING CU MORGAN */
@@ -237,7 +188,7 @@ const csurfProtection = csurf({
         key: '_csrf',
         path: '/',
         httpOnly: false,
-        secure: false, // dacă folosești HTTPS setează la true
+        secure: false, // dacă folosești HTTPS direct din aplicație, setează la true
         signed: false, // în caz de signed cookies, setează la true
         sameSite: 'strict', // https://www.owaspsafar.org/index.php/SameSite
         maxAge: 24 * 60 * 60 * 1000, // 24 ore
@@ -246,11 +197,12 @@ const csurfProtection = csurf({
 });
 
 app.use(csurfProtection); // activarea protecției la CSRF
-// tratează erorile apărute
+
+// ERORI CSRF transmitere token
 app.use(function (err, req, res, next) {
     if (err.code !== 'EBADCSRFTOKEN') return next(err);
     // gestionarea erorilor CSRF token:
-    res.status(403).send('Sockets.io nu trimite înapoi tokenul!!!');
+    res.status(403).send(`Cererea ${req.url} are o eroare și nu trimite token în client.`);
 });
 
 //https://github.com/expressjs/csurf/issues/21
@@ -265,7 +217,6 @@ hbs.registerHelper('json', function clbkHbsHelperJSON (obi) {
     return JSON.stringify(obi);
 });
 app.engine('hbs', hbs.express4({
-    i18n: i18n,
     partialsDir: __dirname + '/views/partials',
     layoutsDir:  __dirname + '/views/layouts',
     beautify: true
@@ -285,7 +236,6 @@ function shouldCompress (req, res) {
 app.use(compression({ filter: shouldCompress }));
 
 /* === ÎNCĂRCAREA RUTELOR === */
-const UserPassport = require('./routes/controllers/user.ctrl')(passport);
 let index          = require('./routes/index');
 let authG          = require('./routes/authGoogle/authG');
 let callbackG      = require('./routes/authGoogle/callbackG');
@@ -298,10 +248,10 @@ let resursepublice = require('./routes/resursepublice');
 let profile        = require('./routes/profile');
 let tags           = require('./routes/tags');
 let help           = require('./routes/help');
-let apiv1          = require('./routes/apiV1');
+let api            = require('./routes/apiV1');
 
 // === MIDDLEWARE-ul RUTELOR ===
-app.use('/api/v1',         apiv1); // accesul la prima versiune a api-ului
+app.use('/api/v1',         passport.authenticate('jwt', { session: false }), api); // accesul la prima versiune a api-ului
 app.use('/auth',           authG);
 app.use('/callback',       callbackG);
 app.use('/logout',         logout);
@@ -337,7 +287,6 @@ app.get('/500', function(req, res){
         mesaj:    "Probleme legate de funcționare internă a serverului. Mergi la secțiunea de interes în câteva secunde."
     });
 });
-
 
 //=== 404 - NEGĂSIT ===
 app.use('*', function (req, res, next) {
@@ -478,13 +427,3 @@ function shutdownserver () {
         process.exit(1);
     });
 }
-
-module.exports = app;
-
-/* === LOGGER MORGAN === */
-// app.use(devlog('dev', {
-//     skip: function (req, res) {
-//         return res.statusCode < 400;
-//     }
-// }));
-// app.use(devlog('dev')); // Activează doar atunci când faci dezvoltare...

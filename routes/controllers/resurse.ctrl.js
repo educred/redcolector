@@ -3,7 +3,7 @@ require('dotenv').config();
 /* === DEPENDINȚE === */
 const moment       = require('moment');
 const redisClient  = require('../../redis.config');
-const {v4: uuidv4} = require('uuid');
+const crypto       = require('crypto');
 const logger       = require('../../util/logger');
 /* === LIVRESQ - CONNECTOR === */
 const LivresqConnect = require('../../models/livresq-connect').LivresqConnect;
@@ -223,7 +223,7 @@ exports.loadOneResource = function loadOneResource (req, res, next) {
 exports.describeResource = function describeResource (req, res, next) {
     const cookieObj = cookieHelper.cock2obj(req.headers.cookie);
     // Unică sursă de identificator
-    let uuid = uuidv4();
+    let uuid = crypto.randomUUID({disableEntropyCache : true});
     // console.log("Sesiunea de la /resurse/adaugă arată așa: ", req.session);
     // pentru evitarea dependițelor din CDN-uri, se vor încărca dinamic scripturile necesare generării editorului
     let scripts = [

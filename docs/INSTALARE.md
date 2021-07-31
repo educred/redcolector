@@ -95,7 +95,6 @@ build environment:
     distarch: x86_64
     target_arch: x86_64
 ```
-
 #### Securizează MongoDB
 
 După instalarea MongoDB, asigură-te că funcționează.
@@ -233,7 +232,6 @@ Instalează Elastisearch rulând comanda `sudo apt install elasticsearch`. După
 În acest moment ești gata să pornești pentru prima dată serverul de Elastisearch rulând `sudo systemctl start elasticsearch.service`. Dacă totul funcționează ok, răspunsul în browser la adresa `http://localhost:9200/` ar trebui să fie un obiect. Poți rula repede din comandă `curl -X GET "localhost:9200/"`. În cazul în care la interogare, este returnat un mesaj *failed to connect* trebuie să mai aștepți puțin pentru ca serverul să pornească. Elasticsearch are nevoie de ceva timp pentru a porni.
 
 Dacă erorile persistă, poți investiga folosind comanda `sudo journalctl -u elasticsearch`.
-
 ## Aducerea resurselor de pe Github
 
 Pentru a avea deja resursele descărcate, trebuie setat subdirectorul din `/var/www/numeSite`.
@@ -252,7 +250,6 @@ git remote add origin git@github.com:kosson/redcolector.git
 git fetch origin
 git checkout master
 ```
-
 ### Instalarea resurselor cu npm
 
 Imediat după aducerea resurselor de pe Github, este indicată instalarea din consola serverului a dependințelor externe necesare. Se va executa `npm install`.
@@ -264,7 +261,6 @@ Toate dependințele necesare specificate în fișierul `assets.js` din rădăcin
 **DataTable**
 
 Aceste dependințe sunt necesare pentru a realiza mediul de prezentare a datelor în format tabelar.
-
 
 ### Crearea fișierului `.env`
 
@@ -448,6 +444,10 @@ Este necesar să reîncerci setările folosind următoarea secvență de comenzi
 ```bash
 sudo systemctl reload nginx
 ```
+
+### Generează cheile necesare semnării JWT-urilor
+
+În subdirectorul `assets/keys`, înainte de a rula aplicația, rulează scriptul `node generateKeyPairs.js`. Aces pas este necesar pentru a crea cheile de emitere și verificare a JWT-urilor cu care operezi pe rutele API-ului. 
 
 ### Introducerea datelor în baza de date
 

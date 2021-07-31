@@ -1,17 +1,11 @@
 require('dotenv').config();
 /* === DEPENDINȚE === */
-const express = require('express');
-const router  = express.Router();
-const passport= require('passport');
-const mongoose = require('mongoose');
-const connectEnsureLogin = require('connect-ensure-login');
-const LocalStrategy = require('passport-local').Strategy;
-
+const express  = require('express');
+const router   = express.Router();
+const passport = require('passport');
+const jwt      = require('jsonwebtoken');
 // CONSTANTE
 const LOGO_IMG = "img/" + process.env.LOGO;
-
-// Încarcă controlerul necesar tratării rutelor de autentificare
-const UserPassport = require('./controllers/user.ctrl')(passport);
 
 /* === LOGIN [GET] === */
 router.get('/', (req, res, next) => {
@@ -39,9 +33,33 @@ router.get('/', (req, res, next) => {
     });
 });
 
-/* === LOGIN [POST] ===*/ // passport.authenticate('local', {failureRedirect: '/login'}),
-router.post('/',  passport.authenticate('local', { failureRedirect: '/login'}), (req, res, next) => {
-    // console.log("Din login.js avem din req.body pe /login: ", req.body);
+// Emite JWT-ul!
+let {issueJWT} = require('./utils/password');
+/* === LOGIN [POST] ===*/
+router.post('/',  async (req, res, next) => {
+    console.log("Din login.js avem din req.body pe /login: ", req.body, 'USER este ', req.user, req.cookies);
+
+    passport.authenticate('login', async (err, user, info) => {
+        try {
+            if(err || !user) {
+                const error = new Error('Ceva nu funcționează');
+                return next(error);
+            }
+            req.login(user, {session: false}, async (error) => {
+                if (error) return next(error);
+                const body = {_id: user._id, email: user.email};
+                const token = jwt.sign({user: body}, process.env.JWT_SECRET);
+                return res.json({token});
+            });
+        } catch(err) {
+            return next(err);
+        }
+    })(req, res, next);
+
+
+
+    // res.status(200).send().json({token: issueJWT({_id:})});
+    // res.status(200).json({token: 'Aici va fi'});
     res.redirect('/');
 });
 

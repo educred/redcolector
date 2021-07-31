@@ -5,13 +5,10 @@ const router     = express.Router();
 const passport   = require('passport');
 const mongoose   = require('mongoose');
 const UserSchema = require('../models/user');
-const connectEnsureLogin = require('connect-ensure-login');
+const logger     = require('../util/logger');
 // Încarcă controlerul necesar tratării rutelor de autentificare
 const UserPassport = require('./controllers/user.ctrl')(passport);
 const UserDetails  = mongoose.model('users', UserSchema, 'users');
-passport.use(UserDetails.createStrategy());
-passport.serializeUser(UserDetails.serializeUser());
-passport.deserializeUser(UserDetails.deserializeUser());
 
 // CONSTANTE
 const LOGO_IMG = "img/" + process.env.LOGO;
@@ -32,7 +29,8 @@ router.get('/', function clbkSignUpGet (req, res, next) {
 
 /* === SIGNUP [POST] ===*/
 router.post('/', function clbkPostSignUp (req, res, next) {
-    // aici creezi contul!
+    // Crearea contului!!!
+    // metoda este atașată de pluginul `passport-local-mongoose` astfel: schema.statics.register
     UserDetails.register(new UserDetails({
         _id: mongoose.Types.ObjectId(),
         username: req.body.email, 
@@ -42,14 +40,20 @@ router.post('/', function clbkPostSignUp (req, res, next) {
             public: false,
             rolInCRED: ['general']
         }
-    }), req.body.password, function (err, user) {
-        if (err) console.error(err);
+    }), req.body.password, function clbkAuthLocal (err, user) {
+        if (err) {
+            logger.error(err);
+            console.log('[signup::post]', err);
+        };
+        // dacă nu este nicio eroare, testează dacă s-a creat corect contul, făcând o autentificare
         var authenticate = UserDetails.authenticate();
-        authenticate(req.body.email, req.body.password, function(err, result) {
+        authenticate(req.body.email, req.body.password, function clbkAuthTest (err, result) {
             if (err) {
-                console.error(err);
+                logger.error(err);
+                console.error('[signup::post::authenticate]', err);
                 return next(err);
             }
+            // în cazul în care autentificarea a reușit, trimite userul să se logheze.
             if (result) {
                 res.redirect('/login');
             }

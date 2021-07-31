@@ -61,12 +61,12 @@ function clbkIndices (r) {
             // setează valorile în Redis
             switch (alsr) {
                 case "users":
-                    redisClient.set( process.env.APP_NAME + ":red:" + "USR_IDX_ES7", d); // se creează o cheie redcolector:red:USR_IDX_ES7
-                    redisClient.set( process.env.APP_NAME + ":red:" + "USR_IDX_ALS", alsr);
+                    redisClient.hset( process.env.APP_NAME + ":es", "USR_IDX_ES7", d); // se creează o cheie redcolector:red:USR_IDX_ES7
+                    redisClient.hset( process.env.APP_NAME + ":es", "USR_IDX_ALS", alsr);
                     break;
                 case "resedus":
-                    redisClient.set( process.env.APP_NAME + ":red:" + "RES_IDX_ES7", d);
-                    redisClient.set( process.env.APP_NAME + ":red:" + "RES_IDX_ALS", alsr);
+                    redisClient.hset( process.env.APP_NAME + ":es", "RES_IDX_ES7", d);
+                    redisClient.hset( process.env.APP_NAME + ":es", "RES_IDX_ALS", alsr);
                     break;
             }
         }
