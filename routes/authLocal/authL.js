@@ -69,6 +69,4 @@ passport.deserializeUser(function (id, done) {
 });
 
 // passport.use(new LocalStrategy(customFields, verifyClbk)); // FOLOSEȘTE DOAR CÂND CÂMPURILE SUNT DIFERITE! Configurează `customFields` cu numele noi din form.
-passport.use(new LocalStrategy(verifyClbk));
-
-// _FIXME: Exportă doar strategia pentru a o putea folosi mai departe sub alte denumiri.
+passport.use(new LocalStrategy(verifyClbk)); // folosit în /routes/controllers/user.ctrl.js

@@ -6,7 +6,6 @@ const redisClient   = require('../redis.config');
 const schema        = require('./resursa-red-es7');
 const editorJs2TXT  = require('../routes/controllers/editorJs2TXT'); 
 const ES7Helper     = require('./model-helpers/es7-helper');
-const globby        = require('globby');
 const logger        = require('../util/logger');
 
 /* INDECȘII ES7 */
@@ -191,11 +190,6 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
     next();
 });
 
-
-
-     
-
-
 /* === CAZUL ÎN CARE SUNT CĂUTATE MAI MULTE ÎNREGISTRĂRI SAU UNA SINGURĂ ==== */
 
 /**
@@ -307,8 +301,6 @@ function clbkResFindPostHookREDschema (doc, next) {
 
 // Adăugare middleware pe `post` pentru toate operațiunile `find`
 // ResursaSchema.post(/^find/, clbkResFindPostHookREDschema);
-
-
 
 // Resursa.methods.nume_metodă = function () {}; // metodă care poate fi folosită pe un singur obiect instanțiat în baza schemei. obiectul adus din bază!!!
 // Resursa.static.nume_metodă = function () {}; // metodă care poate fi folosită pe model

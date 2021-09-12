@@ -41,7 +41,7 @@ router.get('/', function clbkRootRoute (req, res, next) {
             {script: '/lib/npm/holder.min.js'},            
             {script: '/lib/npm/bootstrap.bundle.min.js'},
             {script: '/js/custom.js'},
-            // {script: '/js/index.js'}
+            {script: '/js/IndexInfotoken.js'}
         ];
 
         let modules = [

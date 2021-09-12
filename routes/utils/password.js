@@ -1,12 +1,9 @@
 /* === DEPENDINȚE === */
-const fs           = require('fs');
-const crypto       = require('crypto');
-const path         = require('path');
-const jsonwebtoken = require('jsonwebtoken');
-
-// Citește cheia privată
-const path2key     = path.join(__dirname, '../../assets/keys/', 'id_rsa_priv.pem');
-const PRIV_KEY     = fs.readFileSync(path2key, 'utf8');
+require('dotenv').config();
+const fs     = require('fs');
+const crypto = require('crypto');
+const path   = require('path');
+const jwt    = require('jsonwebtoken');
 
 /**
  * Funcția are rolul de a genera un hash pe textul parolei
@@ -29,28 +26,51 @@ function validPassword (password, hash, salt) {
     return hash === hashVerify;
 }
 
+// Citește cheia privată
+const path2key = path.join(__dirname, '../../assets/keys/', 'id_rsa_priv.pem');
+const PRIV_KEY = fs.readFileSync(path2key, 'utf8');
 /**
  * Funcția generează un JWT pentru a fi trimis userului ca răspuns la autentificarea cu succes
- * @param {Object} user Este obiectul `user` din `req.user` pe care-l creează `passport`
+ * @param {*} user Este obiectul `user` din `req.user` pe care-l creează `passport`
  */
-function issueJWT (user) {
+function issueJWT (user, res) {
     const _id       = user._id;
-    const expiresIn = '1d';
+    const expiresIn = new Date().setDate(new Date().getDate() + 1);
     const payload   = {
         sub: _id,
         iss: process.env.APP_NAME,
         aud: process.env.FQDN,
-        iat: Date.now()
+        iat: new Date().getTime(),
+        exp: expiresIn
     };
 
     // creează JWT-ul semnat folosind cheia privată
-    const signedToken = jsonwebtoken.sign(payload, PRIV_KEY, { expiresIn: expiresIn, algorithm: 'RS256' });
+    const token = jwt.sign(payload, PRIV_KEY, { algorithm: 'RS256' });
 
     return {
-        token:   "Bearer " + signedToken,
+        token:   token,
         expires: expiresIn
     };
 }
+
+function authenticateJWT (req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+
+        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+            if (err) {
+                return res.sendStatus(403);
+            }
+
+            req.user = user;
+            next();
+        });
+    } else {
+        res.sendStatus(401);
+    }
+};
 
 module.exports.validPassword    = validPassword; 
 module.exports.generatePassword = generatePassword;

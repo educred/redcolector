@@ -1,3 +1,11 @@
+Choose which packages to update. @fortawesome/fontawesome-free@5.15.4, multer@1.4.3, pm2@5.1.1, supertest@6.1.6, autoprefixer@10.3.4, @elastic/elasticsearch@7.14.1, bootstrap@5.1.1, datatables.net@1.11.2, datatables.net-dt@1.11.2, elasticdump@6.73.2, isomorphic-git@1.10.0, mocha@9.1.1, socket.io@4.2.0, socket.io-client@4.2.0, webpack-cli@4.8.0, datatables.net-buttons@2.0.0, datatables.net-buttons-dt@2.0.0, globby@12.0.2, mongoose@6.0.5
+
+$ npm install --save @fortawesome/fontawesome-free@5.15.4 multer@1.4.3 pm2@5.1.1 supertest@6.1.6 @elastic/elasticsearch@7.14.1 bootstrap@5.1.1 datatables.net@1.11.2 datatables.net-dt@1.11.2 elasticdump@6.73.2 isomorphic-git@1.10.0 mocha@9.1.1 socket.io@4.2.0 socket.io-client@4.2.0 datatables.net-buttons@2.0.0 datatables.net-buttons-dt@2.0.0 globby@12.0.2 mongoose@6.0.5 --color=always
+
+
+
+
+
 Update-uri
 
 Patch Update Backwards-compatible bug fixes.

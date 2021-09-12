@@ -38,16 +38,17 @@ app.use(responseTime());
 /* === ÎNCĂRCAREA RUTELOR NEPROTEJATE === */
 let login      = require('./routes/login');
 let signupLoco = require('./routes/signup');
+let api        = require('./routes/apiV1');
 
 /* === MONGOOSE === */
 const mongoose = require('./mongoose.config');
 
 /* === ELASTICSEARCH env === */
 const esClient = require('./elasticsearch.config');
-esClient.on('sniff', (err, req) => {
-    // console.log('ES7 sniff: ', err ? err.message : '', `${JSON.stringify(req.meta.sniff)}`);
-    // console.log('ES7 sniff: ', err ? logger.error('La inițializarea conexiunii ES7 a apărut eroarea: ', err.message) : 'Nicio problemă detectată la inițializare!!! All norminal 👌');
-});
+// esClient.on('sniff', (err, req) => {
+//     console.log('ES7 sniff: ', err ? err.message : '', `${JSON.stringify(req.meta.sniff)}`);
+//     console.log('ES7 sniff: ', err ? logger.error('La inițializarea conexiunii ES7 a apărut eroarea: ', err.message) : 'Nicio problemă detectată la inițializare!!! All norminal 👌');
+// });
 
 // process.report.writeReport('./report.json');
 
@@ -178,6 +179,8 @@ app.use('/upload', upload);
 app.use('/signup', signupLoco);
 // LOGIN
 app.use('/login', login);
+// API v.1
+app.use('/api/v1', api); // accesul la prima versiune a api-ului
 
 /* LOGGING CU MORGAN */
 app.use(devlog('dev'));
@@ -248,10 +251,8 @@ let resursepublice = require('./routes/resursepublice');
 let profile        = require('./routes/profile');
 let tags           = require('./routes/tags');
 let help           = require('./routes/help');
-let api            = require('./routes/apiV1');
 
 // === MIDDLEWARE-ul RUTELOR ===
-app.use('/api/v1',         passport.authenticate('jwt', { session: false }), api); // accesul la prima versiune a api-ului
 app.use('/auth',           authG);
 app.use('/callback',       callbackG);
 app.use('/logout',         logout);

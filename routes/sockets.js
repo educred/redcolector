@@ -1115,12 +1115,12 @@ module.exports = function sockets (io) {
         });
 
         // === REINDEXARE ES7 ===
-        socket.on('es7reidx', function handlerWrapper (data) {
+        socket.on('es7reidx', function es7reidxHandle (data) {
             return reidxincr(data, socket);
         });
 
         // === INDEX MONGODB RECs ===
-        socket.on('mgdb2es7', function handleWrapper (data) {
+        socket.on('mgdb2es7', function mgdb2es7Handle (data) {
             return mgdb2es7(data, socket);
         });
         
@@ -1129,6 +1129,7 @@ module.exports = function sockets (io) {
 
         // === STATS::MONGODB ===
         socket.on('mgdbstat', () => {
+            // console.log(`[socket.js::mgdbstat] Lista conecxiunilor`, mongoose.connection.db.listCollections());
             mongoose.connection.db.listCollections().toArray(statDataMgdb);
         });
 
@@ -1255,13 +1256,14 @@ module.exports = function sockets (io) {
             Promise.all(proms).then((r) => {
                 socket.emit("mgdbstat", r);
             }).catch((err) => {
+                console.log(`[socket::mgdbstat::statDataMgdb()]A apărut eroarea`, err);
                 logger.error(`[socket::mgdbstat::statDataMgdb()]A apărut eroarea ${err}`);
             });
         };
 
         // === ALLRES === ::TOATE RESURSELE
         socket.on('allRes', () => {
-            // FIXME: La un moment dat, când vei cere allRes, vor fi zeci de mii!!! Trebuie trimis un subset. Fă un bucketing pe MongoDB și adu agregate pe user!
+            // _FIXME: La un moment dat, când vei cere allRes, vor fi zeci de mii!!! Trebuie trimis un subset. Fă un bucketing pe MongoDB și adu agregate pe user!
             Resursa.find({}).exec().then(allRes => {
                 socket.emit('allRes', allRes);
             }).catch((err) => {

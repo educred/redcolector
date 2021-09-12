@@ -29,9 +29,7 @@ redisClient.get("USR_IDX_ALS", (err, reply) => {
 });
 
 // Definirea unei scheme necesare verificării existenței utilizatorului.
-var Schema = mongoose.Schema;
-var User = new Schema({
-    _id: Schema.Types.ObjectId,
+let User = new mongoose.Schema({
     created:  Date,
     avatar: String,
     email: {
@@ -64,7 +62,9 @@ var User = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'comment'
     },
-    token: String
+    token: String,
+    salt: String,
+    hash: String
 },{
     toJSON: {
         virtuals: true
@@ -196,3 +196,4 @@ User.static.findByCredentials = async (email, password) => {
 };
 
 module.exports = User;
+// module.exports = mongoose.model('User', User);

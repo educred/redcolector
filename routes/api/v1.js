@@ -5,7 +5,7 @@ const RedModel      = require('../../models/resursa-red');
 const passport      = require('passport');
 const localStrategy = require('passport-local').Strategy;
 const UserSchema    = require('../../models/user');
-const UserDetails   = mongoose.model('users', UserSchema, 'users');
+const UserModel   = mongoose.model('users', UserSchema, 'users');
 const {clbkLogin}   = require('../authLocal/authL');
 const logger        = require('../../util/logger');
 
@@ -21,7 +21,7 @@ exports.getREDs = asyncHandler(async function getREDs (req, res, next) {
         // ACL
         let roles = ["user", "validator", "cred"];
 
-        // poți pune în parametrii query criterii de rafinare a rezultatelor, 
+        // poți pune în parametrii query criterii de rafinare a rezultatelor,
         // de ex: /resurse?accesari[lte]=100 sau ?accesari[gt]=10 sau ?accesari[gt]=10& sau ?accesari[gt]=10&util=true
         // sau poți introduce câmpurile necesare unui select, precum în ?accesari[gt]=10&util=true&select=nume,varsta
         let query;
@@ -119,16 +119,18 @@ exports.getRED = asyncHandler(async function getRED (req, res, next) {
 // @route  POST /api/v1/postRED/:idUser
 // @access privat
 exports.postRED = asyncHandler(async function postRED (req, res, next) {
+        console.log("Dacă primesc userul, ar trebui să am", req.user);
+
         // ACL
-        let roles = ["user", "validator", "cred"];
+        let roles = ["admin", "user", "validator", "cred"];
+
+        // dacă este admin, să poată încărca în subdirectorul oricărui utilizator.
+        // dacă nu este admin, să poată încărca doar în propriul user
 
         // pe cerere vom avea id-ul utilizatorui -> req.user.id
-        const red = await RedModel.create(req.body);
+        // const red = await RedModel.create(req.body);
 
-        res.status(201).send({
-                success: true,
-                data: red
-        });
+        next();
 });
 
 // @desc   actualizează un RED
@@ -165,8 +167,8 @@ exports.delRED = function delRED (req, res, next) {
 exports.createUser = function createUser (req, res, next) {
         // Crearea contului!!!
         // metoda este atașată de pluginul `passport-local-mongoose` astfel: schema.statics.register
-        UserDetails.register(
-                new UserDetails({
+        UserModel.register(
+                new UserModel({
                         _id: mongoose.Types.ObjectId(),
                         username: req.body.email,  // _NOTE: Verifică dacă username și email chiar vin din body
                         email: req.body.email,
@@ -175,15 +177,15 @@ exports.createUser = function createUser (req, res, next) {
                                 public: false,
                                 rolInCRED: ['general']
                         }
-                }), 
-                req.body.password, 
+                }),
+                req.body.password,
                 function clbkAuthLocal (err, user) {
                         if (err) {
                                 logger.error(err);
                                 console.log('[signup::post]', err);
                         };
                         // dacă nu este nicio eroare, testează dacă s-a creat corect contul, făcând o autentificare
-                        var authenticate = UserDetails.authenticate();
+                        var authenticate = UserModel.authenticate();
                                 authenticate(req.body.email, req.body.password, function clbkAuthTest (err, result) {
                                 if (err) {
                                         logger.error(err);
@@ -199,18 +201,59 @@ exports.createUser = function createUser (req, res, next) {
         );
 }
 
-// @desc   login
-// @route  POST /api/v1/user/login
+// @desc Returnează userul curent
+// @route GET /api/v1/user/current
 // @access privat
-exports.userLogin = function userLogin (req, res, next) {
-	console.log('Am ajuns pe /api/v1/user/login');
+exports.currentUser = function currentUser (req, res, next) {
+  res.json({user: {
+    id:            req.user._id,
+    roles:         req.user.roles,
+    ecusoane:      req.user.ecusoane,
+    recomandari:   req.user.recomandari,
+    username:      req.user.username,
+    email:         req.user.email,
+    contributions: req.user.contributions
+  }});
+  // next();
+};
+// _FIXME: Creează logica pentru refresh token (https://www.youtube.com/watch?v=mbsmsi7l3r4)
+
+// Utilitarele pentru validarea parolei și emiterea JWT-ul!
+let {issueJWT, validPassword} = require('../utils/password');
+
+// @desc Loghează userul
+// @route POST /api/v1/user/login
+// @access privat
+exports.loginUser = async function loginUser (req, res, next) {
+  // Read username and password from request body
+  const { username, password } = req.body;
+  // Caută userul
+  UserModel.findOne({email: username}).lean().then(user => {
+    // verifică dacă există utilizatorul
+    if (!user) {
+      return res.status(404).json({success: false, message: 'user not found'});
+    }
+
+    // Verifică parola
+    if (validPassword(password, user.hash, user.salt)) {
+      // Dacă parola este ok, creează payload-ul JWT-ului
+      const {token} = issueJWT(user);
+      res.json({success: true, token});
+    } else {
+      return res.status(401).json({success:false, message: 'password incorrect'}); // Unauthorized
+    }
+  }).catch(error => {
+    // return res.status(500).json(error.toString());
+    next(error);
+  });
 }
+
 
 // @desc   logout
 // @route  POST /api/v1/user/logout
 // @access privat
 exports.userLogout = function userLogout (req, res, next) {
-	// ACL
-	let roles = ["user", "validator", "cred"];
-	res.status(200).send({logout: true});
+  // ACL
+  let roles = ["user", "validator", "cred"];
+  res.status(200).send({logout: true});
 }

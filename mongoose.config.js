@@ -2,21 +2,22 @@ require('dotenv').config();
 const logger   = require('./util/logger');
 const mongoose = require('mongoose');
 // MONGOOSE - Conectare la MongoDB
-mongoose.set('useCreateIndex', true); // Deprecation warning
+// mongoose.set('useCreateIndex', true); // Deprecation warning
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
 // by default, you need to set it to false.
-mongoose.set('useFindAndModify', false);
+// mongoose.set('useFindAndModify', false);
 
 /*
 Am setat o variabilă de mediu `APP_RUNTIME` care va indica dacă aplicația rulează virtualizat sau local.
 Valorile pe care această variabilă de mediu le poate avea sunt: `virtual` sau `local`.
 */
 
+
+/* Pentru eroarea `MongoParseError: credentials must be an object with 'username' and 'password' properties` următorul obiect este răspunsul corect: */
 const CONFIG = {
-    auth: { "authSource": "admin" },
-    user: process.env.MONGO_USER,
-    pass: process.env.MONGO_PASSWD,
-    useNewUrlParser: true, 
+    auth: { username: process.env.MONGO_USER, password: process.env.MONGO_PASSWD},
+    authSource: "admin",
+    useNewUrlParser: true,
     useUnifiedTopology: true
 };
 let machine_ip = process.env.APP_RUNTIME === 'virtual' ? 'mongo' : 'localhost';
@@ -30,16 +31,14 @@ if (process.env.APP_RUNTIME === 'virtual') {
         logger.error(error);
     });
 } else {
-    mongoose.connect(process.env.MONGO_LOCAL_CONN, CONFIG).then(() => {
+    mongoose.connect(`mongodb://${machine_ip}:27017/${process.env.MONGO_DB}`, CONFIG).then(() => {
         console.log("Conectare cu succes la baza de date locală.");
     }).catch((error) => {
-        console.warn('Conectarea la MongoDB a eșuat!');
+        console.warn('Conectarea la MongoDB a eșuat!', error);
         logger.error(error);
         process.exit(1);    
     });
 }
-
-
 
 /*
 În cazul în care rulezi cu docker, mai intai avand containerele ruland foloseste `docker ps` și apoi comanda `docker inspect nume_container_mongodb`.

@@ -3,9 +3,14 @@ require('dotenv').config();
 const express = require('express');
 const router  = express.Router();
 const passport= require('passport');
+require('./controllers/user.ctrl')(passport); // încarcă strategiile
 
 // Cere gestionarul pentru versiunea 1
-let {getREDs, getRED, postRED, putRED, delRED, userLogin, createUser} = require('./api/v1');
+let {getREDs, getRED, postRED, putRED, delRED, currentUser, loginUser} = require('./api/v1');
+
+router
+    .get('/user/current', passport.authenticate('jwt', {session: false}), currentUser)
+    .post('/user/login', passport.authenticate('local'), loginUser);
 
 router
     .route('/')
@@ -13,13 +18,10 @@ router
     .post(postRED);
 
 router
-    .route('/:id')
+    .route('/:id', passport.authenticate('jwt', {session: false}))
     .get(getRED)
+    .post(postRED)
     .put(putRED)
     .delete(delRED);
-
-router
-    .route('/user/login')
-    .post(passport.authenticate('local', { failureRedirect: '/login'}), userLogin);
 
 module.exports = router;
