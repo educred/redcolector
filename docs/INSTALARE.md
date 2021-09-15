@@ -268,13 +268,22 @@ Acest fișier este necesar pentru că ține datele necesare conectării cu serve
 Primul pas este să creezi fișierul `.env` chiar în rădăcina aplicației. Deschide-l și introdu datele necesare așa cum sunt specificate în următoarele câmpuri:
 
 ```text
-PUBLISHER=EDUCRED
+BRAND_NAME=Colector Resurse Educaționale Deschise
+PUBLISHER=Centrul Național de Politici și Evaluare în Educație
+CREATOR=CRED-Curriculum relevant, educație deschisă pentru toți– cod SMIS 2014+:118327
+DESCRIPTION=Aceasta este aplicația care colectează Resurse Educaționale Deschise create în cadrul proiectului EDUCRED
+LOGO=repologo.png
+CONTACT=Ionela Calancea <ionela.clancea@educred.ro>
 DOMAIN=localhost:8080
+DOMAIN_VIRT=localhost
+FQDN=red.educred.ro
 PORT=8080
+APP_RUNTIME=local
 MONGO_LOCAL_CONN=mongodb://localhost:27017/redcolector
 MONGO_USER=nume_utilizator
 MONGO_PASSWD=parola_utilizatorului
 MONGO_REDS=resursedu
+MONGO_DB=nume_baza_de_date
 ELASTIC_URL=http://localhost:9200
 GOOGLE_CLIENT_ID=xsdkkdfkjkuf8s9df9sdfsf9sdfhsvp84.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=fdsao09sad99s0fuajfas
@@ -283,12 +292,16 @@ BASE_URL=http://localhost:8080
 NAME_OF_REPO_DIR=repo
 REPO_REL_PATH=./repo/
 FILE_LIMIT_UPL_RES=5242880
+JWT_SECRET=Fdstr565338!@32
+JWT_REFRESH=7628c4079df579730b5d3fsd654654hghfdgdg050fb514a1c047e153a3812593692247e463a43a6b9f381ff775041cfb6ec
 LIVRESQ_TOKEN = 'gasrwe54333m'
 LIVRESQ_TOKEN_PLAN = '1dafsdfsb2b'
 LIVRESQ_HOSTNAME = 'livresq.com'
 API_LIVRESQ_HOSTNAME = 'api.livresq.com'
 LIVRESQ_PATH = 'wp-content/plugins/livresq-connector/inc/api.php'
-APP_VER=0.9.2
+NODE_ENV=development
+APP_NAME=redcolector
+APP_VER=0.9.8
 ```
 
 Câmpurile `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET` sunt proprii administratorului care face instalarea.

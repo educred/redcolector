@@ -1,7 +1,6 @@
 # Descrierea unei Resurse Educaționale Deschise
 
-<em>folosind Colectorul RED</em>
-<em>Versiunea 0.9.3, noiembrie, 2020</em>
+<em>Versiunea 0.9.8, septembrie, 2021</em>
 Nicolaie Constantinescu <nicu.constantinescu@educred.ro>
 
 ![](img/0.9.3/REDinCREDinternalREDs.png)
@@ -68,7 +67,7 @@ Persoana care descrie și încarcă RED-ul folosind formularul aplicației este 
 
 Autorii unei resurse pot fi o singură persoană, un grup, un colectiv, o instituție. În cazul în care sunt mai mulți autori, vor fi introduși rând pe rând, separați de virgule. Nu uitați separarea cu virgule care este esențială. Trebuie înțeleasă distincția clară dintre autor și cel care contribuie cu resursa. De regulă, atunci când sunt mai mulți autori, unul dintre aceștia va fi desemnat să descrie și să încarce resursa.
 
-În continuare ne vom referi la persoana care face descrierea ca fiind *contriuitorul*.
+În continuare ne vom referi la persoana care face descrierea ca fiind *contribuitorul*.
 
 ### 3.3. O scurtă descriere a resursei
 
@@ -129,7 +128,7 @@ Pentru mai multe detalii privind încadrarea în aria curriculară, puteți cons
 - [Ordin privind aprobarea planurilor-cadru de învățământ pentru învățământul gimnazial](http://programe.ise.ro/Portals/1/Curriculum/Pl_cadru-actuale/Gimnaziu/OMENCS%203590_5%20apr%202016_Plan-cadru%20de%20%C3%AEnvatamant%20pentru%20gimnaziu.pdf)
 - [ORDIN nr. 3.371 din 12 martie 2013 privind aprobarea planurilor-cadru de invatamant pentru invatamantul primar si a Metodologiei privind aplicarea planurilor-cadru de invatamant pentru invatamantul primar](http://programe.ise.ro/Portals/1/Curriculum/Pl_cadru-actuale/Primar/1_OMEN_3.371_12.03.2%20013%20%20privind%20aprobarea%20planurilor-cadru%20inv_primar%20si%20a%20Metodologiei%20privind%20aplicarea%20planurilor-cadru%20de%20invatamant.pdf)
 
-Reamintim faptul că alegerea Ariei curriculare este un pas obligatoriu.
+Reamintim faptul că alegerea *Ariei curriculare* este un pas obligatoriu.
 
 <div style="background-color: yellow; padding: .6rem"><img src="img/ilustratii/96px-Belgian_road_sign_A51.svg.png" height="35px"> Este recomandabil să fie analizat RED-ul sub acest aspect înainte de a-l descrie.</div></br>
 
@@ -243,7 +242,7 @@ Ați ajuns la zona în care este oferit un editor necesar încărcării pe serve
 
 ### 6.1. Detalii privind resursele electronice acceptate
 
-Un RED poate fi un singur fișier, dar poate fi constituit din mai multe, acest aspect fiind legat de practica pedagogică specifică fiecăruia. Din acest motiv, este permisă încărcarea de documente și de imagini. Dacă aveți un videoclip, care este offline, adică nu este pe o platformă deja, dacă acesta face parte din resursă sau chiar este resursa în sine, atunci dimensiunile sale nu trebuie să depășească 20 MB. Din rațiuni economice, recomandarea pentru videoclipurile de mare dimensiune, este ca acestea deja să fie online deja și să menționați aici doar linkul, fie să existe deja în directorul Drive propriu, de unde se va genera in link accesibil public, iar acest link să fie menționat aici.
+Un RED poate fi un singur fișier, dar poate fi constituit din mai multe, acest aspect fiind legat de practica pedagogică specifică fiecăruia. Din acest motiv, este permisă încărcarea de documente și de imagini. Dacă aveți un videoclip, care este offline, adică nu este pe o platformă deja, dacă acesta face parte din resursă sau chiar este resursa în sine, atunci dimensiunile sale nu trebuie să depășească 20 MB. Din rațiuni economice, recomandarea pentru videoclipurile de mare dimensiune, este ca acestea deja să fie online deja și să menționați aici doar linkul, fie să existe deja în directorul Drive propriu, de unde se va genera un link accesibil public, iar acest link să fie menționat aici.
 Aceste precizări sunt valabile pentru toate resursele, indiferent de natura și formatul lor.
 
 ![](img/ilustratii/RESURSA.png)
@@ -274,7 +273,7 @@ Toate aceste fișiere încărcate vor sta împreună în același director dedic
 
 Editorul folosit pentru introducerea componentelor unei resurse este unul care oferă instrumente de bază pentru redactarea rapidă a unor fragmente de text, introducerea unor imagini, a unor fragmente de cod, a unor citări și a atașamentelor.
 
-Totul începe cu selectarea butonului plus. Editorul folost te va obișnui cu un nou mod de lucru cu fragmentele de text, imaginile, etc.
+Totul începe cu selectarea butonului plus. Editorul folosit te va obișnui cu un nou mod de lucru cu fragmentele de text, imaginile, etc.
 
 ![](img/0.9.3/Pas4-Editorul-instrumente.png)
 
@@ -355,7 +354,7 @@ Apăsând acel buton, veți ajunge într-un mediu deja pregătit pentru a pregă
 
 <div style="background-color: yellow; padding: .6rem"><img src="img/ilustratii/96px-Belgian_road_sign_A51.svg.png" height="35px"> Atenție, vi se va crea automat un cont în aplicația Livresq și veți putea începe să creați acolo o resursă.</div></br>
 
-Inevitabil, în funcție de natura și întinderea resursei pe care veți dori să o creați cu Livresq, veți putea reveni în tabul de introducere a resursei sau veți realiza că sesiunea de lucru pe red.educre.ro a expirat, ceea ce va necesita inițierea uneia noi prin logare. După ce veți fi fost parcurs din nou pașii de completare a fișei, veți putea încărca fișierul zip creat cu Livresq.
+Inevitabil, în funcție de natura și întinderea resursei pe care veți dori să o creați cu Livresq, veți putea reveni în tabul de introducere a resursei sau veți realiza că sesiunea de lucru pe red.educred.ro a expirat, ceea ce va necesita inițierea uneia noi prin logare. După ce veți fi fost parcurs din nou pașii de completare a fișei, veți putea încărca fișierul zip creat cu Livresq.
 
 ### 6.3. Încărcarea unei coperte
 
