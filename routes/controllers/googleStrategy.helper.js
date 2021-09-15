@@ -54,7 +54,7 @@ function googleStrategy (request, accessToken, refreshToken, params, profile, do
             record.roles.admin = true;
 
             // Constituie documentul Mongoose pentru modelul `UserModel`.
-            const userObj = new userModel(record);
+            const userObj = new User(record);
             try {
                 // Salvează documentul în bază! 
                 // _FIXME: Indexează în Elasticsearch!!!.

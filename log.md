@@ -1,3 +1,27 @@
+/home/nicu/.pm2/logs/app-error.log
+
+
+
+Aplicația a crăpat cu următoarele detalii:  TokenError: Bad Request
+0|app  |     at Strategy.OAuth2Strategy.parseErrorResponse (/var/www/red.educred.ro/node_modules/passport-oauth2/lib/strategy.js:372:12)
+0|app  |     at Strategy.OAuth2Strategy._createOAuthError (/var/www/red.educred.ro/node_modules/passport-oauth2/lib/strategy.js:419:16)
+0|app  |     at /var/www/red.educred.ro/node_modules/passport-oauth2/lib/strategy.js:177:45
+0|app  |     at /var/www/red.educred.ro/node_modules/oauth/lib/oauth2.js:191:18
+0|app  |     at passBackControl (/var/www/red.educred.ro/node_modules/oauth/lib/oauth2.js:132:9)
+0|app  |     at IncomingMessage.<anonymous> (/var/www/red.educred.ro/node_modules/oauth/lib/oauth2.js:157:7)
+0|app  |     at IncomingMessage.emit (node:events:377:35)
+0|app  |     at endReadableNT (node:internal/streams/readable:1312:12)
+0|app  |     at processTicksAndRejections (node:internal/process/task_queues:83:21)
+0|app  | [15-09-2021 18:32:29] [error] [undefined]: 	Bad Request
+0|app  | [15-09-2021 18:32:29] [error] [undefined]: 	Bad Request
+0|app  | GET /callback?code=4/0AX4XfWhUNsgqtMGMHtABuHI4xp6QiIYyJv5jR4YUYQpvfWH1XXOuegW_rYUmxiZeSHFPCA&scope=email%20profile%20https://www.googleapis.com/auth/userinfo.email%20openid%20https://www.googleapis.com/auth/userinfo.profile&authuser=1&hd=educred.ro&prompt=none 302 169.194 ms - 52
+
+
+
+
+
+
+
 Uncaught TypeError: $(...).DataTable is not a function
 (user.js:165)
 
