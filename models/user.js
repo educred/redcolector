@@ -6,7 +6,7 @@ const jwt                   = require('jsonwebtoken');
 const redisClient           = require('../redis.config');
 const esClient              = require('../elasticsearch.config');
 const schema                = require('./user-es7');
-const ES7Helper             = require('./model-helpers/es7-helper');
+// const ES7Helper             = require('./model-helpers/es7-helper');
 const logger                = require('../util/logger');
 
 // INDECȘII ES7
@@ -162,7 +162,7 @@ User.post('save', function clbkUsrSave (doc, next) {
 //     next();
 // });
 
-// TODO: Atunci când ștergi un utilizator, generează o mare arhivă cu propriile conținuturi
+// _TODO: Atunci când ștergi un utilizator, generează o mare arhivă cu propriile conținuturi
 // Înainte să ștergi un utilizator, șterge-i toate comentariile dacă există vreunul.
 User.pre('remove', async function (next) {
     // în cazul în care vrem să-i ștergem comentariile
@@ -195,5 +195,5 @@ User.static.findByCredentials = async (email, password) => {
     return user;
 };
 
-module.exports = User;
-// module.exports = mongoose.model('User', User);
+// module.exports = User;
+module.exports = new mongoose.model('user', User);

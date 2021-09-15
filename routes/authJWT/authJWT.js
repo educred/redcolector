@@ -2,8 +2,7 @@
 const path        = require('path');
 const fs          = require('fs');
 const mongoose    = require('mongoose');
-const UserSchema  = require('../../models/user'); // adu schema
-const UserModel   = mongoose.model('users', UserSchema); // constituie modelul
+const User        = require('../../models/user');
 const passport    = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt  = require('passport-jwt').ExtractJwt;
@@ -31,7 +30,7 @@ const JWTstrategy = new JwtStrategy(options, (payload, done) => {
     // `done` este un callback error first care primește argumentele: `error`, `user`, `info`.
     
     // nu uita, la momentul în care se creează JWT-ul, va fi inclus în payload id-ul user-ului luat din MongoDB
-    return UserModel.findOne({_id: payload.sub}).lean().then((user) => {
+    return User.findOne({_id: payload.sub}).lean().then((user) => {
         // console.log('[authJWT] userul este', user);
         if (user) {
             return done(null, user); // nu este eroare, returnează user-ul

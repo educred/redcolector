@@ -1,6 +1,147 @@
+Uncaught TypeError: $(...).DataTable is not a function
+(user.js:165)
+
+
+
+[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii:  CastError: Cast to ObjectId failed for value "resurse" (type string) at path "_id" for model "user"
+
+
 Choose which packages to update. @fortawesome/fontawesome-free@5.15.4, multer@1.4.3, pm2@5.1.1, supertest@6.1.6, autoprefixer@10.3.4, @elastic/elasticsearch@7.14.1, bootstrap@5.1.1, datatables.net@1.11.2, datatables.net-dt@1.11.2, elasticdump@6.73.2, isomorphic-git@1.10.0, mocha@9.1.1, socket.io@4.2.0, socket.io-client@4.2.0, webpack-cli@4.8.0, datatables.net-buttons@2.0.0, datatables.net-buttons-dt@2.0.0, globby@12.0.2, mongoose@6.0.5
 
 $ npm install --save @fortawesome/fontawesome-free@5.15.4 multer@1.4.3 pm2@5.1.1 supertest@6.1.6 @elastic/elasticsearch@7.14.1 bootstrap@5.1.1 datatables.net@1.11.2 datatables.net-dt@1.11.2 elasticdump@6.73.2 isomorphic-git@1.10.0 mocha@9.1.1 socket.io@4.2.0 socket.io-client@4.2.0 datatables.net-buttons@2.0.0 datatables.net-buttons-dt@2.0.0 globby@12.0.2 mongoose@6.0.5 --color=always
+
+
+
+
+
+
+
+
+```javascript
+console.log("La primirea pe evenimentul `es7reidx` am următoarele date venite: ", data);
+let pscript =  '';
+// În funcție de modificarea mapping-ului trebuie adaptat scriptul painless care să opereze modificările de structură (vezi variabila `pscript`).
+
+console.log("[socket.js::reidxincr] Am primit in reidxincr datele", data);
+
+let idx = data.alsr + data.vs,
+    nvs = ''; // noua versiune
+
+// Verifică mai întâi dacă ai mapping pentru colecția respectivă. Dacă cu ai mapping, trimite înapoi mesaj că acesta nu există și nu se va face indexarea
+if (data.alsr in col2idx) {
+    // Verifică existența alias-ului (alias-ul nu este purtător de versiune)
+    esClient.indices.existsAlias({name: data.alsr})
+        .then((r) => {
+
+            // ALIAS-ul există, procedează la reindexare
+            if (r.statusCode === 200) {
+                
+
+                // dacă este un alias care se termină cu un număr, atunci înseamnă că e un install vechi. Șterge MANUAL indexul, sterge alias-ul. Reindexează de la 0.
+                // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html#indices-aliases-api-rename-alias-ex
+                /*
+                    #1 Adaugă un index nou 
+                    #2 reindexează înregistrările pe noul index 
+                        - https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#_reindex
+                        - https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/7.x/reindex_examples.html
+                    #3 Leagă indexul nou de alias-ul existent
+                    #4 Șterge indexul vechi
+                */
+                
+                // verifică cărui index aparține alias-ul.
+                esClient.cat.aliases({
+                    name: data.alsr,
+                    format: "json"     
+                }, (err, r) => {
+                    if (err) {
+                        console.log("[socket.js::reidxincr()] De la aliases", err);
+                        logger.error(err);
+                    };
+
+                    console.log("Indexul verificat este", r.body[0].index, " iar aliasul este ", r.body[0].alias);
+
+                    // în cazul în care indexul primit este egal cu cel verificat pentru alias creează noul index
+                    if (idx === r.body[0].index) {
+                        
+                        // incrementează versiunea
+                        let nrvs = parseInt(data.vs);
+                        let newvs = ++nrvs;
+                        nvs = data.alsr + newvs; // `nvs` e prescurtare de la `new version`
+
+                        console.log("Noua versiune de index incrementată este ", nvs);
+
+                        // CREEAZĂ INDEXUL nou pasând la index, numele noului index, iar la body, mapping-ul indexului. Ori de câte ori modiffice mappingul, reindexezi
+                        esClient.indices.create({
+                            index: nvs,
+                            body:  col2idx[data.alsr].mapping
+                        }).then(async (r) => {
+
+                            // REINDEXEAZĂ
+                            let body4reindex = {
+                                source: {
+                                    index: idx
+                                },
+                                dest: {
+                                    index: nvs
+                                }
+                                // ,
+                                // script: {
+                                //     lang: 'painless',
+                                //     source: pscript
+                                // }
+                            };
+                            await esClient.reindex({
+                                waitForCompletion: true,
+                                refresh: true,
+                                body: body4reindex
+                            });
+
+                            // ATAȘEZ alias-ul noului index creat
+                            // https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#_indices_putalias
+                            await esClient.indices.putAlias({
+                                index: nvs,
+                                name:  data.alsr
+                            });
+                            
+                            // ȘTERGE indexul vechi
+                            esClient.indices.delete({
+                                index: idx
+                            }, (error, r) => {
+                                if (error) {
+                                    logger.error(error);
+                                    console.log("[socket.js::reidxincr()] Când să șterg indicele, am avut o eroare");
+                                };
+
+                                // Trimite datele noului index
+                                socket.emit('es7reidx', {newidx: nvs, oldidx: idx, deleted: r.body.acknowledged}); // trimit clientului datele
+                            });
+
+                        }).catch((err) => {
+                            if (err) {
+                                console.log("[socket.js::reidxincr()] Am eșuat crearea noului index cu următoarele detalii: ", err)
+                                logger.error(err);
+                            };
+                        });
+                    }
+                });
+            } else {
+                console.log("Alias-ul nu există. Ai statusCode: ", r.statusCode)
+            }
+        }).catch((err) => {
+            logger.log(err);
+            console.log('La reindexarea incrementală a apărut următoarea eroare: ', err.message);
+        });
+}
+// Pentru că nu există un fișier de mapping pentru respectiva colecție
+socket.emit('es7reidx', {mapping: false}); // trimit clientului datele
+```
+
+
+
+
+
+
+
 
 
 

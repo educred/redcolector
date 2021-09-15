@@ -2,20 +2,11 @@ require('dotenv').config();
 const esClient     = require('../../elasticsearch.config');
 const mongoose     = require('../../mongoose.config');
 const Resursa      = require('../resursa-red');
-const userSchema   = require('../user'); // Atenție, este chiar schema
+const User         = require('../user');
+const logger       = require('../../util/logger');
+const setRedis     = require('../../util/setInRedisESIndexs');
 // https://nesin.io/blog/fix-mongoose-cannot-overwrite-model-once-compiled-error
 // https://mongoosejs.com/docs/5.x/docs/faq.html#overwrite-model-error
-
-// const User = mongoose.models.User || mongoose.model('usrs', userSchema);
-// let User;
-// try {
-//     User = mongoose.model("User");
-// } catch {
-//     User = mongoose.model("User", userSchema);
-// }
-
-
-const logger       = require('../../util/logger');
 
     // io.on('connect', socket => {
     //     console.log("Id-ul conectat este: ", socket.id);
@@ -39,7 +30,7 @@ let {getStructure}  = require('../../util/es7'); // `getStructure()` este o prom
 
 // CARE COLECȚIE CE MAPPING ARE: cheile vor fi numele colecțiilor din MongoDB, iar valorile mapping-ul
 const col2idx = {
-    // users:      {mapping: userES7, mongModel: User},
+    users:      {mapping: userES7, mongModel: User},
     resursedus: {mapping: resursaRedES7, mongModel: Resursa}
 }
 
@@ -314,20 +305,22 @@ exports.delAndCreateNew = async function delAndReindex (schema, oldIdx, vs = '',
     }
 }
 
-let pscript =  '';
+
 /**
  * Funcția are rolul de a face o reindexare cu date existente în indexul vechi.
  * Numărul versiunii va fi incrementat ori de câte ori este apelată.
  * Reindexarea se va face ori de câte ori este modificat mapping-ul (vezi variabila `resursaRedES7`).
+ * Datele primite vin de la funcția `idxactions` din `admin.mjs`.
  * @param {Object} data Numele aliasului și numărul versiunii la care este indexul
  * @param {Object} socket Este obiectul socket necasar comunicării
  */
 exports.reidxincr = function reidxincr (data, socket) {
+    let pscript =  '';
     // În funcție de modificarea mapping-ului trebuie adaptat scriptul painless care să opereze modificările de structură (vezi variabila `pscript`).
     
-    console.dir("Am primit in `reidxincr` datele", data);
+    // console.log("[es7-helper.js::reidxincr] Am primit in `reidxincr` datele", data);
 
-    let idx = data.idx,
+    let  idx = data.alsr + data.vs,
         nvs = ''; // noua versiune
 
     // Verifică mai întâi dacă ai mapping pentru colecția respectivă. Dacă cu ai mapping, trimite înapoi mesaj că acesta nu există și nu se va face indexarea
@@ -409,6 +402,9 @@ exports.reidxincr = function reidxincr (data, socket) {
                                         console.log("[es7-helper::reidxincr()] Când să șterg indicele, am avut o eroare");
                                     };
 
+                                    // _FIXME: Actualizează datele din Redis!!!
+                                    setRedis(esClient);
+
                                     // Trimite datele noului index
                                     socket.emit('es7reidx', {newidx: nvs, oldidx: idx, deleted: r.body.acknowledged}); // trimit clientului datele
                                 });
@@ -445,6 +441,7 @@ exports.reidxincr = function reidxincr (data, socket) {
 };
 
 /**
+ * Funcția creează de la 0 un index pentru o colecție MongoDB.
  * Funcția are rol de handler pentru tratarea datelor pe evenimentul `mgdb2es7` din socket.js
  *  
  * @param {Object} es7 Obiect cu datele necesare creării unui nou index
@@ -462,32 +459,40 @@ exports.mgdb2es7 = function mgdb2es7 (es7, socket) {
     // Verifică mai întâi dacă ai mapping pentru colecția respectivă. Dacă cu ai mapping, trimite înapoi mesaj că acesta nu există și nu se va face indexarea
     if (es7.alsr in col2idx) {
 
-        esClient.indices.create({
-            index: es7.idx,
-            body: col2idx[es7.alsr].mapping
-        }).then(async (r) => {
-            // console.log("[es7-helper::esClient.indices.create] Rezultatul creării indicelui", r);
-    
-            // Creează alias-ul
-            if (r.statusCode == 200) {
+        // console.log("[es7-helper::mgdbes7] Mappingul pentru viitorul index este: ", col2idx[es7.alsr].mapping);
 
-                esClient.indices.putAlias({
-                    index: es7.idx,
-                    name:  es7.alsr
-                }).then((r) => {
-                    // console.log("[es7-helper] Rezultatul creării alias-ului", r);
-                    
-                    // INDEXEAZĂ CONȚINUTUL UNEI COLECȚII
+        if (col2idx[es7.alsr].mapping) {
+
+            esClient.indices.create({
+                index: es7.idx,
+                body: col2idx[es7.alsr].mapping
+            }).then(async (r) => {
+                // console.log("[es7-helper::esClient.indices.create] Rezultatul creării indicelui", r);
+        
+                // Creează alias-ul
+                if (r.statusCode == 200) {
+    
                     indexMongoColInES7(es7.alsr, es7.idx);
-                }).catch((e) => {
-                    console.error("Nu s-a putut face indexarea", e);
-                });
-            }
-            
-        }).catch(e => {
-            socket.emit('mgdb2es7', {error: e.meta.body.error.reason}); // trimit clientului datele
-            console.error(e, `M-am oprit la ${procesate} documente`);
-        });
+
+                    // esClient.indices.putAlias({
+                    //     index: es7.idx,
+                    //     name:  es7.alsr
+                    // }).then((r) => {
+                    //     // console.log("[es7-helper] Rezultatul creării alias-ului", r);
+                        
+                    //     // INDEXEAZĂ CONȚINUTUL UNEI COLECȚII
+                    //     indexMongoColInES7(es7.alsr, es7.idx);
+                    // }).catch((e) => {
+                    //     console.error("Nu s-a putut face indexarea", e);
+                    // });
+                }
+                
+            }).catch(e => {
+                socket.emit('mgdb2es7', {error: e.meta.body.error.reason}); // trimit clientului datele
+                console.error(e, `M-am oprit la ${procesate} documente`);
+            });
+        }
+        socket.emit('mgdb2es7', {mapping: false});
     }
     // Pentru că nu există un fișier de mapping pentru respectiva colecție
     socket.emit('mgdb2es7', {mapping: false}); // trimit clientului datele
@@ -496,10 +501,10 @@ exports.mgdb2es7 = function mgdb2es7 (es7, socket) {
 /**
  *Funcția creează index, alias-ul acestuia în baza unui mapping existent
  *
- * @param {*} data
+ * @param {Object} data
  */
 function createIdxAls (data) {
-    console.dir("Indexul nu există și pornesc la crearea de la 0 cu următoarele date:", data);
+    // console.log("Indexul nu există și pornesc la crearea de la 0 cu următoarele date:", data);
     /* {
             idx: "nume_index",
             als: "nume_alias",
@@ -518,7 +523,7 @@ function createIdxAls (data) {
             index: data.idx,
             name:  data.als
         });
-        console.log("[es7-helper::createIdxAls()] Aliasul creat cu următorul rezultat ", result);
+        // console.log("[es7-helper::createIdxAls()] Aliasul creat cu următorul rezultat ", result);
     }).catch((err) => {
         if (err) {
             console.log("[es7-helper::createIdxAls()] Am eșuat crearea noului index de la 0 cu următoarele detalii: ", err)
@@ -533,16 +538,12 @@ function createIdxAls (data) {
  * @param {String} idx Este indexul ES7 în care ajung datele
  */
 function indexMongoColInES7 (col, idx) {
-    console.log("[es-helper::indexMongoColInES7] Am primit la `col`:", col, 'iar indexul este', idx);
+    // console.log("[es-helper::indexMongoColInES7] Am primit la `col`:", col, 'iar indexul este', idx);
     try {
-        let Mod = col2idx[`${col}`].mongModel,
-        cursor; // Inițiază un cursor MongoDB
-
-        console.log("[es-helper::indexMongoColInES7] Schema este:", Mod);
 
         // Specificitatea colecției `resursedus`
         if (col === 'resursedus') {
-            cursor = Mod.find({}).populate('competenteS').cursor();
+            let cursor = Resursa.find({}).populate('competenteS').cursor();
             cursor.eachAsync(async (doc) => {
                 let obi = Object.assign({}, doc._doc);
                 // verifică dacă există conținut
@@ -597,7 +598,7 @@ function indexMongoColInES7 (col, idx) {
         }
 
         if (col === 'users') {
-            cursor = Mod.find({}).cursor();
+            let cursor = User.find({}).cursor();
             cursor.eachAsync(async (doc) => {
                 let obi = Object.assign({}, doc._doc);
                 // indexează documentul
@@ -606,7 +607,9 @@ function indexMongoColInES7 (col, idx) {
                     created:  obi.created,
                     email:    obi.email,
                     roles:    obi.roles,
-                    ecusoane: obi.ecusoane
+                    ecusoane: obi.ecusoane,
+                    googleID: obi.googleID,
+                    googleProfile: obi.googleProfile
                 };
                 await esClient.create({
                     id:      data.id,
@@ -615,10 +618,11 @@ function indexMongoColInES7 (col, idx) {
                     body:    data
                 });
                 // Ține contul documentelor procesate
-                ++procesate;  
+                procesate++;  
             });
         }
 
+        setRedis(esClient); // actualizează datele din Redis după ce s-a făcut indexarea unei colecții MongoDB
         console.log(`[es-helper::indexMongoColInES7] Am indexat un număr de ${procesate} documente`);
     } catch (error) {
         console.log("[es-helper::indexMongoColInES7] Eroare:", error);

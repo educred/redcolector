@@ -1,12 +1,13 @@
-var csrfToken = '';
+// var csrfToken = '';
 
-if(document.getElementsByName('_csrf')[0].value) {
-    csrfToken = document.getElementsByName('_csrf')[0].value;
-}
+import {pubComm} from './main.mjs';
+// if(document.getElementsByName('_csrf')[0].value) {
+//     csrfToken = document.getElementsByName('_csrf')[0].value;
+// }
 
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
 
 // TESTAREA CONEXIUNII
 // setInterval(() => {
@@ -27,16 +28,12 @@ var visuals = document.querySelector('#visuals');
 var user_id = visuals.dataset.usrid;
 
 pubComm.emit('usrRes', user_id); // emite cerere de date
-pubComm.on('usrRes', (resurse) => {
-    
-    
+pubComm.on('usrRes', (resurse) => {    
     let newResultArr = []; // noul array al obiectelor resursă
     resurse.map(function clbkMapResult (obi) {
         obi.dataRo = moment(obi.date).locale('ro').format('LLL');
         newResultArr.push(obi);
     });
-
-    console.log(newResultArr);
 
     // RANDEAZĂ TABELUL
     // https://datatables.net/manual/data/orthogonal-data

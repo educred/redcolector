@@ -63,7 +63,7 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
             {script: '/lib/npm/dataTables.buttons.min.js'},
             {script: '/lib/npm/dataTables.responsive.min.js'},
             // TIMELINE 3
-            {script: '/lib/timeline3/js/timeline.js'},
+            {script: '/lib/timeline3/js/timeline.js'}            
         ];
 
         let styles = [
@@ -80,7 +80,8 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
 
         let modules = [
             // MAIN
-            {module: '/js/main.mjs'}
+            {module: '/js/main.mjs'},
+            {module: '/js/res-visuals-user.mjs'}
         ];
         /**
          * Funncție cu rol de callback
@@ -95,7 +96,7 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (
             return newObi;
         }
 
-        // Afișează doar ultimele 6 resurse introduse
+        // Afișează doar ultimele 8 resurse introduse
         Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((result) => {
 
             // transformă documentele Mongoose în POJOs cu dată formatată

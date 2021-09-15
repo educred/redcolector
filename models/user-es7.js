@@ -30,7 +30,15 @@ const userES7 = {
                     unit:      {type: "text", fields: {keyword: {type: "keyword"}}}
                 }
             },
-            ecusoane:        {type: "text", fields: {keyword: {type: "keyword"}}}
+            googleID: {type: "text", fields: {keyword: {type: "keyword"}}},
+            googleProfile: {
+                type: "nested",
+                properties: {
+                    name:        {type: "text"},
+                    family_name: {type: "text"}
+                }
+            },
+            ecusoane: {type: "text", fields: {keyword: {type: "keyword"}}}
         }
     },
     aliases: {

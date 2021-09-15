@@ -26,6 +26,7 @@ function clbkFindUser (evt) {
     pubComm.emit('person', document.querySelector('#findUserField').value);
 }
 findUserBtn.addEventListener('click', clbkFindUser);
+
 // Tratează cazul browserelor mai vechi
 findUser.addEventListener('keypress', (evt) => {
     let charCodeNr = typeof evt.charCode == "number" ? evt.charCode : evt.keyCode;
@@ -62,7 +63,9 @@ var renderUsr = document.getElementById('showusers'); // Pas 2 - Fă o referinț
  * @param {Array} resurse Este un array al datelor utilizatorilor găsiți
  */
 function showUser (resurse) {
-    resurse.map(user => {
+    resurse.map((user) => {
+        // console.log("[admin.mjs] Utilizatorul primit este următorul", user);
+
         var cloneContent = userTmpl.content.cloneNode(true); // Pas 3 -  Clonează conținutul din template
         
         // titul card-ului va fi adresa de email a userului
@@ -71,6 +74,7 @@ function showUser (resurse) {
 
         // Butonul cardului va fi numele de familie în cazul unui cont de Google. Pe buton ascultă `exposeUser()`
         var family_name = cloneContent.querySelector('.userProfileBtn');
+
         family_name.name = user._id;
         if (user._source.googleProfile.name) {
             family_name.textContent = user._source.googleProfile.name;
@@ -90,8 +94,10 @@ function showUser (resurse) {
  */
 function exposeUser () {
     // adu toate datele despre user (administrative și contribuții)
-    pubComm.emit('personrecord', event.target.name); // este ascultat ma jos
+    pubComm.emit('personrecord', event.target.name); // este ascultat mai jos
 }
+
+globalThis.exposeUser = exposeUser; // _ HACK: expose global
 
 var userFile; // (userFile.resurse)
 var tmlOptions = {
@@ -101,21 +107,21 @@ var tmlOptions = {
     zoom_sequence: 5,
     scale_factor: 2
 }; // opțiuni necesare obiectului Timeline
-// TimelineObj = {
-//     // scale: "human",
-//     title: {
-//         media: {
-//             url: '',
-//             caption: '',
-//             credit: ''
-//         },
-//         text: {
-//             headline: '',
-//             text: ''
-//         }
-//     },
-//     events: [],
-// };
+let TimelineObj = {
+    // scale: "human",
+    title: {
+        media: {
+            url: '',
+            caption: '',
+            credit: ''
+        },
+        text: {
+            headline: '',
+            text: ''
+        }
+    },
+    events: [],
+};
 
 // Primirea detaliilor privind utilizatorul ales
 pubComm.on('personrecord', function clblPersReds (resurse) {
@@ -125,7 +131,7 @@ pubComm.on('personrecord', function clblPersReds (resurse) {
 
     //- TODO: Transformă `resurse` într-un subset necesar lui Timeline
     if (resurse.googleProfile) {
-        console.log('Din admin.js [on(personrecord)] -> resurse.googleProfile ', resurse.googleProfile);
+        // console.log('Din admin.js [on(personrecord)] -> resurse.googleProfile ', resurse.googleProfile);
         TimelineObj.title.text.headline = resurse.googleProfile.name;
     } else {
         TimelineObj.title.text.headline = resurse.username;
@@ -706,12 +712,14 @@ function idxactions (evt) {
         vs     = idx.slice(endIdx);     // versiunea extrasă din numele indexului
         alsr   = idx.slice(0, endIdx);  // aliasul este numele indexului fără versiune
     };
-    // console.log("Alias-ul ar trebui să fie ", alsr, ', iar versiunea indexului este: ', vs);
+    // console.log("[admin.mjs::idxactions()] Alias-ul ar trebui să fie ", alsr, ', iar versiunea indexului este: ', vs);
 
     switch (id) {
         case "ridx":
             // verifică mai întâi dacă există un alias; dacă nu există, mai întâi creează-l
-            pubComm.emit('es7reidx', {vs, alsr}); // Formula este `alsr` + `vs` = numele indexului.
+            let obi = {vs, alsr};
+            console.log("Datele care ar trebui să plece pe `es7reidx` sunt: ", obi)
+            pubComm.emit('es7reidx', obi); // Formula este `alsr` + `vs` = numele indexului.
             break;
         case "bkpidx":
             console.log("[admin.mjs::idxactions()] Faci backup?");
@@ -788,6 +796,7 @@ mgdbTab.addEventListener('click', (event = {}) => {
 });
 // prelucrez datele colecțiilor MongoDB
 pubComm.on('mgdbstat', (data) => {
+    // console.dir(data);
     systemMgdb.innerHTML = ''; // clear tab!!!
 
     let mdb4statsTmpl      = mdb4StatsTmpl.content,         // ref la template
@@ -947,6 +956,6 @@ function collsactions (evt) {
     }
 
     pubComm.on('mgdb2es7', (data) => {
-        console.log("[admin.mjs] În urma operatiunii de indexare am următoarele erori", data);
+        console.log("[admin.mjs] În urma operatiunii de indexare am primit datele", data);
     });
 }

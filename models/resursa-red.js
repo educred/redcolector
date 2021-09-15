@@ -5,7 +5,7 @@ const Schema        = mongoose.Schema;
 const redisClient   = require('../redis.config');
 const schema        = require('./resursa-red-es7');
 const editorJs2TXT  = require('../routes/controllers/editorJs2TXT'); 
-const ES7Helper     = require('./model-helpers/es7-helper');
+// const ES7Helper     = require('./model-helpers/es7-helper');
 const logger        = require('../util/logger');
 
 /* INDECȘII ES7 */

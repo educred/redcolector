@@ -6,8 +6,7 @@ require('dotenv').config();
 const mongoose      = require('mongoose');
 const passport      = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const UserSchema    = require('../../models/user'); // adu schema
-const UserModel     = mongoose.model('users', UserSchema); // constituie modelul
+const User          = require('../../models/user');
 
 const {validPassword} = require('../utils/password.js');
 
@@ -32,9 +31,9 @@ const customFields = {
 function verifyClbk (username, password, done) {
         /* passport.authenticate() va executa acest callback */
         // Caută în bază userul
-        UserModel.findOne({ email: username }).lean()
+        User.findOne({ email: username }).lean()
             .then((user) => {
-                // console.log('[authL::UserModel.findOne] user este: ', user, 'Parola primită este', password);
+                // console.log('[authL::User.findOne] user este: ', user, 'Parola primită este', password);
                 if (!user) {
                     return done(null, false, {message: 'Problemă la user sau la parolă!'}); // nu este nicio eroare, dar nici user n-ai. trimite un 401
                 }
@@ -63,7 +62,7 @@ passport.serializeUser(function (user, done) {
     
 passport.deserializeUser(function (id, done) {
     // User este un document Mongoose
-    UserModel.findById(id, function (err, user) {
+    User.findById(id, function (err, user) {
         done(err, user);
     });
 });

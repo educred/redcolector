@@ -4,11 +4,12 @@ const express    = require('express');
 const router     = express.Router();
 const passport   = require('passport');
 const mongoose   = require('mongoose');
-const UserSchema = require('../models/user');
+// const UserSchema = require('../models/user');
+
 const logger     = require('../util/logger');
 // Încarcă controlerul necesar tratării rutelor de autentificare
 const UserPassport = require('./controllers/user.ctrl')(passport);
-const UserDetails  = mongoose.model('users', UserSchema, 'users');
+const User       = require('../models/user');
 const {generatePassword} = require('./utils/password');
 
 // CONSTANTE
@@ -34,7 +35,7 @@ router.post('/', function clbkPostSignUp (req, res, next) {
     const {salt, hash} = generatePassword(req.body.password);
 
     // Crearea contului!!!
-    let user = new UserDetails({
+    let user = new User({
         _id: mongoose.Types.ObjectId(),
         username: req.body.email, 
         email:    req.body.email,
@@ -59,7 +60,7 @@ router.post('/', function clbkPostSignUp (req, res, next) {
     //         console.log('[signup::post]', err);
     //     };
     //     // dacă nu este nicio eroare, testează dacă s-a creat corect contul, făcând o autentificare
-    //     var authenticate = UserDetails.authenticate();
+    //     var authenticate = User.authenticate();
     //     authenticate(req.body.email, req.body.password, function clbkAuthTest (err, result) {
     //         if (err) {
     //             logger.error(err);

@@ -15,6 +15,7 @@ pubComm.emit('personrecord', window.location.pathname.split('/').pop());
 var userTmpl = document.querySelector('#usertpl');    // Pas 1 - Fă o referință către template
 var renderUsr = document.getElementById('showusers'); // Pas 2 - Fă o referință către elementul din DOM unde va fi inserat conținutul rezultat din compilarea template-ului
 
+
 /**
  * Rolul funcției este de a popula un template Handlebars cu datele din backend
  * @param {Array} resurse 
@@ -45,6 +46,8 @@ function exposeUser () {
     // adu toate datele despre user (administrative și contribuții)
     pubComm.emit('personrecord', event.target.name);
 }
+
+// globalThis.exposeUser = exposeUser; // _ HACK: expose global
 
 // Referință către fișa de utilizator.
 var userFile; // (userFile.resurse)
@@ -85,7 +88,7 @@ function removeAllChildren(element) {
 
 // Primirea detaliilor privind utilizatorul ales
 pubComm.on('personrecord', function clbkPersReds (resurse) {
-    // TODO: La un moment dat, va trebui schimbat sistemul de afișare pentru a acomoda mii de resurse individuale
+    // _TODO: La un moment dat, va trebui schimbat sistemul de afișare pentru a acomoda mii de resurse individuale
     // console.log(resurse.resurse);
     // renderUsrDetails.innerHTML = '';
     removeAllChildren(renderUsrDetails);

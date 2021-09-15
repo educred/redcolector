@@ -13,7 +13,7 @@ const validator   = require('validator');
 const redisClient = require('../redis.config');
 const esClient    = require('../elasticsearch.config');
 const Resursa     = require('../models/resursa-red');           // Adu modelul resursei
-const UserSchema  = require('../models/user');                  // Adu schema unui user
+const User        = require('../models/user');                  // Adu modelul unui user
 const Log         = require('../models/logentry');              // Adu modelul unui articol de blog
 const Competente  = require('../models/competenta-specifica');  // Adu modelul competenței
 const editorJs2HTML= require('../routes/controllers/editorJs2HTML');
@@ -708,8 +708,7 @@ module.exports = function sockets (io) {
         // === MKADMIN === ::Aducerea fișei unui singur id (email) și trimiterea în client
         socket.on('mkAdmin', (userSet) => {    
             // Atenție: https://mongoosejs.com/docs/deprecations.html#-findandmodify-
-            const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-            let docUser = UserModel.findOne({_id: userSet.id}, 'admin');
+            let docUser = User.findOne({_id: userSet.id}, 'admin');
             if (userSet.admin == true) {                
                 docUser.exec(function clbkSetAdmTrue(error, doc) {
                     if (error) {
@@ -742,8 +741,7 @@ module.exports = function sockets (io) {
 
         // === ADDROLE === ::Adaugă rol nou
         socket.on('addRole', (newRoles) => {
-            const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-            let docUser = UserModel.findOne({_id: newRoles.id}, 'roles');
+            let docUser = User.findOne({_id: newRoles.id}, 'roles');
             // dacă vreunul din rolurile trimise nu există deja în array-ul din profilul utilizatorului, acesta va fi adăugat.
             docUser.exec(function clbkAddRole (error, doc) {
                 if (error) {
@@ -765,8 +763,7 @@ module.exports = function sockets (io) {
 
         // === ADDUNIT === ::Adaugă unit nou pentru utilizator
         socket.on('addUnit', (newUnits) => {
-            const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-            let docUser = UserModel.findById(newUnits.id);
+            let docUser = User.findById(newUnits.id);
 
             docUser.exec(function clbkAddArrUnit (error, doc) {
                 if (error) {
@@ -886,9 +883,9 @@ module.exports = function sockets (io) {
 
         // === PERSON === ::căutarea unui utilizator și reglarea înregistrărilor dintre ES și MONGODB
         socket.on('person', async function searchUserInES (queryString) {
-            console.log("Stringul de interogare din socket.on(person) este următorul: ", queryString);
+            // console.log("Stringul de interogare din socket.on(person) este următorul: ", queryString);
             
-            // FIXME: Sanetizează inputul care vine prin `queryString`!!! E posibil să fie flood. Taie dimensiunea la un singur cuvânt!!!
+            // _FIXME: Sanetizează inputul care vine prin `queryString`!!! E posibil să fie flood. Taie dimensiunea la un singur cuvânt!!!
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
             const searchqry = {
                 "query": {
@@ -903,76 +900,81 @@ module.exports = function sockets (io) {
             // Se face căutarea în Elasticsearch!!!
             // Atenție, folosesc driverul nou conform: https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/introduction.html E suuuuperfast! :D
             try {
-                const {body} = await esClient.search({
-                    index: USR_IDX_ALS, 
-                    body:  searchqry
-                });
-                console.log("Pe evenimentul person am următorul rezultat ", body.hits.hits.length);
-                
-                // DACĂ AM ÎNREGISTRĂRI ÎN INDEX-ul Elasticsearch
-                if (body.hits.hits.length > 0) {               
-                    // pentru fiecare id din elasticsearch, cauta daca există o înregistrare în MongoDB. Dacă nu există în MongoDB, șterge din Elastic.
-                    body.hits.hits.map((user) => {
-                        // dacă documentul nu există în MongoDB, șterge înregistrarea din Elastic
-                        const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-                        UserModel.exists({_id: user._id}).then((result) => {
-                            if (!result) {
-                                esClient.delete({
-                                    // index: 'users0',
-                                    index: USR_IDX_ALS,
-                                    type: 'user',
-                                    id: user._id
-                                }).then((res) => {
-                                    console.log("[sockets.js::'person'] Înregistrarea userului nu există. Detalii: ", res);
-                                    socket.emit('mesaje', `Pentru că documentul nu mai există în baza de date, l-am șters și de la indexare cu detaliile: ${res}`);
-                                }).catch((error)=>{
-                                    console.log("[sockets.js::'person'] Eroare la aducerea unui user cu următoarele detalii: ", error);
-                                });
-                            } else {
-                                // dacă utilizatorul există și în MongoDB, dar și în ES7, trimite datele în client
-                                socket.emit('person', body.hits.hits);
-                            }
-                        }).catch((error) => {
-                            if (error) {
-                                // console.log(error);
-                                socket.emit('mesaje', `Am interogat baza de date, dar a apărut eroarea: ${error}`);
-                            }
-                        });
-                    });                    
-                    // TODO: Aici ai putea testa daca ai date; daca nu ai date, tot aici ai putea face căutarea în baza Mongoose să vezi dacă există.     
-                } else {
-                    // NU EXISTĂ ÎNREGISTRĂRI ÎN INDEX-ul ELASTICSEARCH
-                    // TODO: Caută dacă adresa de email există în MongoDB. Dacă există și nu apare în index, indexeaz-o!
-                    let trimStr = validator.trim(queryString);
-                    // PAS 1 -> Analizează dacă `queryString` este un email
-                    if (validator.isEmail(trimStr)) {
-                        // caută în MongoDB dacă există emailul. În cazul în care există, indexează-l în Elasticsearch!
-                        const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-                        UserModel.exists({email: queryString}).then(async (result) => {
-                            try {
-                                if (result) {
-                                    await esClient.index({
-                                        index: 'users0',
-                                        body: result
+                // obține structura indecșilor din Redis și 
+                getStructure().then(async (val) => {
+                    // console.log('[socket.js] are din promisiune: ', val);
+
+                    const {body} = await esClient.search({
+                        index: val.USR_IDX_ALS,
+                        body:  searchqry
+                    });
+                    // console.log("Pe evenimentul person am următorul rezultat ", body.hits.hits.length);
+                    
+                    // DACĂ AM ÎNREGISTRĂRI ÎN INDEX-ul Elasticsearch
+                    if (body.hits.hits.length > 0) {
+                        // console.log("[sockets.js::person] Rezultatul adus de la indexul ElasticSearch", body.hits.hits);
+                        // pentru fiecare id din elasticsearch, cauta daca există o înregistrare în MongoDB. Dacă nu există în MongoDB, șterge din Elastic.
+                        body.hits.hits.map((user) => {
+                            // dacă documentul nu există în MongoDB, șterge înregistrarea din Elastic
+                            User.exists({_id: user._id}).then((result) => {
+                                if (!result) {
+                                    esClient.delete({
+                                        // index: 'users0',
+                                        index: val.USR_IDX_ALS,
+                                        type: 'user',
+                                        id:   user._id
+                                    }).then((res) => {
+                                        console.log("[sockets.js::'person'] Înregistrarea userului nu există. Detalii: ", res);
+                                        socket.emit('mesaje', `Pentru că documentul nu mai există în baza de date, l-am șters și de la indexare cu detaliile: ${res}`);
+                                    }).catch((error)=>{
+                                        console.log("[sockets.js::'person'] Eroare la aducerea unui user cu următoarele detalii: ", error);
                                     });
-                                    // forțează reindexarea pentru a putea afișa rezultatul la următoarea căutare!!!
-                                    await client.indices.refresh({ index: 'users' });
-                                    socket.emit('mesaje', `Am interogat baza de date și am găsit un email neindexat pe care l-am reindexat. Caută acum din nou!`);
-                                }                                    
-                            } catch (error) {
-                                console.error(error);
-                            }
-                        }).catch((error) => {
-                            if (error) {
-                                // console.log(error);
-                                socket.emit('mesaje', `Am interogat baza de date și am găsit un email neindexat, dar când am vrut să-l indexez, stupoare: ${error}`);
-                            }
-                        });
+                                } else {
+                                    // dacă utilizatorul există și în MongoDB, dar și în ES7, trimite datele în client
+                                    socket.emit('person', body.hits.hits);
+                                }
+                            }).catch((error) => {
+                                if (error) {
+                                    // console.log(error);
+                                    socket.emit('mesaje', `Am interogat baza de date, dar a apărut eroarea: ${error}`);
+                                }
+                            });
+                        });                    
+                        // _TODO: Aici ai putea testa daca ai date; daca nu ai date, tot aici ai putea face căutarea în baza Mongoose să vezi dacă există.     
                     } else {
-                        // TODO: Sanetizează ceea ce este primit prin trimming și limitare la dimensiune de caractere
+                        // NU EXISTĂ ÎNREGISTRĂRI ÎN INDEX-ul ELASTICSEARCH
+                        // _TODO: Caută dacă adresa de email există în MongoDB. Dacă există și nu apare în index, indexeaz-o!
+                        let trimStr = validator.trim(queryString);
+                        // PAS 1 -> Analizează dacă `queryString` este un email
+                        if (validator.isEmail(trimStr)) {
+                            // caută în MongoDB dacă există emailul. În cazul în care există, indexează-l în Elasticsearch!
+                            User.exists({email: queryString}).then(async (result) => {
+                                try {
+                                    if (result) {
+                                        await esClient.index({
+                                            index: 'users0',
+                                            body: result
+                                        });
+                                        // forțează reindexarea pentru a putea afișa rezultatul la următoarea căutare!!!
+                                        await client.indices.refresh({ index: 'users' });
+                                        socket.emit('mesaje', `Am interogat baza de date și am găsit un email neindexat pe care l-am reindexat. Caută acum din nou!`);
+                                    }                                    
+                                } catch (error) {
+                                    console.error(error);
+                                }
+                            }).catch((error) => {
+                                if (error) {
+                                    // console.log(error);
+                                    socket.emit('mesaje', `Am interogat baza de date și am găsit un email neindexat, dar când am vrut să-l indexez, stupoare: ${error}`);
+                                }
+                            });
+                        } else {
+                            // _TODO: Sanetizează ceea ce este primit prin trimming și limitare la dimensiune de caractere
+                        }
+                        socket.emit('mesaje', `Am căutat în index fără succes. Pur și simplu nu există înregistrări sau trebuie să schimbi cheia de căutare nițel`);
                     }
-                    socket.emit('mesaje', `Am căutat în index fără succes. Pur și simplu nu există înregistrări sau trebuie să schimbi cheia de căutare nițel`);
-                }
+                    
+                }).catch((e) => console.error);
             } catch (error) {
                 console.log("[sockets.js::'person'] Eroare la aducerea unui user cu următoarele detalii: ", error);
                 socket.emit('mesaje', `Din nefericire, căutarea utilizatorului a eșuat cu următoarele detalii: ${error}`);
@@ -990,8 +992,7 @@ module.exports = function sockets (io) {
         socket.on('personrecord', id => {
             // console.log('Din sockets.js [personrecord] -> id-ul primit este ', id);
             // https://mongoosejs.com/docs/api.html#model_Model.populate
-            const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-            UserModel.findById(id, function clbkFindById (error, user) {
+            User.findById(id, function clbkFindById (error, user) {
                 if (error) {
                     console.error("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
                     socket.emit('mesaje', 'A dat eroare căutarea...');
@@ -1008,7 +1009,7 @@ module.exports = function sockets (io) {
                     }
                 ];
                 // Populează modelul!
-                UserModel.populate(user, opts, function clbkExecPopUser (error, res) {
+                User.populate(user, opts, function clbkExecPopUser (error, res) {
                     if (error) {
                         console.log("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
                         // socket.emit('mesaje', 'A dat eroare căutarea...');
@@ -1038,8 +1039,7 @@ module.exports = function sockets (io) {
                                 return result;                   
                             });
                         case 'users':
-                            const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-                            UserModel.estimatedDocumentCount({}, function clbkUsersTotal (error, result) {
+                            User.estimatedDocumentCount({}, function clbkUsersTotal (error, result) {
                                 if (error) {
                                     console.log("[sockets.js::'stats'] Eroare la aducerea statisticilor cu următoarele detalii: ", error);
                                     logger.error(`[sockets.js::'stats'] Eroare la aducerea setului de useri: ${error}`);
@@ -1071,8 +1071,7 @@ module.exports = function sockets (io) {
                             return result;                   
                         });
                     } else if (descriptor === 'users') {
-                        const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-                        const TotalUsers = UserModel.estimatedDocumentCount({}, function clbkUsersTotal (error, result) {
+                        const TotalUsers = User.estimatedDocumentCount({}, function clbkUsersTotal (error, result) {
                             if (error) {
                                 console.log("[sockets.js::'stats'] Eroare la aducerea statisticilor cu următoarele detalii: ", error);
                             } else {
@@ -1129,7 +1128,6 @@ module.exports = function sockets (io) {
 
         // === STATS::MONGODB ===
         socket.on('mgdbstat', () => {
-            // console.log(`[socket.js::mgdbstat] Lista conecxiunilor`, mongoose.connection.db.listCollections());
             mongoose.connection.db.listCollections().toArray(statDataMgdb);
         });
 
@@ -1161,6 +1159,9 @@ module.exports = function sockets (io) {
                 logger.error(err);
             };
 
+            // console.log(`Valoarea parametrului names este`, names);
+            let mongocolections = names.map(ob => ob.name);
+
             // populează un array cu date despre indecșii din ES7,
             let data = JSON.parse(JSON.stringify(await es7stats())),
                 nameCols = names.reduce((ac, nxt, idx) => {
@@ -1178,26 +1179,43 @@ module.exports = function sockets (io) {
                 Dacă există, cauta o cheie cu același nume în `names` și îmbogățește obiectul pe acea ramură
             */
             let indicesES7 = Object.entries(data.body.indices); // constituie un array de array-uri
-            // console.log('In array-ul de array-uri an ', indicesES7);
+            // console.log('[socket::mgdbstat::statDataMgdb()] In array-ul de array-uri am: ', indicesES7);
 
             // Augmentez obiectul prin îmbogațirea cu informații despre cale.
             let colAugObject = objectsOps.pathOfProps(names); // augmentează obiectul!!!
-            // console.log('Colectiile din MongoDB ca obiect augmentat are: ', colAugObject);
+            // console.log('[socket::mgdbstat::statDataMgdb()] Colectiile din MongoDB ca obiect augmentat are: ', colAugObject);
             indicesES7.forEach(([key, value]) => {
-                // Acoperă cazul în care alias-ul a fost numit gresit cu versiune in coadă. NOTE: motive istorice
+
+                // console.log(`Cheia este `, key, `iar valoarea este`, value);
+
+                // Acoperă cazul în care alias-ul a fost numit gresit cu versiune in coadă, iar indexul fără. NOTE: motive istorice
                 if ((/(\d{1,})+/g).test(key)) {
+                    // Regex-ul testează dacă textul se termină cu cifre
 
                     // taie fragmentul de nume până la cifra care indică versiunea
-                    let aliasES7 = key.slice(0, key.search(/(\d{1,})+/g));
+                    let aliasES7 = key.slice(0, key.search(/(\d{1,})+/g)); // fragmentul indică alias-ul corect
+                    let foundES7Idx, colname;
 
-                    // dacă nu, înseamnă că din motive istorice avem nevoie să lucrăm cu două seturi diferite de nume ( FIXME: )
-                    switch(aliasES7){
-                        case 'resedus':
-                            let foundES7Idx =  objectsOps.searchOne('resursedus', colAugObject);
+                    for (colname of mongocolections) {
+                        if (aliasES7 === colname) {
+                            foundES7Idx = objectsOps.searchOne(colname, colAugObject);
                             names[foundES7Idx.idxDataSet]['es7name'] = key;
                             names[foundES7Idx.idxDataSet]['noEs7Docs'] = value.total.docs;
-                        break;
+                        }
                     }
+                    // dacă nu, înseamnă că din motive istorice avem nevoie să lucrăm cu două seturi diferite de nume ( FIXME: )
+                    // switch(aliasES7){
+                    //     case 'resedus':
+                    //         foundES7Idx = objectsOps.searchOne('resursedus', colAugObject);
+                    //         names[foundES7Idx.idxDataSet]['es7name'] = key;
+                    //         names[foundES7Idx.idxDataSet]['noEs7Docs'] = value.total.docs;
+                    //         break;
+                    //     case 'users':
+                    //         foundES7Idx = objectsOps.searchOne('users', colAugObject);
+                    //         names[foundES7Idx.idxDataSet]['es7name'] = key;
+                    //         names[foundES7Idx.idxDataSet]['noEs7Docs'] = value.total.docs;
+                    //         break;
+                    // }
                 }
 
                 // cazul în care indexul de ES7 are echivalent același nume între colecțiile MongoDB
@@ -1229,9 +1247,8 @@ module.exports = function sockets (io) {
                         return collection;
                         break;
                     case "users":
-                        const UserModel      = mongoose.model('user', UserSchema);
                         collection.name      = 'users';                      
-                        collection.no        = await UserModel.estimatedDocumentCount();
+                        collection.no        = await User.estimatedDocumentCount();
                         collection.es7name   = entity.es7name;
                         collection.noEs7Docs = entity.noEs7Docs;                          
                         return collection;
@@ -1284,6 +1301,7 @@ module.exports = function sockets (io) {
 
         // === PERSONALRES === ::TOATE RESURSELE UNUI UTILIZATOR
         socket.on('usrRes', (id) => {
+            // console.log("Identificatorul pentru user pe care l-am primit este", id);
             Resursa.find({idContributor: id}).exec().then(pRes => {
                 socket.emit('usrRes', pRes);
             }).catch((err) => {
@@ -1293,8 +1311,7 @@ module.exports = function sockets (io) {
 
         // === ALLUSERS === ::TOȚI UTILIZATORII
         socket.on('allUsers', () => {
-            const UserModel = mongoose.model('user', UserSchema); // constituie model din schema de user
-            UserModel.find({}).exec().then(allUsers => {
+            User.find({}).exec().then(allUsers => {
                 socket.emit('allUsers', allUsers);
             }).catch((err) => {
                 logger.error(`[sockets.js::'allUsers'] Eroare la aducerea utilizatorilor cu următoarele detalii: ${err}`);

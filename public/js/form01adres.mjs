@@ -3048,7 +3048,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             // Adăugarea de informații în toolbar
             $("div.toolbar").html('<strong>Pentru a încadra corect activitățile (cunoștințe, abilități, atitudini) fiecărei competențe, apăsați semnul plus.</strong>');
 
-            // TODO: În cazul în care te decizi să introduci fontawesome
+            // _TODO: În cazul în care te decizi să introduci fontawesome
             // $(this).find('[data-fa-i2svg]').toggleClass('fa-minus-square').toggleClass('fa-plus-square');
 
             // Adaugă eveniment pe deschiderea detaliilor și închidere (butonul verde)
@@ -3113,7 +3113,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         return values;
     }
 
-    // globalThis.disciplineBifate = disciplineBifate; // HACK: Expunere în global
+    // globalThis.disciplineBifate = disciplineBifate; // _HACK: Expunere în global
 
     /**
      * Populează cu date reprezentând competențele specifice pentru disciplinele selectate

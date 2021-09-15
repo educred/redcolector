@@ -353,8 +353,8 @@ router.get('/users', function clbkAdmUsr (req, res) {
         res.render('users-data-visuals', {
             title:     "Utilizatori",
             user:      req.user,
-            logoimg:   "/img/red-logo-small30.png",
-            credlogo:  "../img/CREDlogo.jpg",
+            logoimg:   LOGO_IMG,
+            // credlogo:  "../img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
             scripts:   scriptsArr,
             modules,
@@ -380,6 +380,12 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
 
         // Scripturile necesare rutei /administrator [rol: admin]
         let usrIdAdScripts = [
+            // DATATABLES
+            {script: '/lib/npm/jquery.dataTables.min.js'},
+            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+            {script: '/lib/npm/dataTables.select.min.js'},
+            {script: '/lib/npm/dataTables.buttons.min.js'},
+            {script: '/lib/npm/dataTables.responsive.min.js'},
             // TIMELINE 3
             {script: '/lib/timeline3/js/timeline.js'},
             {script: '/js/user.js'}
@@ -390,8 +396,8 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
         res.render('user-admin', {
             title:    "Fișă user",
             user:     req.user,
-            logoimg:  "/img/red-logo-small30.png",
-            credlogo: "../img/CREDlogo.jpg",
+            logoimg:  LOGO_IMG,
+            // credlogo: "../img/CREDlogo.jpg",
             csrfToken: req.csrfToken(),
             scripts,
             styles,
@@ -402,6 +408,12 @@ router.get('/users/:id', function clbkAdmRoot (req, res) {
 
         // Scripturile necesare rutei /administrator [rol: validator]
         let usrIdValScripts = [
+            // DATATABLES
+            {script: '/lib/npm/jquery.dataTables.min.js'},
+            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
+            {script: '/lib/npm/dataTables.select.min.js'},
+            {script: '/lib/npm/dataTables.buttons.min.js'},
+            {script: '/lib/npm/dataTables.responsive.min.js'},
             // TIMELINE 3
             {script: '/lib/timeline3/js/timeline.js'},
             {script: '/js/validator.js'}

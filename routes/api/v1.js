@@ -4,8 +4,7 @@ const jwt           = require('jsonwebtoken');
 const RedModel      = require('../../models/resursa-red');
 const passport      = require('passport');
 const localStrategy = require('passport-local').Strategy;
-const UserSchema    = require('../../models/user');
-const UserModel   = mongoose.model('users', UserSchema, 'users');
+const User          = require('../../models/user');
 const {clbkLogin}   = require('../authLocal/authL');
 const logger        = require('../../util/logger');
 
@@ -167,8 +166,8 @@ exports.delRED = function delRED (req, res, next) {
 exports.createUser = function createUser (req, res, next) {
         // Crearea contului!!!
         // metoda este atașată de pluginul `passport-local-mongoose` astfel: schema.statics.register
-        UserModel.register(
-                new UserModel({
+        User.register(
+                new User({
                         _id: mongoose.Types.ObjectId(),
                         username: req.body.email,  // _NOTE: Verifică dacă username și email chiar vin din body
                         email: req.body.email,
@@ -185,7 +184,7 @@ exports.createUser = function createUser (req, res, next) {
                                 console.log('[signup::post]', err);
                         };
                         // dacă nu este nicio eroare, testează dacă s-a creat corect contul, făcând o autentificare
-                        var authenticate = UserModel.authenticate();
+                        var authenticate = User.authenticate();
                                 authenticate(req.body.email, req.body.password, function clbkAuthTest (err, result) {
                                 if (err) {
                                         logger.error(err);
@@ -228,7 +227,7 @@ exports.loginUser = async function loginUser (req, res, next) {
   // Read username and password from request body
   const { username, password } = req.body;
   // Caută userul
-  UserModel.findOne({email: username}).lean().then(user => {
+  User.findOne({email: username}).lean().then(user => {
     // verifică dacă există utilizatorul
     if (!user) {
       return res.status(404).json({success: false, message: 'user not found'});
