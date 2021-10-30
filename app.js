@@ -220,6 +220,7 @@ hbs.registerHelper('json', function clbkHbsHelperJSON (obi) {
     return JSON.stringify(obi);
 });
 app.engine('hbs', hbs.express4({
+    // defaultLayout: __dirname + '/views/layouts/landing.hbs',
     partialsDir: __dirname + '/views/partials',
     layoutsDir:  __dirname + '/views/layouts',
     beautify: true

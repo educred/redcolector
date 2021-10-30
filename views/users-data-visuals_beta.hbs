@@ -1,0 +1,22 @@
+{{!< beta/layout}}
+{{> nav-administrator}}
+{{> messages}}
+<input type="hidden" name="_csrf" value="{{this.csrfToken}}">
+
+<div id="content">
+    <div class="title"><h1>Utilizatorii</h1></div>
+    <section class="container-fluid" id="res-visuals">
+        {{!-- Va încărca resursele compilate cu ajutorul template-ului --}}
+        <div id="visuals" class="tableDisplay">
+        </div>
+    </section>
+</div>
+
+{{!-- Tabelul resurselor personale --}}
+<template id="userResTbl">
+    <div id="resurseTab" class=""></div>
+</template>
+
+{{#each scripts}}
+    <script defer type="application/javascript" src="{{script}}"></script>
+{{/each}}

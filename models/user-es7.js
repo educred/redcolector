@@ -19,26 +19,27 @@ const userES7 = {
     },
     mappings: {
         properties: {
-            created:          {type: "date"},
-            email:            {type: "text", fields: {keyword: {type: "keyword"}}},
-            roles:            {
-                type: "nested",
+            created: {type: "date"},
+            email:   {type: "text", fields: {keyword: {type: "keyword"}}},
+            roles:   {
+                type: "object",
                 properties: {
                     admin:     {type: "boolean"},
                     public:    {type: "boolean"},
-                    rolInCRED: {type: "text", fields: {keyword: {type: "keyword"}}},
-                    unit:      {type: "text", fields: {keyword: {type: "keyword"}}}
+                    rolInCRED: {type: "text"},
+                    unit:      {type: "text", store: true}
                 }
             },
             googleID: {type: "text", fields: {keyword: {type: "keyword"}}},
             googleProfile: {
-                type: "nested",
+                type: "object",
                 properties: {
-                    name:        {type: "text"},
-                    family_name: {type: "text"}
+                    name:        {type: "text", store: true},
+                    given_name:  {type: "text", store: true},
+                    family_name: {type: "text", store: true}
                 }
             },
-            ecusoane: {type: "text", fields: {keyword: {type: "keyword"}}}
+            ecusoane: {type: "text", store: true}
         }
     },
     aliases: {

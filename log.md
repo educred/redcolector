@@ -1,3 +1,222 @@
+npm notice 
+npm notice New major version of npm available! 7.19.1 -> 8.1.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v8.1.0
+npm notice Run npm install -g npm@8.1.0 to update!
+npm notice 
+
+
+var pResEd = resursaEducationala.populate('competenteS').execPopulate();
+
+Deprecation!!!!!!
+Vezi
+https://mongoosejs.com/docs/migrating_to_6.html#removed-execpopulate
+
+
+
+[app.js] A apărut un "uncaughtException" cu detaliile:  resursaEducationala.populate(...).execPopulate is not a function
+[11-10-2021 14:04:27] [error] [undefined]:      resursaEducationala.populate(...).execPopulate is not a function TypeError: resursaEducationala.populate(...).execPopulate is not a function
+    at Socket.clbkCreateRED (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:475:70)
+    at Socket.emit (node:events:394:28)
+    at Socket.emitUntyped (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/socket.io/dist/typed-events.js:69:22)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/socket.io/dist/socket.js:428:39
+    at processTicksAndRejections (node:internal/process/task_queues:78:11)
+[11-10-2021 14:04:27] [error] [undefined]:      resursaEducationala.populate(...).execPopulate is not a function TypeError: resursaEducationala.populate(...).execPopulate is not a function
+    at Socket.clbkCreateRED (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:475:70)
+    at Socket.emit (node:events:394:28)
+    at Socket.emitUntyped (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/socket.io/dist/typed-events.js:69:22)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/socket.io/dist/socket.js:428:39
+    at processTicksAndRejections (node:internal/process/task_queues:78:11)
+Procesul a fost încheiat având codul:  1
+[nodemon] app crashed - waiting for file changes before starting...
+
+
+
+npm-check -u
+(node:35789) [DEP0128] DeprecationWarning: Invalid 'main' field in '/usr/local/lib/node_modules/npm-check/node_modules/find-parent-dir/package.json' of 'find-parent-dir.js'. Please either fix that or report it to the module author
+(Use `node --trace-deprecation ...` to show where the warning was created)
+? Choose which packages to update. 
+  
+ Patch Update Backwards-compatible bug fixes.
+ ◉ mongoose            6.0.7  ❯  6.0.8  https://mongoosejs.com
+ ◉ postcss-cli devDep  9.0.0  ❯  9.0.1  https://github.com/postcss/postcss-cli#readme
+  
+ Minor Update New backwards-compatible features.
+❯◉ express-rate-limit  5.3.0  ❯  5.4.0  https://github.com/nfriedly/express-rate-limit
+  
+ Major Update Potentially breaking API changes. Use caution.
+ ◯ globby  11.0.4  ❯  12.0.2  https://github.com/sindresorhus/globby#readme
+
+
+
+
+
+
+npm audit fix
+
+changed 6 packages, and audited 1065 packages in 2s
+
+98 packages are looking for funding
+  run `npm fund` for details
+
+# npm audit report
+
+ansi-regex  >2.1.1 <5.0.1
+Severity: moderate
+ Inefficient Regular Expression Complexity in chalk/ansi-regex - https://github.com/advisories/GHSA-93q8-gq69-wqmw
+fix available via `npm audit fix`
+node_modules/wide-align/node_modules/ansi-regex
+node_modules/wrap-ansi/node_modules/ansi-regex
+  strip-ansi  4.0.0 - 5.2.0
+  Depends on vulnerable versions of ansi-regex
+  node_modules/wide-align/node_modules/strip-ansi
+  node_modules/wrap-ansi/node_modules/strip-ansi
+    string-width  2.1.0 - 4.1.0
+    Depends on vulnerable versions of strip-ansi
+    node_modules/wide-align/node_modules/string-width
+    node_modules/wrap-ansi/node_modules/string-width
+      wrap-ansi  3.0.0 - 6.1.0
+      Depends on vulnerable versions of string-width
+      Depends on vulnerable versions of strip-ansi
+      node_modules/wrap-ansi
+        status-logger  >=3.1.1
+        Depends on vulnerable versions of wrap-ansi
+        node_modules/status-logger
+          neat-log  1.1.2
+          Depends on vulnerable versions of status-logger
+          node_modules/neat-log
+
+express-hbs  *
+Severity: moderate
+Insecure template handling in express-hbs - https://github.com/advisories/GHSA-rwxp-hwwf-653v
+No fix available
+node_modules/express-hbs
+
+7 moderate severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+Some issues need review, and may require choosing
+a different dependency.
+
+
+Aplicația a crăpat cu următoarele detalii:  Error: [resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix
+    at loadRootResources (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/resurse.ctrl.js:73:19)
+
+
+
+    at Layer.handle [as handle_request] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/route.js:137:13)
+    at Route.dispatch (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/route.js:112:3)
+    at Layer.handle [as handle_request] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/layer.js:95:5)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:281:22
+    at Function.process_params (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:335:12)
+    at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:275:10)
+    at Function.handle (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:174:3)
+    at router (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:47:12)
+    at Layer.handle [as handle_request] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:317:13)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:284:7
+    at Function.process_params (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:335:12)
+    at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/express/lib/router/index.js:275:10)
+
+
+    at ensureAuthenticated (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/user.ctrl.js:43:24)
+
+    
+[27-09-2021 12:03:37] [error] [undefined]:      [resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix
+[27-09-2021 12:03:37] [error] [undefined]:      [resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix
+
+
+Actualizare
+
+Patch Update Backwards-compatible bug fixes.
+❯◯ datatables.net             1.11.2  ❯  1.11.3  https://datatables.net
+ ◯ datatables.net-buttons     2.0.0   ❯  2.0.1   https://datatables.net
+ ◯ datatables.net-buttons-dt  2.0.0   ❯  2.0.1   https://datatables.net
+ ◯ datatables.net-dt          1.11.2  ❯  1.11.3  https://datatables.net
+ ◯ isomorphic-git             1.10.0  ❯  1.10.1  https://isomorphic-git.org/
+ ◯ mocha                      9.1.1   ❯  9.1.2   https://mochajs.org/
+ ◯ mongoose                   6.0.5   ❯  6.0.7   https://mongoosejs.com
+ ◯ pm2                        5.1.1   ❯  5.1.2   http://pm2.keymetrics.io/
+ ◯ autoprefixer devDep        10.3.4  ❯  10.3.6  https://github.com/postcss/autoprefixer#readme
+  
+ Minor Update New backwards-compatible features.
+ ◯ @elastic/elasticsearch  7.14.1  ❯  7.15.0  http://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
+ ◯ elasticdump             6.73.2  ❯  6.75.0  https://github.com/elasticsearch-dump/elasticsearch-dump#readme
+
+
+
+ResponseError: mapper_parsing_exception: [mapper_parsing_exception] Reason: Failed to parse mapping [_doc]: Failed to parse value [analyzed] as only [true] or [false] are allowed.
+    at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:350:23)
+    at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:276:11)
+    at IncomingMessage.emit (node:events:406:35)
+    at endReadableNT (node:internal/streams/readable:1343:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  meta: {
+    body: { error: [Object], status: 400 },
+    statusCode: 400,
+    headers: {
+      'x-elastic-product': 'Elasticsearch',
+      warning: '299 Elasticsearch-7.15.0-79d65f6e357953a5b3cbcc5e2c7c21073d89aa29 "Elasticsearch built-in security features are not enabled. Without authentication, your cluster could be accessible to anyone. See https://www.elastic.co/guide/en/elasticsearch/reference/7.15/security-minimal-setup.html to enable security."',
+      'content-type': 'application/json; charset=UTF-8',
+      'content-length': '472'
+    },
+    meta: {
+      context: null,
+      request: [Object],
+      name: 'elasticsearch-js',
+      connection: [Object],
+      attempts: 0,
+      aborted: false
+    }
+  }
+} M-am oprit la 0 documente
+
+
+
+GET /users0/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET /users0/_mapping
+
+GET /users0/_search
+{
+  "query": {
+      "multi_match": {
+          "query": "nicu.constantinescu",
+          "type": "most_fields",
+          "fields": ["email", "googleProfile.name"]
+      }
+  }
+}
+
+GET _cat/indices/?v
+
+GET _cat/indices/*,-.*?v
+
+GET /_cat/health?v=true
+
+DELETE /false
+
+GET /resedus*/_alias
+
+GET /users*/_alias
+
+GET /users/_alias
+
+GET /_cat/indices/exists
+
+GET _cat/count/resedus1/?v&pretty
+
+GET /resedus0/_search?size=0&filter_path=hits.total&pretty
+
+
+
 /home/nicu/.pm2/logs/app-error.log
 
 
@@ -17,11 +236,6 @@ Aplicația a crăpat cu următoarele detalii:  TokenError: Bad Request
 0|app  | GET /callback?code=4/0AX4XfWhUNsgqtMGMHtABuHI4xp6QiIYyJv5jR4YUYQpvfWH1XXOuegW_rYUmxiZeSHFPCA&scope=email%20profile%20https://www.googleapis.com/auth/userinfo.email%20openid%20https://www.googleapis.com/auth/userinfo.profile&authuser=1&hd=educred.ro&prompt=none 302 169.194 ms - 52
 
 
-
-
-
-
-
 Uncaught TypeError: $(...).DataTable is not a function
 (user.js:165)
 
@@ -33,141 +247,6 @@ Uncaught TypeError: $(...).DataTable is not a function
 Choose which packages to update. @fortawesome/fontawesome-free@5.15.4, multer@1.4.3, pm2@5.1.1, supertest@6.1.6, autoprefixer@10.3.4, @elastic/elasticsearch@7.14.1, bootstrap@5.1.1, datatables.net@1.11.2, datatables.net-dt@1.11.2, elasticdump@6.73.2, isomorphic-git@1.10.0, mocha@9.1.1, socket.io@4.2.0, socket.io-client@4.2.0, webpack-cli@4.8.0, datatables.net-buttons@2.0.0, datatables.net-buttons-dt@2.0.0, globby@12.0.2, mongoose@6.0.5
 
 $ npm install --save @fortawesome/fontawesome-free@5.15.4 multer@1.4.3 pm2@5.1.1 supertest@6.1.6 @elastic/elasticsearch@7.14.1 bootstrap@5.1.1 datatables.net@1.11.2 datatables.net-dt@1.11.2 elasticdump@6.73.2 isomorphic-git@1.10.0 mocha@9.1.1 socket.io@4.2.0 socket.io-client@4.2.0 datatables.net-buttons@2.0.0 datatables.net-buttons-dt@2.0.0 globby@12.0.2 mongoose@6.0.5 --color=always
-
-
-
-
-
-
-
-
-```javascript
-console.log("La primirea pe evenimentul `es7reidx` am următoarele date venite: ", data);
-let pscript =  '';
-// În funcție de modificarea mapping-ului trebuie adaptat scriptul painless care să opereze modificările de structură (vezi variabila `pscript`).
-
-console.log("[socket.js::reidxincr] Am primit in reidxincr datele", data);
-
-let idx = data.alsr + data.vs,
-    nvs = ''; // noua versiune
-
-// Verifică mai întâi dacă ai mapping pentru colecția respectivă. Dacă cu ai mapping, trimite înapoi mesaj că acesta nu există și nu se va face indexarea
-if (data.alsr in col2idx) {
-    // Verifică existența alias-ului (alias-ul nu este purtător de versiune)
-    esClient.indices.existsAlias({name: data.alsr})
-        .then((r) => {
-
-            // ALIAS-ul există, procedează la reindexare
-            if (r.statusCode === 200) {
-                
-
-                // dacă este un alias care se termină cu un număr, atunci înseamnă că e un install vechi. Șterge MANUAL indexul, sterge alias-ul. Reindexează de la 0.
-                // https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-aliases.html#indices-aliases-api-rename-alias-ex
-                /*
-                    #1 Adaugă un index nou 
-                    #2 reindexează înregistrările pe noul index 
-                        - https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#_reindex
-                        - https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/7.x/reindex_examples.html
-                    #3 Leagă indexul nou de alias-ul existent
-                    #4 Șterge indexul vechi
-                */
-                
-                // verifică cărui index aparține alias-ul.
-                esClient.cat.aliases({
-                    name: data.alsr,
-                    format: "json"     
-                }, (err, r) => {
-                    if (err) {
-                        console.log("[socket.js::reidxincr()] De la aliases", err);
-                        logger.error(err);
-                    };
-
-                    console.log("Indexul verificat este", r.body[0].index, " iar aliasul este ", r.body[0].alias);
-
-                    // în cazul în care indexul primit este egal cu cel verificat pentru alias creează noul index
-                    if (idx === r.body[0].index) {
-                        
-                        // incrementează versiunea
-                        let nrvs = parseInt(data.vs);
-                        let newvs = ++nrvs;
-                        nvs = data.alsr + newvs; // `nvs` e prescurtare de la `new version`
-
-                        console.log("Noua versiune de index incrementată este ", nvs);
-
-                        // CREEAZĂ INDEXUL nou pasând la index, numele noului index, iar la body, mapping-ul indexului. Ori de câte ori modiffice mappingul, reindexezi
-                        esClient.indices.create({
-                            index: nvs,
-                            body:  col2idx[data.alsr].mapping
-                        }).then(async (r) => {
-
-                            // REINDEXEAZĂ
-                            let body4reindex = {
-                                source: {
-                                    index: idx
-                                },
-                                dest: {
-                                    index: nvs
-                                }
-                                // ,
-                                // script: {
-                                //     lang: 'painless',
-                                //     source: pscript
-                                // }
-                            };
-                            await esClient.reindex({
-                                waitForCompletion: true,
-                                refresh: true,
-                                body: body4reindex
-                            });
-
-                            // ATAȘEZ alias-ul noului index creat
-                            // https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#_indices_putalias
-                            await esClient.indices.putAlias({
-                                index: nvs,
-                                name:  data.alsr
-                            });
-                            
-                            // ȘTERGE indexul vechi
-                            esClient.indices.delete({
-                                index: idx
-                            }, (error, r) => {
-                                if (error) {
-                                    logger.error(error);
-                                    console.log("[socket.js::reidxincr()] Când să șterg indicele, am avut o eroare");
-                                };
-
-                                // Trimite datele noului index
-                                socket.emit('es7reidx', {newidx: nvs, oldidx: idx, deleted: r.body.acknowledged}); // trimit clientului datele
-                            });
-
-                        }).catch((err) => {
-                            if (err) {
-                                console.log("[socket.js::reidxincr()] Am eșuat crearea noului index cu următoarele detalii: ", err)
-                                logger.error(err);
-                            };
-                        });
-                    }
-                });
-            } else {
-                console.log("Alias-ul nu există. Ai statusCode: ", r.statusCode)
-            }
-        }).catch((err) => {
-            logger.log(err);
-            console.log('La reindexarea incrementală a apărut următoarea eroare: ', err.message);
-        });
-}
-// Pentru că nu există un fișier de mapping pentru respectiva colecție
-socket.emit('es7reidx', {mapping: false}); // trimit clientului datele
-```
-
-
-
-
-
-
-
-
-
 
 
 

@@ -4,7 +4,7 @@ const express    = require('express');
 const router     = express.Router();
 const passport   = require('passport');
 const mongoose   = require('mongoose');
-// const UserSchema = require('../models/user');
+const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
 
 const logger     = require('../util/logger');
 // Încarcă controlerul necesar tratării rutelor de autentificare
@@ -12,20 +12,31 @@ const UserPassport = require('./controllers/user.ctrl')(passport);
 const User       = require('../models/user');
 const {generatePassword} = require('./utils/password');
 
-// CONSTANTE
-const LOGO_IMG = "img/" + process.env.LOGO;
+// LOGO
+let LOGO_IMG = "img/" + process.env.LOGO;
 
 /* === SIGNUP [GET] ===*/
-router.get('/', function clbkSignUpGet (req, res, next) {
+async function clbkSignUpGet (req, res, next) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+
     let scripts = [
         // LOCALE
-        {script: '/js/signup.js'} 
+        {script: `${gensettings.template}/js/signup.js`} 
     ];
-    res.render('signup', {
-        title:   "Signup RED",
-        style:   "/lib/fontawesome/css/fontawesome.min.css",
-        logoimg: LOGO_IMG,
+    res.render(`signup_${gensettings.template}`, {
+        title:   "Signup",
+        style:   `${gensettings.template}/lib/fontawesome/css/fontawesome.min.css`,
+        logoimg: `${gensettings.template}/${LOGO_IMG}`,
         scripts
+    });
+};
+router.get('/', (req, res, next) => {
+    clbkSignUpGet (req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);  
     });
 });
 
@@ -40,8 +51,8 @@ router.post('/', function clbkPostSignUp (req, res, next) {
         username: req.body.email, 
         email:    req.body.email,
         roles: {
-            admin: false,
-            public: false,
+            admin:     false,
+            public:    false,
             rolInCRED: ['general']
         },
         salt, 

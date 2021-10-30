@@ -13,6 +13,7 @@ let makeSureLoggedIn = require('connect-ensure-login');
 let checkRole        = require('./controllers/checkRole.helper');
 // MODELE
 const Resursa    = require('../models/resursa-red'); // Adu modelul resursei
+const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
 // CONFIGURARI ACCES SERVICII
 const esClient   = require('../elasticsearch.config');
 // HELPERI
@@ -20,8 +21,8 @@ const schema     = require('../models/resursa-red-es7');
 const ES7Helper  = require('../models/model-helpers/es7-helper');
 let editorJs2TXT = require('./controllers/editorJs2TXT');
 
-// CONSTANTE
-const LOGO_IMG = "img/" + process.env.LOGO;
+// LOGO
+let LOGO_IMG = "img/" + process.env.LOGO;
 
 // INDECȘII ES7
 let RES_IDX_ES7 = '', RES_IDX_ALS = '';
@@ -36,139 +37,164 @@ redisClient.get("RES_IDX_ALS", (err, reply) => {
 });
 
 /* === PROFILUL PROPRIU === */
-router.get('/', makeSureLoggedIn.ensureLoggedIn(), function clbkProfile (req, res) {
-    res.render('profile', {        
+async function clbkProfile (req, res) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+
+    res.render(`profile_${gensettings.template}`, {
+        template:     `${gensettings.template}`,
         title:        "Profil",
         user:         req.user,
-        logoimg:      LOGO_IMG,
+        logoimg:      `${gensettings.template}/${LOGO_IMG}`,
         csrfToken:    req.csrfToken(),
         activePrfLnk: true
     });
+};
+router.get('/', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
+    clbkProfile(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);    
+    })
 });
 
 /* === ACCESAREA PROPRIILOR RESURSE :: /resurse === */
-router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), function clbkProfRes (req, res) {
-        /* === RESURSELE NECESARE LA RANDARE === */
-        let scripts = [       
-            // MOMENT.JS
-            {script: '/lib/npm/moment-with-locales.min.js'},
-            // HOLDERJS
-            {script: '/lib/npm/holder.min.js'},
-            // LOCAL
-            //{script: '/js/form02log.js'},
-            // DATATABLES
-            {script: '/lib/npm/jquery.dataTables.min.js'},
-            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
-            {script: '/lib/npm/dataTables.select.min.js'},
-            {script: '/lib/npm/dataTables.buttons.min.js'},
-            {script: '/lib/npm/dataTables.responsive.min.js'},
-            // TIMELINE 3
-            {script: '/lib/timeline3/js/timeline.js'}            
-        ];
+async function clbkProfRes (req, res) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
 
-        let styles = [
-            // FONTAWESOME
-            {style: '/lib/npm/all.min.css'},
-            // JQUERY TOAST
-            {style: '/lib/npm/jquery.toast.min.css'},
-            // BOOTSTRAP
-            {style: '/lib/npm/bootstrap.min.css'},
-            {style: '/lib/npm/jquery.dataTables.min.css'},
-            {style: '/lib/npm/responsive.dataTables.min.css'},
-            {style: '/lib/npm/dataTables.bootstrap4.min.css'}
-        ];
-
-        let modules = [
-            // MAIN
-            {module: '/js/main.mjs'},
-            {module: '/js/res-visuals-user.mjs'}
-        ];
-        /**
-         * Funncție cu rol de callback
-         * Transformă obiectul primit într-un POJO cu date formatate cu moment
-         * @param {Object} obi 
-         */
-        function clbkMapResult (obi) {
-            const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-            // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
-            newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
-            // newResultArr.push(newObi);
-            return newObi;
-        }
-
-        // Afișează doar ultimele 8 resurse introduse
-        Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((result) => {
-
-            // transformă documentele Mongoose în POJOs cu dată formatată
-            let newResultArr = result.map(clbkMapResult);
-
-            /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
-            res.render('resurse-profil', {                
-                title:     "Profil",
-                user:      req.user,
-                logoimg:   LOGO_IMG,
-                csrfToken: req.csrfToken(),
-                resurse:   newResultArr,
-                scripts,
-                modules,
-                styles,
-                activeAdmLnk: true
-            });
-        }).catch((error) => {
-            console.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
-            logger.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
-        });
-    }
-);
-
-/* === VALIDARE / PUBLICARE /ȘTERGERE /EDITARE :: /resurse/:idres === */
-router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProfResID (req, res, next){
-    // Adu înregistrarea resursei cu toate câmpurile referință populate deja
-    // const editorJs2html = require('./controllers/editorJs2HTML');
-    let scripts = [
+    /* === RESURSELE NECESARE LA RANDARE === */
+    let scripts = [       
         // MOMENT.JS
-        {script: '/lib/npm/moment-with-locales.min.js'},
-        // HELPER DETECT URLS or PATHS
-        {script: '/js/check4url.js'}
-    ];
-
-    let modules = [
-        // EDITOR.JS
-        {module: '/lib/editorjs/editor.js'},
-        {module: '/lib/editorjs/header.js'},
-        {module: '/lib/editorjs/paragraph.js'},
-        {module: '/lib/editorjs/checklist.js'},
-        {module: '/lib/editorjs/list.js'},
-        {module: '/lib/editorjs/image.js'},
-        {module: '/lib/editorjs/embed.js'},
-        {module: '/lib/editorjs/code.js'},
-        {module: '/lib/editorjs/quote.js'},
-        {module: '/lib/editorjs/inlinecode.js'},
-        {module: '/lib/editorjs/table.js'},
-        {module: '/lib/editorjs/attaches.js'},
-        {module: '/lib/editorjs/ajax.js'},
-        // MAIN
-        {module: '/js/main.mjs'},
-        // REEDIT RES
-        {module: '/js/personal-res.mjs'},
+        {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+        // HOLDERJS
+        {script: `${gensettings.template}/lib/npm/holder.min.js`},
+        // LOCAL
+        //{script: '/js/form02log.js`},
+        // DATATABLES
+        {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+        {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+        {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+        {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+        {script: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+        // TIMELINE 3
+        {script: `${gensettings.template}/lib/timeline3/js/timeline.js`}            
     ];
 
     let styles = [
         // FONTAWESOME
-        {style: '/lib/npm/all.min.css'},
+        {style: `${gensettings.template}/lib/npm/all.min.css`},
         // JQUERY TOAST
-        {style: '/lib/npm/jquery.toast.min.css'},
+        {style: `${gensettings.template}/lib/npm/jquery.toast.min.css`},
         // BOOTSTRAP
-        {style: '/lib/npm/bootstrap.min.css'}
+        {style: `${gensettings.template}/lib/npm/bootstrap.min.css`},
+        {style: `${gensettings.template}/lib/npm/jquery.dataTables.min.css`},
+        {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+        {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`}
+    ];
+
+    let modules = [
+        // MAIN
+        {module: `${gensettings.template}/js/main.mjs`},
+        {module: `${gensettings.template}/js/res-visuals-user.mjs`}
+    ];
+    /**
+     * Funncție cu rol de callback
+     * Transformă obiectul primit într-un POJO cu date formatate cu moment
+     * @param {Object} obi 
+     */
+    function clbkMapResult (obi) {
+        const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
+        // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
+        newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
+        // newResultArr.push(newObi);
+        return newObi;
+    }
+
+    // Afișează doar ultimele 8 resurse introduse
+    Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((result) => {
+
+        // transformă documentele Mongoose în POJOs cu dată formatată
+        let newResultArr = result.map(clbkMapResult);
+
+        /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
+        res.render(`resurse-profil_${gensettings.template}`, {
+            template: `${gensettings.template}`,               
+            title:     "Profil",
+            user:      req.user,
+            logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+            csrfToken: req.csrfToken(),
+            resurse:   newResultArr,
+            scripts,
+            modules,
+            styles,
+            activeAdmLnk: true
+        });
+    }).catch((error) => {
+        console.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
+        logger.error(error);
+    });
+};
+router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
+    clbkProfRes(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error); 
+    })
+});
+
+/* === VALIDARE / PUBLICARE /ȘTERGERE /EDITARE :: /resurse/:idres === */
+async function clbkProfResID (req, res, next) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+    // Adu înregistrarea resursei cu toate câmpurile referință populate deja
+    // const editorJs2html = require('./controllers/editorJs2HTML');
+    let scripts = [
+        // MOMENT.JS
+        {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+        // HELPER DETECT URLS or PATHS
+        {script: `/js/check4url.js`}
+    ];
+
+    let modules = [
+        // EDITOR.JS
+        {module: `${gensettings.template}/lib/editorjs/editor.js`},
+        {module: `${gensettings.template}/lib/editorjs/header.js`},
+        {module: `${gensettings.template}/lib/editorjs/paragraph.js`},
+        {module: `${gensettings.template}/lib/editorjs/checklist.js`},
+        {module: `${gensettings.template}/lib/editorjs/list.js`},
+        {module: `${gensettings.template}/lib/editorjs/image.js`},
+        {module: `${gensettings.template}/lib/editorjs/embed.js`},
+        {module: `${gensettings.template}/lib/editorjs/code.js`},
+        {module: `${gensettings.template}/lib/editorjs/quote.js`},
+        {module: `${gensettings.template}/lib/editorjs/inlinecode.js`},
+        {module: `${gensettings.template}/lib/editorjs/table.js`},
+        {module: `${gensettings.template}/lib/editorjs/attaches.js`},
+        {module: `${gensettings.template}/lib/editorjs/ajax.js`},
+        // MAIN
+        {module: `${gensettings.template}/js/main.mjs`},
+        // REEDIT RES
+        {module: `${gensettings.template}/js/personal-res.mjs`},
+    ];
+
+    let styles = [
+        // FONTAWESOME
+        {style: `${gensettings.template}/js/personal-res.mjs/lib/npm/all.min.css`},
+        // JQUERY TOAST
+        {style: `${gensettings.template}/js/personal-res.mjs/lib/npm/jquery.toast.min.css`},
+        // BOOTSTRAP
+        {style: `${gensettings.template}/js/personal-res.mjs/lib/npm/bootstrap.min.css`}
     ];
 
     let roles = ["user", "cred", "validator"];
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
 
     // caută resursa în bază
-    const query = Resursa.findById(req.params.idres).populate({path: 'competenteS'});    
     // reformatare obiect resursă și căutarea corespondentului în Elasticsearch cu reindexare, dacă nu există în bază, șterge ghost-ul din ES
-    query.then((resursa) => {   
+    Resursa.findById(req.params.idres).populate({path: 'competenteS'}).then((resursa) => {   
         /* === Resursa încă există în MongoDB === */
         if (resursa.id !== null) {
             // transformă obiectul document de Mongoose într-un obiect normal.
@@ -292,8 +318,8 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             }
             // Setul de date va fi disponibil în `data-content` ca string JSON. Este trimis cu helperul `hbs.registerHelper('json', cb)` definit în app.js
             // Acest lucru este necesar pentru a reedita resursa în client.
-            res.render('resursa-admin', {
-                title:     "RED",
+            res.render(`resursa-admin_${gensettings.template}`, {
+                title:     "Resursa",
                 user:      req.user,                
                 logoimg:   LOGO_IMG,
                 csrfToken: req.csrfToken(),
@@ -310,10 +336,11 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             } else {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck">`;
             }
-            res.render('resursa-validator', {            
+            res.render(`resursa-validator_${gensettings.template}`, {
+                template:  `${gensettings.template}`,      
                 title:     "Validator",
                 user:      req.user,               
-                logoimg:   LOGO_IMG,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
@@ -323,11 +350,11 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
         /* === ROLURI ÎN CRED === */
         } else if (confirmedRoles.length > 0) { 
             // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
-            res.render('resursa', {                
-                title:     "RED",
+            res.render(`resursa_${gensettings.template}`, { 
+                template:  `${gensettings.template}`,                
+                title:     "Resursa",
                 user:      req.user,
-                // style:     "/lib/fontawesome/css/fontawesome.min.css",
-                logoimg:   LOGO_IMG,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
@@ -343,9 +370,15 @@ router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), async function clbkProf
             console.error(err);
             // rre('mesaje', `Nu pot să afișez resursa. Este posibil să nu mai existe! Eroare: ${err}`);
             res.redirect('/administrator/reds');
-            next(err); // fugi pe următorul middleware / rută
         }
     });
+};
+router.get('/:idres', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
+    clbkProfResID(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error); 
+    })
 });
 
 module.exports = router;

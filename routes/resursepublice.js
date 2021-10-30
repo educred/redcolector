@@ -3,12 +3,15 @@ require('dotenv').config();
 const express = require('express');
 const router  = express.Router();
 const moment  = require('moment');
+const logger  = require('../util/logger');
 const Resursa = require('../models/resursa-red'); // Adu modelul resursei
+const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
+
 var content2html = require('./controllers/editorJs2HTML');
 const redisClient = require('../redis.config');
 
-// CONSTANTE
-const LOGO_IMG = "img/" + process.env.LOGO;
+// LOGO
+let LOGO_IMG = "img/" + process.env.LOGO;
 
 // INDECȘII ES7
 const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
@@ -23,15 +26,13 @@ const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
 let idxRes = RES_IDX_ALS;
 
 // === RESURSE PUBLICE ===
-router.get('/', (req, res) => {
-    Resursa.where({'generalPublic': true}).countDocuments(function cbCountResPub (err, count) {
-        if (err) throw err;
-        // console.log('Numărul resurselor este: ', count);
-    });
+async function clbkResPublice (req, res) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
 
-    let resursePublice = Resursa.find({'generalPublic': 'true'}).sort({"date": -1}).limit(8);
-    let promiseResPub = resursePublice.exec();
-    promiseResPub.then((result) => {
+    let resursePublice = Resursa.find({'generalPublic': true}).sort({"date": -1}).limit(8);
+    resursePublice.exec().then((result) => {
         let newResultArr = [];
 
         result.map(function clbkMapResult (obi) {
@@ -43,33 +44,34 @@ router.get('/', (req, res) => {
 
         let scripts = [
             //JQUERY
-            {script: '/lib/npm/jquery.slim.min.js'},
-            {script: '/lib/npm/jquery.waypoints.min.js'}, 
+            {script: `${gensettings.template}/lib/npm/jquery.slim.min.js`},
+            {script: `${gensettings.template}/lib/npm/jquery.waypoints.min.js`}, 
             // MOMENT.JS
-            {script: '/lib/npm/moment-with-locales.min.js'}, 
+            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}, 
             // FONTAWESOME
-            {script: '/lib/npm/all.min.js'},
+            {script: `${gensettings.template}/lib/npm/all.min.js`},
             // HOLDERJS
-            {script: '/lib/npm/holder.min.js'},
+            {script: `${gensettings.template}/lib/npm/holder.min.js`},
             // BOOTSTRAP         
-            {script: '/lib/npm/bootstrap.bundle.min.js'},
-            {script: '/js/custom.js'},
-            {script: '/js/resursepublice.js'}
+            {script: `${gensettings.template}/lib/npm/bootstrap.bundle.min.js`},
+            {script: `${gensettings.template}/js/custom.js`},
+            {script: `${gensettings.template}/js/resursepublice.js`}
         ];
 
         let modules = [
-            {module: '/lib/npm/popper.min.js'},
+            {module: `${gensettings.template}/lib/npm/popper.min.js`},
             
         ];
 
         let styles = [
-            {style: '/lib/npm/all.min.css'}
+            {style: `${gensettings.template}/lib/npm/all.min.css`}
         ];
 
-        res.render('resursepublice', {
+        res.render(`resursepublice_${gensettings.template}`, {
+            template:     `${gensettings.template}`,
             title:        "Publice",
             user:         req.user,
-            logoimg:      LOGO_IMG,
+            logoimg:      `${gensettings.template}/${LOGO_IMG}`,
             csrfToken:    req.csrfToken(),            
             resurse:      newResultArr,
             activeResLnk: true,
@@ -81,20 +83,27 @@ router.get('/', (req, res) => {
     }).catch((err) => {
         if (err) throw err;
     });
+};
+router.get('/', (req, res, next) => {
+    clbkResPublice(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);   
+    })
 });
 
-router.get('/:id', (req, res) => {
+// === RESURSĂ PUBLICĂ INDIVIDUALĂ ===
+async function clbkResPublicaID (req, res, next) {
     let query = Resursa.findById(req.params.id).populate({path: 'competenteS'});
     query.then(resursa => {
         let scripts = [      
             // MOMENT.JS
-            {script: '/lib/npm/moment-with-locales.min.js'},  
+            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},  
             // LOCALE
-            {script: '/js/redincredadmin.js'}    
+            {script: `${gensettings.template}/js/redincredadmin.js`}    
         ];
         
         if (resursa !== null) {
-
             // transformă obiectul document de Mongoose într-un obiect normal.
             const newObi = Object.assign({}, resursa._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
 
@@ -109,10 +118,10 @@ router.get('/:id', (req, res) => {
             newObi.editorContent = JSON.stringify(resursa);
             
             // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-            res.render('resursa-publica', {                
-                title:     "RED public",
+            res.render(`resursa-publica_${gensettings.template}`, {                
+                title:     "O resursă",
                 user:      req.user,
-                logoimg:   LOGO_IMG,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
                 resursa:   newObi,
                 scripts
@@ -125,6 +134,13 @@ router.get('/:id', (req, res) => {
             console.log(err);
         }
     });
+};
+router.get('/:id', (req, res, next) => {
+    clbkResPublicaID(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);  
+    })
 });
 
 module.exports = router;

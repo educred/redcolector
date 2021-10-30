@@ -34,7 +34,7 @@ if (document.getElementsByName('_csrf')[0].value) {
 
 // === MANAGEMENTUL COMUNICĂRII pe socketuri ===
 // pubComm.on('mesaje', (mess) => {
-//     // TODO: execută funcție care afișează mesajul
+//     //- TODO: execută funcție care afișează mesajul
 
 //     $.toast({
 //         heading: 'Colectorul spune:',
@@ -240,6 +240,111 @@ function check4url (url) {
     };
 }
 
+/*
+* MECANISM DE EXPIRAREA A CHEILOR DIN LOCALSTORAGE
+* https://www.sohamkamani.com/blog/javascript-localstorage-with-ttl-expiry/
+*/
+
+/**
+ * Setează o cheie în `localStorage`
+ * @param key nume cheie
+ * @param value valoarea care trebuie stocată
+ * @param ttl valoarea în milisecunde
+ */
+function setWithExpiry(key, value, ttl) {
+    // creează un obiect `Date`
+	const now = new Date();
+
+	// obiectul `item` este un obiect pe care îl vom serializa
+	const item = {
+		value,
+		expiry: now.getTime() + ttl,
+	};
+
+    // și apoi îl introducem în `localStorage`
+	localStorage.setItem(key, JSON.stringify(item)); 
+    // trebuie convertite la string pentru că atât putem stoca în localstorage
+}
+
+/**
+ * Funcția are rolul de a lua o valoare din `localStore`, a vedea dacă este expirată,
+ * Dacă timpul a expirat, și nu există valoare în parametrul `exp` o șterge.
+ * Dacă există valoare în parametrul `exp`, timpul va fi prelungit cu valoarea primită
+ * @param key numele cheii din `localStore`
+ * @param exp este valoarea în milisecunde a timpului cu care își extinde durata de viață cheia
+ * @returns valoarea cheii
+ */
+function getWithExpiry(key, exp) {
+	const itemStr = localStorage.getItem(key);
+
+	// dacă valoarea nu există, returnează `null`.
+	if (!itemStr) {
+		return null;
+	}
+	const item = JSON.parse(itemStr);
+	const now = new Date(); // creează obiectul `Date`
+
+	// compară timpul de expirare a elementului cu timpul curent
+	if (now.getTime() > item.expiry && !exp) {
+		// Dacă timpul curent este mai mare decât cel din obiect, șterge elementul din storage
+		localStorage.removeItem(key);
+		return null; // și returnează valoarea `null`
+	} else {
+        let preexisting = parseInt(item.expiry),
+            addedtime = parseInt(exp);
+        item.expiry = preexisting += addedtime;
+        // actualizează valoarea cheii
+        localStorage.setItem(key, JSON.stringify(item));
+    }
+	return item.value; // Dacă este în timpul setat, returnează valoarea
+}
+
+/**
+ * Funcția transformă datele dintr-un obiect DataForm într-un POJO
+ * Sursa: https://stackoverflow.com/questions/41431322/how-to-convert-formdata-html5-object-to-json
+ * https://javascript.info/formdata
+ * @param dataform Este obiectul DataForm
+ * @returns 
+ */
+function frm2obj(dataform) {
+    let object = {};
+    dataform.forEach((value, key) => {
+        if (!Reflect.has(object, key)) {
+            object[key] = value;
+            return;
+        }
+        if (!Array.isArray(object[key])) {
+            object[key] = [object[key]];
+        }
+        object[key].push(value);
+    });
+    return object;
+};
+
+/**
+ * Funcția are rolul de a elimina proprietățile care nu au valoare dintr-un obiect.
+ * Sursa: https://stackoverflow.com/questions/286141/remove-blank-attributes-from-an-object-in-javascript/57625661#57625661
+ * @param obj Obiect care trebuie curățat de proprietățile fără valori sau null
+ * @returns 
+ */
+const cleanEmptyPropsInObj = function(obj, defaults = [undefined, null, NaN, '']) {
+    if (!defaults.length) {
+        return obj;
+    }
+
+    if (defaults.includes(obj)) {
+        return;
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(v => v && typeof v === 'object' ? cleanEmptyPropsInObj(v, defaults) : v).filter(v => !defaults.includes(v));
+    }
+
+    return Object.entries(obj).length ? Object.entries(obj)
+        .map(([k, v]) => ([k, v && typeof v === 'object' ? cleanEmptyPropsInObj(v, defaults) : v]))
+        .reduce((a, [k, v]) => (defaults.includes(v) ? a : { ...a, [k]: v}), {}) : obj;
+}
+
 // let ocalecufis = '/test/ceva/ceva.jpg';
 // let ocale      = '/test/ceva/';
 // let unurl      = 'http://www.ceva.ro/cale1/cale2';
@@ -258,4 +363,4 @@ function check4url (url) {
 // check4url(real01);     //?
 // check4url(real02);     //?
 
-export {socket, pubComm, check4url, createElement, decodeCharEntities, datasetToObject};
+export {socket, pubComm, setWithExpiry, getWithExpiry, check4url, createElement, decodeCharEntities, datasetToObject, frm2obj, cleanEmptyPropsInObj};

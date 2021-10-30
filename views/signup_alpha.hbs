@@ -1,0 +1,11 @@
+{{!< alpha/landing}}
+{{> nav-landing}}
+
+<div class="container">
+    {{> messages}}
+    {{> loSignup}}
+</div>
+
+{{#each scripts}}
+    <script type="application/javascript" src="{{script}}"></script>
+{{/each}}

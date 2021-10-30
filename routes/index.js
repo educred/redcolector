@@ -2,20 +2,23 @@ require('dotenv').config();
 const express  = require('express');
 const router   = express.Router();
 const moment   = require('moment');
-const Resursa  = require('../models/resursa-red'); // Adu modelul resursei
+const Resursa  = require('../models/resursa-red');              // Adu modelul resursei
+const Mgmtgeneral = require('../models/MANAGEMENT/general');    // Adu modelul management
+const logger   = require('../util/logger');
 
-// CONSTANTE
-const LOGO_IMG = "img/" + process.env.LOGO;
+// LOGO
+let LOGO_IMG = "img/" + process.env.LOGO;
 
 /* === LANDING :: / === */
-router.get('/', function clbkRootRoute (req, res, next) {
-    // let localizat = moment(result.date).locale('ro').format('LLL');
-    // result.dataRo = `${localizat}`; // formatarea datei pentru limba română.
-
-    Resursa.where({'generalPublic': true}).countDocuments(function cbCountResPub (err, count) {
-        if (err) throw err;
-        // console.log('Numărul resurselor este: ', count);
-    });
+async function clbkRootRoute (req, res, next) {
+    
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+    // Resursa.where({'generalPublic': true}).countDocuments(function cbCountResPub (err, count) {
+    //     if (err) throw err;
+    //     console.log('Numărul resurselor este: ', count);
+    // });
 
     /* Adu ultimele 8 RESURSE pe landing */
     let resursePublice = Resursa.find({'generalPublic': true}).sort({"date": -1}).limit(8);
@@ -31,42 +34,63 @@ router.get('/', function clbkRootRoute (req, res, next) {
         
         let scripts = [
             //JQUERY
-            {script: '/lib/npm/jquery.slim.min.js'},
-            {script: '/lib/npm/jquery.waypoints.min.js'},
+            {script: `${gensettings.template}/lib/npm/jquery.slim.min.js`},
+            {script: `${gensettings.template}/lib/npm/jquery.waypoints.min.js`},
             // MOMENT.JS
-            {script: '/lib/npm/moment-with-locales.min.js'}, 
+            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}, 
             // FONTAWESOME
-            {script: '/lib/npm/all.min.js'},
+            {script: `${gensettings.template}/lib/npm/all.min.js`},
             // HOLDERJS
-            {script: '/lib/npm/holder.min.js'},            
-            {script: '/lib/npm/bootstrap.bundle.min.js'},
-            {script: '/js/custom.js'},
-            {script: '/js/IndexInfotoken.js'}
+            {script: `${gensettings.template}/lib/npm/holder.min.js`},
+            // BOOTSTRAP          
+            {script: `${gensettings.template}/lib/npm/bootstrap.bundle.min.js`},
+            // LOCALE
+            {script: `${gensettings.template}/js/custom.js`},
+            {script: `${gensettings.template}/js/IndexInfotoken.js`}
         ];
 
         let modules = [
-            {module: '/lib/npm/popper.min.js'},
-            {module: '/js/main.mjs'}
+            {module: `${gensettings.template}/lib/npm/popper.min.js`},
+            {module: `${gensettings.template}/js/main.mjs`}
         ];
 
         let styles = [
-            {style: '/lib/npm/all.min.css'}
+            {style: `${gensettings.template}/lib/npm/all.min.css`}
         ];
-    
-        res.render('index', {
+
+        let user = req.user;
+        let csrfToken = req.csrfToken();
+        
+        res.render(`index_${gensettings.template}`, {
+            template:  `${gensettings.template}`,
             title:     "Acasă",
-            user:      req.user,
-            logoimg:   LOGO_IMG,            
+            user,
+            logoimg:   `${gensettings.template}/${LOGO_IMG}`,            
             resurse:   newResultArr,
-            csrfToken: req.csrfToken(),
+            csrfToken,
             modules,
             scripts,
-            styles
+            styles,
+            creator: gensettings.creator,
+            publisher: gensettings.publisher,
+            brandname: gensettings.brand,
+            description: gensettings.description,
+            publisher: gensettings.publisher,
+            author: gensettings.contact
         });
     }).catch((err) => {
-        if (err) throw err;
-        next(err);
+        if (err) {
+            console.log(err);
+            logger.error(err);
+        }
     });
+}
+router.get('/', (req, res, next) => {
+    clbkRootRoute(req, res, next).catch((error) => {
+        console.log(err);
+        logger.error(err);
+        next(err);
+    })
 });
 
 module.exports = router;

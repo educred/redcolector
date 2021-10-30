@@ -5,37 +5,49 @@ const fs       = require('fs');
 const express  = require('express');
 const router   = express.Router();
 const passport = require('passport');
+const logger   = require('../util/logger');
+const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
 
-// CONSTANTE
-const LOGO_IMG = "img/" + process.env.LOGO;
+// LOGO
+let LOGO_IMG = "img/" + process.env.LOGO;
 
 /* === LOGIN [GET] === */
-router.get('/', (req, res, next) => {
+async function clbkLogin (req, res, next) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
 
     let scripts = [
         // FONTAWESOME
-        {script: '/lib/npm/all.min.js'},
+        {script: `${gensettings.template}/lib/npm/all.min.js`},
     ];
 
     let styles = [
-        {style: '/lib/npm/all.min.css'}
+        {style: `${gensettings.template}/lib/npm/all.min.css`}
     ];
 
     let modules = [
-        {module: '/lib/npm/popper.min.js'},
-        {module: '/lib/npm/popper-utils.min.js'}
+        {module: `${gensettings.template}/lib/npm/popper.min.js`},
+        {module: `${gensettings.template}/lib/npm/popper-utils.min.js`}
     ]
     // console.log("Din user.ctrl avem din req.body pe /login: ", req.body);
-    res.render('login', {
+    res.render(`login_${gensettings.template}`, {
         title:   "login",
-        logoimg: LOGO_IMG,
+        logoimg:   `${gensettings.template}/${LOGO_IMG}`,
         scripts,
         modules,
         styles
     });
+};
+router.get('/', (req, res, next) => {
+    clbkLogin(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
 });
 
-// Utilitarelel pentru validarea parolei și emiterea JWT-ul!
+// Utilitarele pentru validarea parolei și emiterea JWT-ul!
 let {issueJWT, validPassword} = require('./utils/password');
 /* === LOGIN [POST] ===*/
 router.post('/',  passport.authenticate('local'), async (req, res, next) => {

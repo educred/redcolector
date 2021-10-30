@@ -4,6 +4,7 @@ const esClient    = require('../elasticsearch.config');
 const moment      = require('moment');
 const router      = require('express').Router();
 const Resursa     = require('../models/resursa-red');
+const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
 const Competente  = require('../models/competenta-specifica');
 
 // HELPERI
@@ -31,166 +32,238 @@ redisClient.get("USR_IDX_ALS", (err, reply) => {
     USR_IDX_ALS = reply;
 });
 
-// CONSTANTE
-const LOGO_IMG = "img/" + process.env.LOGO;
+// LOGO
+let LOGO_IMG = "img/" + process.env.LOGO;
 
 // === VERIFICAREA ROLURILOR ===
 let checkRole = require('./controllers/checkRole.helper');
 const logger = require('../util/logger');
 
-// === SCRIPTURI și STILURI COMUNE ===
-let scriptsArr = [       
-    // MOMENT.JS
-    {script: '/lib/npm/moment-with-locales.min.js'},
-    {script: '/lib/timeline3/js/timeline.js'},
-    // zip
-    {script: '/lib/jszip.min.js'},
-    // PDF
-    {script: '/lib/pdfmake.min.js'},
-    {script: '/lib/vfs_fonts.js'}
-
-    // Scripturile caracteristice fiecărei rute vor fi injectate per rută
-];
-let styles = [
-    // DATATABLES
-    // {style: '/lib/npm/jquery.dataTables.min.css'},    
-    {style: '/lib/npm/dataTables.bootstrap4.min.css'},
-    {style: '/lib/npm/responsive.dataTables.min.css'},
-    // TIMELINE
-    {style: '/lib/timeline3/css/fonts/font.roboto-megrim.css'},
-    {style: '/lib/timeline3/css/timeline.css'}
-];
-let modulesArr = [
-    // MAIN
-    {module: '/js/main.mjs'},
-    // DATATABLES
-    {module: '/lib/npm/jquery.dataTables.min.js'},
-    {module: '/lib/npm/dataTables.bootstrap4.min.js'},
-    {module: '/lib/npm/dataTables.select.min.js'},
-    {module: '/lib/npm/dataTables.buttons.min.js'},
-    {module: '/lib/npm/buttons.print.min.js'},
-    {module: '/lib/npm/buttons.html5.min.js'},
-    {module: '/lib/npm/buttons.bootstrap4.min.js'},
-    {module: '/lib/npm/dataTables.responsive.min.js'}
-];
-
 /* === /administrator === */
-router.get('/', function clbkAdmRoot (req, res) {    
-    let roles = ["admin", "validator"]; // ACL
+router.get('/', (req, res, next) => {
+    async function clbkAdmRoot (req, res, next) {
+        console.log(`LUCRU PE CALLBACK`);
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
     
-    // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
-    let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
-
-    /* === ADMIN === :: Dacă avem un admin, atunci oferă acces neîngrădit */
-    if(req.session.passport.user.roles.admin){
-
-        // Scripturile necesare rutei /administrator [rol: admin]
-        let admModules = [
-            {module: '/js/admin.mjs'}
-        ];
-        let modules = modulesArr.concat(admModules); // injectează în array-ul `scripts`
-
-        res.render('administrator', {
-            title:     "Admin",
-            user:      req.user,
-            logoimg:   LOGO_IMG,
-            csrfToken: req.csrfToken(),
-            scripts:   scriptsArr,
-            modules,
-            styles,
-            activeAdmLnk: true
-        });
-
-    /* === VALIDATOR === :: Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public */
-    } else if (confirmedRoles.includes('validator')) {
-
-        // Scripturile necesare rutei /administrator [rol: validator]
-        let valScripts = [
-            // TIMELINE 3
-            {script: '/lib/timeline3/js/timeline.js'}
-        ];
-        let scripts = scriptsArr.concat(valScripts); // injectează în array-ul `scripts`
-
-        let valModules = [
-            // LOCAL ADMIN
-            {module: '/js/validator.mjs'}
-        ];
-        let modules = modulesArr.concat(valModules); // injectează în array-ul `scripts`
-
-        res.render('validator', {
-            title:     "Validator",
-            user:      req.user,
-            logoimg:   LOGO_IMG,
-            csrfToken: req.csrfToken(),
-            scripts,
-            modules,
-            activeAdmLnk: true
-        });
-    } else {
-        res.redirect('/401');
-    }
+        let roles = ["admin", "validator"]; // ACL
+        
+        // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
+        let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
+    
+        /* === ADMIN === :: Dacă avem un admin, atunci oferă acces neîngrădit */
+        if(req.session.passport.user.roles.admin){
+            console.log(`sunt aici?`);
+            // === SCRIPTURI și STILURI COMUNE ===
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                // TIMELINE.JS
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`}
+            ];
+            let styles = [
+                // DATATABLES    
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+                // TIMELINE
+                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
+            ];
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`},
+                // DATATABLES
+                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // LOCALE
+                {module: `${gensettings.template}/js/admin.mjs`}
+            ];
+    
+            res.render(`administrator_${gensettings.template}`, {
+                template: `${gensettings.template}`,
+                title:     "Admin",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+    
+        /* === VALIDATOR === :: Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public */
+        } else if (confirmedRoles.includes('validator')) {
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                // TIMELINE.JS
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`}
+            ];
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`},
+                // DATATABLES
+                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // LOCALE
+                {module: `${gensettings.template}/js/admin.mjs`}
+            ];
+            let styles = [
+                // DATATABLES    
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+                // TIMELINE
+                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
+            ];
+    
+            res.render(`validator_${gensettings.template}`, {
+                title:     "Validator",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+        } else {
+            res.redirect('/401');
+        }
+    };
+    clbkAdmRoot(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
 });
 
 /* === /administrator/reds === */
-router.get('/reds', function clbkAdmReds (req, res) {
-    // DOAR ADMINISTRATORII VAD TOATE RESURSELE ODATĂ FIXME: Creează aceeași posibilitate și validatorilor!!!
-    if(req.session.passport.user.roles.admin){
-
-        // Scripturile necesare rutei /administrator/reds [rol: admin]
-        let admModules = [
-            {module: '/js/res-visuals.mjs'}
-        ];
-        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
-
-        res.render('reds-data-visuals', {
-            title:     "Adm. REDs",
-            user:      req.user,
-            logoimg:   LOGO_IMG,
-            csrfToken: req.csrfToken(),
-            scripts:   scriptsArr,
-            modules,
-            styles,
-            activeAdmLnk: true
-        });
-    } else {
-        res.redirect('/401');
-    }
+router.get('/reds', (req, res, next) => {
+    async function clbkAdmReds (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+        // DOAR ADMINISTRATORII VAD TOATE RESURSELE ODATĂ FIXME: Creează aceeași posibilitate și validatorilor!!!
+        if(req.session.passport.user.roles.admin){
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`},
+                // DATATABLES
+                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // LOCALE
+                {module: `${gensettings.template}/js/res-visuals.mjs`}
+            ];
+            let styles = [
+                // DATATABLES    
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+                // TIMELINE
+                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
+            ];
+    
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                // TIMELINE.JS
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`}
+            ];
+    
+            res.render(`res-data-visuals_${gensettings.template}`, {
+                title:     "Resurse",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+        } else {
+            res.redirect('/401');
+        }
+    };
+    clbkAdmReds(req, res).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
 });
 
 /* === /administrator/reds/:id === */
-router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
+router.get('/reds/:id', (req, res, next) => {
+    async function clbkAdmOneRes (req, res, next) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
         // const editorJs2html = require('./controllers/editorJs2HTML');
         let scripts = [
             // MOMENT.JS
-            {script: '/lib/npm/moment-with-locales.min.js'},
+            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
             // EDITOR.JS
-            {script: '/lib/editorjs/editor.js'},
-            {script: '/lib/editorjs/header.js'},
-            {script: '/lib/editorjs/paragraph.js'},
-            {script: '/lib/editorjs/list.js'},
-            {script: '/lib/editorjs/image.js'},
-            {script: '/lib/editorjs/table.js'},
-            {script: '/lib/editorjs/attaches.js'},
-            {script: '/lib/editorjs/embed.js'},
-            {script: '/lib/editorjs/code.js'},
-            {script: '/lib/editorjs/quote.js'},
-            {script: '/lib/editorjs/inlinecode.js'},
+            {script: `${gensettings.template}/lib/editorjs/editor.js`},
+            {script: `${gensettings.template}/lib/editorjs/header.js`},
+            {script: `${gensettings.template}/lib/editorjs/paragraph.js`},
+            {script: `${gensettings.template}/lib/editorjs/list.js`},
+            {script: `${gensettings.template}/lib/editorjs/image.js`},
+            {script: `${gensettings.template}/lib/editorjs/table.js`},
+            {script: `${gensettings.template}/lib/editorjs/attaches.js`},
+            {script: `${gensettings.template}/lib/editorjs/embed.js`},
+            {script: `${gensettings.template}/lib/editorjs/code.js`},
+            {script: `${gensettings.template}/lib/editorjs/quote.js`},
+            {script: `${gensettings.template}/lib/editorjs/inlinecode.js`},
             // {script: '/js/res-shown.js'},
-            // LOCAL
-            {script: '/js/redincredadmin.js'},
+            // LOCALE
+            {script: `${gensettings.template}/js/redincredadmin.js`},
             // HELPER DETECT URLS or PATHS
-            {script: '/js/check4url.js'},
+            {script: `${gensettings.template}/js/check4url.js`},
         ];
-
+    
         let styles = [
             // FONTAWESOME
-            {style: '/lib/npm/all.min.css'},
+            {style: `${gensettings.template}/lib/npm/all.min.css`},
             // JQUERY TOAST
-            {style: '/lib/npm/jquery.toast.min.css'},
+            {style: `${gensettings.template}/lib/npm/jquery.toast.min.css`},
             // BOOTSTRAP
-            {style: '/lib/npm/bootstrap.min.css'}
+            {style: `${gensettings.template}/lib/npm/bootstrap.min.css`}
         ];
-
+    
         let roles = ["admin"];
         let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
         
@@ -202,15 +275,15 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
             if (resursa.id) {
                 // transformă obiectul document de Mongoose într-un obiect normal.
                 const obi = Object.assign({}, resursa._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-
+    
                 // obiectul competenței specifice cu toate datele sale trebuie curățat.
                 obi.competenteS = obi.competenteS.map(obi => {
                     return Object.assign({}, obi._doc);
                 });
-
+    
                 // adaug o nouă proprietate la rezultat cu o proprietate a sa serializată [injectare în client a întregii înregistrări serializate]
                 obi.editorContent = JSON.stringify(resursa);
-
+    
                 // resursa._doc.content = editorJs2html(resursa.content);
                 let localizat = moment(obi.date).locale('ro').format('LLL');
                 // resursa._doc.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
@@ -225,7 +298,7 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                 });
                 
                 obi.activitati = activitatiRehashed;
-
+    
                 // Dacă nu este indexată în Elasticsearch deja, indexează aici!
                 esClient.exists({
                     index: RES_IDX_ES7,
@@ -273,19 +346,20 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                             utilMie:          obi.utilMie,
                             expertCheck:      obi.expertCheck
                         };
-
+    
                         ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
                     }
                     return resFromIdx;
-                }).catch(err => {
+                }).catch((err) => {
                     console.error(err);
+                    logger.error(err);
                 });
                 return obi;
             }
         }).then(resursa => {
             /* === ADMIN === */
             if(req.session.passport.user.roles.admin){
-
+    
                 // Adaugă mecanismul de validare al resursei
                 if (resursa.expertCheck) {
                     resursa.validate = `<input type="checkbox" id="valid" class="expertCheck" checked>`;
@@ -299,21 +373,21 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
                 } else {
                     resursa.genPub = `<input type="checkbox" id="public" class="generalPublic">`;
                 }
-
-                res.render('resursa-admin', {                    
-                    title:     "RED admin",
+    
+                res.render(`resursa-admin_${gensettings.template}`, {                    
+                    title:     "Examinare",
                     user:      req.user,
-                    logoimg:   LOGO_IMG,
+                    logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                     csrfToken: req.csrfToken(),
                     resursa,
                     scripts,
                     styles
                 });
             } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
-                res.render('resursa', {                    
-                    title:     "RED",
+                res.render(`resursa_${gensettings.template}`, {                    
+                    title:     "Resursa",
                     user:      req.user,
-                    logoimg:   LOGO_IMG,
+                    logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                     csrfToken: req.csrfToken(),
                     resursa,
                     scripts,
@@ -322,237 +396,408 @@ router.get('/reds/:id', function clbkAdmOneRes (req, res, next) {
             } else {
                 res.redirect('/401');
             }
-        }).catch(err => {
+        }).catch((err) => {
             if (err) {
                 console.log(err);
-                logger.error(`La afișarea resursei individuale: ${err}`);
+                logger.error(err);
                 // next(); // fugi pe următorul middleware / rută
-                res.redirect('/administrator/reds');
+                res.redirect(`/administrator/reds`);
                 next(err);
             }
         });
+    };
+    clbkAdmOneRes(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
 });
 
 /* === /administrator/users === */
-router.get('/users', function clbkAdmUsr (req, res) {
-    // ACL
-    let roles = ["admin", "validator"];
+router.get('/users', (req, res, next) => {
+    async function clbkAdmUsr (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+        // ACL
+        let roles = ["admin", "validator"];
+        
+        // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
+        let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
+        
+        /* === ADMIN === :: Dacă avem un admin, atunci oferă acces neîngrădit */
+        if(req.session.passport.user.roles.admin){
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`},
+                // DATATABLES
+                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // LOCALE
+                {module: `/js/users-visuals.mjs`}
+            ];
     
-    // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
-    let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
+            let styles = [
+                // DATATABLES    
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+                // TIMELINE
+                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
+            ];
     
-    /* === ADMIN === :: Dacă avem un admin, atunci oferă acces neîngrădit */
-    if(req.session.passport.user.roles.admin){
-
-        // Scripturile necesare rutei /administrator/reds [rol: admin]
-        let admModules = [
-            {module: '/js/users-visuals.mjs'}
-        ];
-        let modules = modulesArr.concat(admModules); // injectează în array-ul `scripts`
-
-        res.render('users-data-visuals', {
-            title:     "Utilizatori",
-            user:      req.user,
-            logoimg:   LOGO_IMG,
-            // credlogo:  "../img/CREDlogo.jpg",
-            csrfToken: req.csrfToken(),
-            scripts:   scriptsArr,
-            modules,
-            styles,
-            activeAdmLnk: true
-        });
-    } else {
-        res.redirect('/401');
-    }
+            res.render(`users-data-visuals_${gensettings.template}`, {
+                title:     "Users",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+        } else {
+            res.redirect('/401');
+        }
+    };
+    clbkAdmUsr(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    })
 });
 
 /* === /administrator/users/:id === */
-router.get('/users/:id', function clbkAdmRoot (req, res) {
-    // ACL
-    let roles = ["admin", "validator"];
+
+router.get('/users/:id', (req, res, next) => {
+    async function clbkAdmRoot (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+        // ACL
+        let roles = ["admin", "validator"];
+        
+        // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
+        let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
     
-    // Constituie un array cu rolurile care au fost setate pentru sesiunea în desfășurare. Acestea vin din coockie-ul clientului.
-    let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
-
-    /* === VERIFICAREA CREDENȚIALELOR === */
-    // Dacă avem un admin, atunci oferă acces neîngrădit
-    if(req.session.passport.user.roles.admin){
-
-        // Scripturile necesare rutei /administrator [rol: admin]
-        let usrIdAdScripts = [
-            // DATATABLES
-            {script: '/lib/npm/jquery.dataTables.min.js'},
-            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
-            {script: '/lib/npm/dataTables.select.min.js'},
-            {script: '/lib/npm/dataTables.buttons.min.js'},
-            {script: '/lib/npm/dataTables.responsive.min.js'},
-            // TIMELINE 3
-            {script: '/lib/timeline3/js/timeline.js'},
-            {script: '/js/user.js'}
-        ];
-
-        let scripts = scriptsArr.concat(usrIdAdScripts); // injectează în array-ul `scripts`
-                
-        res.render('user-admin', {
-            title:    "Fișă user",
-            user:     req.user,
-            logoimg:  LOGO_IMG,
-            // credlogo: "../img/CREDlogo.jpg",
-            csrfToken: req.csrfToken(),
-            scripts,
-            styles,
-            activeAdmLnk: true
-        });
-    // Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public
-    } else if (confirmedRoles.includes('validator')) {
-
-        // Scripturile necesare rutei /administrator [rol: validator]
-        let usrIdValScripts = [
-            // DATATABLES
-            {script: '/lib/npm/jquery.dataTables.min.js'},
-            {script: '/lib/npm/dataTables.bootstrap4.min.js'},
-            {script: '/lib/npm/dataTables.select.min.js'},
-            {script: '/lib/npm/dataTables.buttons.min.js'},
-            {script: '/lib/npm/dataTables.responsive.min.js'},
-            // TIMELINE 3
-            {script: '/lib/timeline3/js/timeline.js'},
-            {script: '/js/validator.js'}
-        ];
+        /* === VERIFICAREA CREDENȚIALELOR === */
+        // Dacă avem un admin, atunci oferă acces neîngrădit
+        if(req.session.passport.user.roles.admin){
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`},
+                // DATATABLES
+                {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {script: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // TIMELINE 3
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                {script: `${gensettings.template}/js/user.js`}
+            ];
     
-        let scripts = scriptsArr.concat(usrIdValScripts); // injectează în array-ul `scripts`        
-
-        res.render('validator', {
-            title:    "Validator",
-            user:     req.user,
-            logoimg:  "/img/red-logo-small30.png",
-            credlogo: "../img/CREDlogo.jpg",
-            csrfToken: req.csrfToken(),
-            scripts,
-            styles
-        });
-    } else {
-        res.redirect('/401');
-    }
+            let styles = [
+                // DATATABLES    
+                {style: `/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `/lib/npm/responsive.dataTables.min.css`},
+                // TIMELINE
+                {style: `/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `/lib/timeline3/css/timeline.css`}
+            ];
+                    
+            res.render(`user-admin_${gensettings.template}`, {
+                title:    "User",
+                user:     req.user,
+                logoimg:  `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                styles,
+                activeAdmLnk: true
+            });
+        // Dacă ai un validator, oferă aceleași drepturi precum administratorului, dar fără posibilitatea de a trimite în public
+        } else if (confirmedRoles.includes('validator')) {
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`},
+                // DATATABLES
+                {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {script: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // TIMELINE 3
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                {script: `${gensettings.template}/js/validator.js`}
+            ];
+            
+            let styles = [
+                // DATATABLES    
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+                // TIMELINE
+                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
+            ];
+    
+            res.render(`validator_${gensettings.template}`, {
+                title:     "Validare",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                styles
+            });
+        } else {
+            res.redirect('/401');
+        }
+    };
+    clbkAdmRoot(req, res).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
 });
 
 /* === /administrator/compets === */
-router.get('/compets', function clbkAdmCompets (req, res) {
-    // DOAR ADMINISTRATORII VAD TOATE COMPETENȚELE SPECIFICE ODATĂ
-    if(req.session.passport.user.roles.admin){
-
-        // Scripturile necesare rutei /administrator/compets [rol: admin]
-        let admModules = [
-            {module: '/js/comps-visuals.mjs'}
-        ];
-        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
-
-        res.render('comps-data-visuals', {
-            title:     "CompS",
-            user:      req.user,
-            logoimg:   LOGO_IMG,
-            csrfToken: req.csrfToken(),
-            scripts:   scriptsArr,
-            modules,
-            styles,
-            activeAdmLnk: true
-        });
-    } else {
-        res.redirect('/401');
-    }
+router.get('/compets', (req, res, next) => {
+    async function clbkAdmCompets (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+        // DOAR ADMINISTRATORII VAD TOATE COMPETENȚELE SPECIFICE ODATĂ
+        if(req.session.passport.user.roles.admin){
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`}
+            ];
+    
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`},
+                // DATATABLES
+                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // LOCALE
+                {module: `${gensettings.template}/js/comps-visuals.mjs`}
+            ];
+    
+            let styles = [
+                // DATATABLES    
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+                // TIMELINE
+                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
+            ];
+    
+            res.render(`comps-data-visuals_${gensettings.template}`, {
+                title:     "Competențe",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+        } else {
+            res.redirect('/401');
+        }
+    };
+    clbkAdmCompets(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
 });
 
 /* === /administrator/compets/new === */
-router.get('/compets/new', function clbkAdmCompetsID (req, res) {
-    // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
-    if(req.session.passport.user.roles.admin){
 
-        // Scripturile necesare rutei /administrator/compets/:id [rol: admin]
-        let admModules = [
-            {module: '/js/comp-id.mjs'}
-        ];
-        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
-
-        /* === ADMIN === */
+router.get('/compets/new', (req, res, next) => {
+    async function clbkAdmCompetsID (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+        // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
         if(req.session.passport.user.roles.admin){
-            res.render('comp-id-admin', {                    
-                title:     "RED admin",
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`},
+                // DATATABLES
+                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // LOCALE
+                {module: `${gensettings.template}/js/comp-id.mjs`}
+            ];
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`}
+    
+                // Scripturile caracteristice fiecărei rute vor fi injectate per rută
+            ];
+    
+            res.render(`comp-id-admin_${gensettings.template}`, {                    
+                title:     "Comp",
                 user:      req.user,
-                logoimg:   LOGO_IMG,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
-                scripts:   scriptsArr,
+                scripts,
                 modules,
                 styles
             });
         } else {
             res.redirect('/401');
         }
-    } else {
-        res.redirect('/401');
-    }
+    };
+    clbkAdmCompetsID(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
 });
 
 /* === /administrator/compets/:id === */
-router.get('/compets/:id', function clbkAdmCompetsID (req, res) {
-    // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
-    if(req.session.passport.user.roles.admin){
 
-        // Scripturile necesare rutei /administrator/compets/:id [rol: admin]
-        let admModules = [
-            {module: '/js/comp-id.mjs'}
-        ];
-        let modules = modulesArr.concat(admModules); // injectează în array-ul `modulesArr`
-
-        let query = Competente.findById(req.params.id).populate({path: 'nrREDuri'});
-        query.then( (comp) => {
-            if (comp.id) {
-                // console.log('Competenta trimisa are urmatoarea semnatura ', comp);
-
-                // transformă obiectul document de Mongoose într-un obiect normal.
-                const obi = Object.assign({}, comp._doc); 
-
-                // adaugă versiunea la care este înregistrarea și nr de RED-uri
-                obi['__v'] = comp.__v;
-                obi['nrREDuri'] = comp.nrREDuri;
-
-                // obiectul competenței specifice cu toate datele sale trebuie curățat.
-                obi.idRED = obi.idRED.map(obi => {
-                    return Object.assign({}, obi._doc);
-                });
-
-                let localizat = moment(obi.date).locale('ro').format('LLL');
-                // resursa._doc.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
-                obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
-
-                return obi;
-            }
-        }).then((comp) => {
-            // console.log(Object.keys(comp));
-            /* === ADMIN === */
-            if(req.session.passport.user.roles.admin){
-                res.render('comp-id-admin', {                    
-                    title:     "RED admin",
-                    user:      req.user,
-                    logoimg:   LOGO_IMG,
-                    csrfToken: req.csrfToken(),
-                    comp,
-                    scripts:   scriptsArr,
-                    modules,
-                    styles
-                });
-            } else {
-                res.redirect('/401');
-            }
-        }).catch(err => {
-            if (err) {
-                logger.error(`La afișarea competenței individuale: ${err}`);
-                // next(); // fugi pe următorul middleware / rută
-                res.redirect('/administrator/compets');
-                next(err);
-            }
-        });
-    } else {
-        res.redirect('/401');
-    }
+router.get('/compets/:id', (rew, res, next) => {
+    async function clbkAdmCompetsID (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+        // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
+        if(req.session.passport.user.roles.admin){
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`},
+                // DATATABLES
+                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // LOCALE
+                {module: `${gensettings.template}/js/comp-id.mjs`}
+            ];
+    
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`}
+    
+                // Scripturile caracteristice fiecărei rute vor fi injectate per rută
+            ];
+            let styles = [
+                // DATATABLES    
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+                // TIMELINE
+                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
+            ];        
+    
+            Competente.findById(req.params.id).populate({path: 'nrREDuri'}).then( (comp) => {
+                if (comp.id) {
+                    // console.log('Competenta trimisa are urmatoarea semnatura ', comp);
+    
+                    // transformă obiectul document de Mongoose într-un obiect normal.
+                    const obi = Object.assign({}, comp._doc); 
+    
+                    // adaugă versiunea la care este înregistrarea și nr de RED-uri
+                    obi['__v'] = comp.__v;
+                    obi['nrREDuri'] = comp.nrREDuri;
+    
+                    // obiectul competenței specifice cu toate datele sale trebuie curățat.
+                    obi.idRED = obi.idRED.map(obi => {
+                        return Object.assign({}, obi._doc);
+                    });
+    
+                    let localizat = moment(obi.date).locale('ro').format('LLL');
+                    // resursa._doc.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
+                    obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
+    
+                    return obi;
+                }
+            }).then((comp) => {
+                /* === ADMIN === */
+                if(req.session.passport.user.roles.admin){
+                    res.render(`comp-id-admin_${gensettings.template}`, {                    
+                        title:     "Comp",
+                        user:      req.user,
+                        logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                        csrfToken: req.csrfToken(),
+                        comp,
+                        scripts,
+                        modules,
+                        styles
+                    });
+                } else {
+                    res.redirect('/401');
+                }
+            }).catch(err => {
+                if (err) {
+                    logger.error(err);
+                    res.redirect(`/administrator/compets`);
+                }
+            });
+        } else {
+            res.redirect('/401');
+        }
+    };
+    clbkAdmCompetsID(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
 });
 
 module.exports = router;

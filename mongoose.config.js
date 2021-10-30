@@ -17,8 +17,8 @@ Valorile pe care această variabilă de mediu le poate avea sunt: `virtual` sau 
 const CONFIG = {
     auth: { username: process.env.MONGO_USER, password: process.env.MONGO_PASSWD},
     authSource: "admin",
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true
 };
 let machine_ip = process.env.APP_RUNTIME === 'virtual' ? 'mongo' : 'localhost';
 

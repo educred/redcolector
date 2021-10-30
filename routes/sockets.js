@@ -16,6 +16,7 @@ const Resursa     = require('../models/resursa-red');           // Adu modelul r
 const User        = require('../models/user');                  // Adu modelul unui user
 const Log         = require('../models/logentry');              // Adu modelul unui articol de blog
 const Competente  = require('../models/competenta-specifica');  // Adu modelul competenței
+const Mgmtgeneral = require('../models/MANAGEMENT/general');    // Adu modelul management
 const editorJs2HTML= require('../routes/controllers/editorJs2HTML');
 // necesare pentru constituirea și gestionarea repo-ului de git
 const globby      = require('globby');
@@ -25,11 +26,15 @@ const objectsOps  = require('../util/objectsOps');
 let {getStructure} = require('../util/es7');
 
 // INDECȘII ES7
-// `getStructure()` este o promisiune a cărui rezultat sunt setările indecșilor și ale alias-urilor (vezi `elasticsearch.config.js`, unde sunt setați)
-// TEST if needed!!!:
-// getStructure().then((val) => {
-//     console.log('[socket.js] are din promisiune: ', val);
-// }).catch((e) => console.error);
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+getStructure().then((val) => {
+    USR_IDX_ALS = val.USR_IDX_ALS;
+    USR_IDX_ES7 = val.USR_IDX_ES7;
+    RES_IDX_ALS = val.RES_IDX_ALS;
+    RES_IDX_ES7 = val.RES_IDX_ES7;
+}).catch((error) => {
+    console.log(`resurse.ctrl.js`, error);
+});
 
 // funcțiile de căutare
 const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
@@ -39,6 +44,7 @@ const {pagination} = require('./controllers/pagination.ctrl');
 const {deleteIndex, reidxincr, mgdb2es7} = require('../models/model-helpers/es7-helper');
 const { get, set } = require('../redis.config');
 const { error } = require('../util/logger');
+const management = require('../models/MANAGEMENT/general');
 // funcții de raportare date statistice în MongoDB
 // const {statsmgdb} = require('../models/model-helpers/mgdb4-helper');
 
@@ -468,7 +474,7 @@ module.exports = function sockets (io) {
                 # Salvează ca json întreaga înregistrare în `./data`;
                 # Creează repo-ul git-ului
             */
-            var pResEd = resursaEducationala.populate('competenteS').execPopulate();
+            var pResEd = resursaEducationala.populate('competenteS');
             pResEd.then(async function clbkThenSave (res) {
                 /* === Scrie JSON-ul întregii înregistrării în `data` === */
                 const newRes = Object.assign({}, RED);                                          // fă o copie shallow a obiectului primit din client
@@ -855,17 +861,18 @@ module.exports = function sockets (io) {
                 // scoate spații pe capete și trunchiază textul.
                 let trimmedQ = query.fragSearch.trim();
                 let queryString = '';
+
+                // Dacă se încearcă forțarea câmpului cu mai mult de 250 de caractere
                 if (trimmedQ.length > 250) {
                     queryString = trimmedQ.slice(0, 250);
-                } else {
-                    queryString = trimmedQ;
                 }
-                // TODO: Integrează gestionarea cuvintelor evidențiate returnate de Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html#request-body-search-highlighting
+                
+                // _TODO: Integrează gestionarea cuvintelor evidențiate returnate de Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-body.html#request-body-search-highlighting
                 // resurse căutate după termenii cheie
-                // console.log(query);
+                // console.log(` socket.on('searchres')::Query-ul este: `, query);
                 
                 const rezProm = findInIdx(query.index, trimmedQ, query.fields);
-                rezProm.then(r => {              
+                rezProm.then(r => {
                     socket.emit('searchres', r.body.hits.hits);
                 }).catch(error => {
                     console.log("[sockets.js::'searchres'] Înregistrarea userului nu există. Detalii: ", error);
@@ -881,8 +888,88 @@ module.exports = function sockets (io) {
             // }).catch(e => console.log(e)); 
         });
 
+        // === PIT === :: Creează un PIT
+        async function clbkPitES7 (data) {
+            try {
+                /*
+                    {
+                        data.del: true | false,
+                        data.pit: string,
+                        data.conf: {
+                            index: string | string [],
+                            keep_alive: string
+                        }
+                    }
+                */
+                console.log(`sockets.js::pit Am primit data: `, data);
+                // Verifică dacă nu cumva deja există un PIT deschis. Vezi în REDIS. Dacă este, trimite-l!!!
+                // console.log(`sockets.js::pit ID-ul creat în urma solicitării este: `, result.body.id);
+
+                // CAZUL în care un pit deja a fost creat și este în REDIS
+                if (redisClient.get('pit')) {
+                    socket.emit('pit', redisClient.get('pit')); // trimite-l pe cel mai recent
+                }
+
+                // CAZUL în care nu ai niciun PIT și îl creezi pe primul
+                let result = await esClient.openPointInTime(data.conf);
+                // setează în Redis id-ul PIT-ului cu același timp de expirare
+                redisClient.set( "pit", result.body.id, "EX", 60); // https://github.com/NodeRedis/node-redis/issues/1000
+
+                // CAZUL în care ștergi PIT-ul în mod voit.
+                if (data.del === true) {
+                    // scrie logica necesară ștergerii PIT-ului.
+                    // trimite în client obiectul rezultat în urma ștergerii PIT-ului
+                    let response = await esClient.closePointInTime({
+                        body: data.pit
+                    });
+                    if (response) {
+                        socket.emit('pit', response);
+                    }
+                }
+
+                socket.emit('pit', result.body.id);
+            } catch (error) {
+                console.log(error);
+                logger.error(error);
+            }
+        }
+        socket.on('pit', (data) => {
+            clbkPitES7(data).catch(err => {
+                console.log(err);
+                logger.error(error);
+            })
+        });
+
+        // === SEARCH === ::Căutare generală în Elasticsearch
+        async function clbkSearch (queryobj, idx) {
+            // Funcția va primi din client obiectul de interogare, precum și indexul în care se va face căutarea
+            try {
+
+                //_ TODO: CAZUL în care primești cererea cu un PIT id, dar pe server deja este altul.
+                // În acest caz, înlocuiești PIT-ul din cerere cu cel de pe server, iar când rezultatul ajunge înapoi, clientul actualizează PIT-ul în `localStore`
+
+                const {body} = await esClient.search({
+                    index: idx,
+                    body:  queryobj
+                });
+
+                if (body) {
+                    socket.emit('search', body);
+                }
+            } catch (error) {
+                console.log(error);
+                logger.error(error);
+            }
+        }
+        socket.on('search', (queryobj, idx) => {
+            clbkSearch(queryobj, idx).catch((err) => {
+                console.log(err);
+                logger.error(error);
+            })
+        });
+
         // === PERSON === ::căutarea unui utilizator și reglarea înregistrărilor dintre ES și MONGODB
-        socket.on('person', async function searchUserInES (queryString) {
+        async function searchUserInES (queryString) {
             // console.log("Stringul de interogare din socket.on(person) este următorul: ", queryString);
             
             // _FIXME: Sanetizează inputul care vine prin `queryString`!!! E posibil să fie flood. Taie dimensiunea la un singur cuvânt!!!
@@ -892,7 +979,9 @@ module.exports = function sockets (io) {
                     "multi_match": {
                         "query": validator.trim(queryString),
                         "type": "best_fields",
-                        "fields": ["email", "googleProfile.name", "name", "*_name"]      
+                        "fields": ["email", "googleProfile.name", "name", "*_name"],
+                        "slop": 1,
+                        "fuzziness": "auto"
                     }
                 }
             };
@@ -900,83 +989,78 @@ module.exports = function sockets (io) {
             // Se face căutarea în Elasticsearch!!!
             // Atenție, folosesc driverul nou conform: https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/introduction.html E suuuuperfast! :D
             try {
-                // obține structura indecșilor din Redis și 
-                getStructure().then(async (val) => {
-                    // console.log('[socket.js] are din promisiune: ', val);
-
-                    const {body} = await esClient.search({
-                        index: val.USR_IDX_ALS,
-                        body:  searchqry
-                    });
-                    // console.log("Pe evenimentul person am următorul rezultat ", body.hits.hits.length);
-                    
-                    // DACĂ AM ÎNREGISTRĂRI ÎN INDEX-ul Elasticsearch
-                    if (body.hits.hits.length > 0) {
-                        // console.log("[sockets.js::person] Rezultatul adus de la indexul ElasticSearch", body.hits.hits);
-                        // pentru fiecare id din elasticsearch, cauta daca există o înregistrare în MongoDB. Dacă nu există în MongoDB, șterge din Elastic.
-                        body.hits.hits.map((user) => {
-                            // dacă documentul nu există în MongoDB, șterge înregistrarea din Elastic
-                            User.exists({_id: user._id}).then((result) => {
-                                if (!result) {
-                                    esClient.delete({
-                                        // index: 'users0',
-                                        index: val.USR_IDX_ALS,
-                                        type: 'user',
-                                        id:   user._id
-                                    }).then((res) => {
-                                        console.log("[sockets.js::'person'] Înregistrarea userului nu există. Detalii: ", res);
-                                        socket.emit('mesaje', `Pentru că documentul nu mai există în baza de date, l-am șters și de la indexare cu detaliile: ${res}`);
-                                    }).catch((error)=>{
-                                        console.log("[sockets.js::'person'] Eroare la aducerea unui user cu următoarele detalii: ", error);
+                const {body} = await esClient.search({
+                    index: USR_IDX_ALS,
+                    body:  searchqry
+                });
+                // console.log("Pe evenimentul person am următorul rezultat ", body.hits.hits.length);
+                
+                // DACĂ AM ÎNREGISTRĂRI ÎN INDEX-ul Elasticsearch
+                if (body.hits.hits.length > 0) {
+                    // console.log("[sockets.js::person] Rezultatul adus de la indexul ElasticSearch", body.hits.hits);
+                    // pentru fiecare id din elasticsearch, cauta daca există o înregistrare în MongoDB. Dacă nu există în MongoDB, șterge din Elastic.
+                    body.hits.hits.map((user) => {
+                        // dacă documentul nu există în MongoDB, șterge înregistrarea din Elastic
+                        User.exists({_id: user._id}).then((result) => {
+                            if (!result) {
+                                esClient.delete({
+                                    // index: 'users0',
+                                    index: USR_IDX_ALS,
+                                    type: 'user',
+                                    id:   user._id
+                                }).then((res) => {
+                                    console.log("[sockets.js::'person'] Înregistrarea userului nu există. Detalii: ", res);
+                                    socket.emit('mesaje', `Pentru că documentul nu mai există în baza de date, l-am șters și de la indexare cu detaliile: ${res}`);
+                                }).catch((error)=>{
+                                    console.log("[sockets.js::'person'] Eroare la aducerea unui user cu următoarele detalii: ", error);
+                                });
+                            } else {
+                                // dacă utilizatorul există și în MongoDB, dar și în ES7, trimite datele în client
+                                socket.emit('person', body.hits.hits);
+                            }
+                        }).catch((error) => {
+                            if (error) {
+                                // console.log(error);
+                                socket.emit('mesaje', `Am interogat baza de date, dar a apărut eroarea: ${error}`);
+                            }
+                        });
+                    });                    
+                    // _TODO: Aici ai putea testa daca ai date; daca nu ai date, tot aici ai putea face căutarea în baza Mongoose să vezi dacă există.     
+                } else {
+                    // NU EXISTĂ ÎNREGISTRĂRI ÎN INDEX-ul ELASTICSEARCH
+                    // _TODO: Caută dacă adresa de email există în MongoDB. Dacă există și nu apare în index, indexeaz-o!
+                    let trimStr = validator.trim(queryString);
+                    // PAS 1 -> Analizează dacă `queryString` este un email
+                    if (validator.isEmail(trimStr)) {
+                        // caută în MongoDB dacă există emailul. În cazul în care există, indexează-l în Elasticsearch!
+                        User.exists({email: queryString}).then(async (result) => {
+                            try {
+                                if (result) {
+                                    await esClient.index({
+                                        index: USR_IDX_ALS,
+                                        body: result
                                     });
-                                } else {
-                                    // dacă utilizatorul există și în MongoDB, dar și în ES7, trimite datele în client
-                                    socket.emit('person', body.hits.hits);
-                                }
-                            }).catch((error) => {
-                                if (error) {
-                                    // console.log(error);
-                                    socket.emit('mesaje', `Am interogat baza de date, dar a apărut eroarea: ${error}`);
-                                }
-                            });
-                        });                    
-                        // _TODO: Aici ai putea testa daca ai date; daca nu ai date, tot aici ai putea face căutarea în baza Mongoose să vezi dacă există.     
+                                    // forțează reindexarea pentru a putea afișa rezultatul la următoarea căutare!!!
+                                    await client.indices.refresh({ index: 'users' });
+                                    socket.emit('mesaje', `Am interogat baza de date și am găsit un email neindexat pe care l-am reindexat. Caută acum din nou!`);
+                                }                                    
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        }).catch((error) => {
+                            if (error) {
+                                // console.log(error);
+                                socket.emit('mesaje', `Am interogat baza de date și am găsit un email neindexat, dar când am vrut să-l indexez, stupoare: ${error}`);
+                            }
+                        });
                     } else {
-                        // NU EXISTĂ ÎNREGISTRĂRI ÎN INDEX-ul ELASTICSEARCH
-                        // _TODO: Caută dacă adresa de email există în MongoDB. Dacă există și nu apare în index, indexeaz-o!
-                        let trimStr = validator.trim(queryString);
-                        // PAS 1 -> Analizează dacă `queryString` este un email
-                        if (validator.isEmail(trimStr)) {
-                            // caută în MongoDB dacă există emailul. În cazul în care există, indexează-l în Elasticsearch!
-                            User.exists({email: queryString}).then(async (result) => {
-                                try {
-                                    if (result) {
-                                        await esClient.index({
-                                            index: 'users0',
-                                            body: result
-                                        });
-                                        // forțează reindexarea pentru a putea afișa rezultatul la următoarea căutare!!!
-                                        await client.indices.refresh({ index: 'users' });
-                                        socket.emit('mesaje', `Am interogat baza de date și am găsit un email neindexat pe care l-am reindexat. Caută acum din nou!`);
-                                    }                                    
-                                } catch (error) {
-                                    console.error(error);
-                                }
-                            }).catch((error) => {
-                                if (error) {
-                                    // console.log(error);
-                                    socket.emit('mesaje', `Am interogat baza de date și am găsit un email neindexat, dar când am vrut să-l indexez, stupoare: ${error}`);
-                                }
-                            });
-                        } else {
-                            // _TODO: Sanetizează ceea ce este primit prin trimming și limitare la dimensiune de caractere
-                        }
-                        socket.emit('mesaje', `Am căutat în index fără succes. Pur și simplu nu există înregistrări sau trebuie să schimbi cheia de căutare nițel`);
+                        // _TODO: Sanetizează ceea ce este primit prin trimming și limitare la dimensiune de caractere
                     }
-                    
-                }).catch((e) => console.error);
+                    socket.emit('mesaje', `Am căutat în index fără succes. Pur și simplu nu există înregistrări sau trebuie să schimbi cheia de căutare nițel`);
+                }
             } catch (error) {
                 console.log("[sockets.js::'person'] Eroare la aducerea unui user cu următoarele detalii: ", error);
+                logger.error(error);
                 socket.emit('mesaje', `Din nefericire, căutarea utilizatorului a eșuat cu următoarele detalii: ${error}`);
 
                 // CAZUL index_not_found_exception
@@ -986,40 +1070,48 @@ module.exports = function sockets (io) {
                     console.error("Este o eroare pe care nu pot să o apreciez. Detalii: ", error);
                 }
             }
+        }
+        socket.on('person', (queryString) => {
+            searchUserInES (queryString).catch((err) => {
+                console.log(err);
+                logger.error(error);
+            })
         });
 
-        // === PERSONRECORD === ::FIȘA completă de utilizator
-        socket.on('personrecord', id => {
-            // console.log('Din sockets.js [personrecord] -> id-ul primit este ', id);
+        // === PERSONRECORD === :: FIȘA completă de utilizator
+        socket.on('personrecord', (id) => {
+            console.log('Din sockets.js [personrecord] -> id-ul primit este ', id);
             // https://mongoosejs.com/docs/api.html#model_Model.populate
-            User.findById(id, function clbkFindById (error, user) {
-                if (error) {
-                    console.error("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
-                    socket.emit('mesaje', 'A dat eroare căutarea...');
-                }
-                // setează opțiunile pentru căutare
-                var opts = [
-                    {
-                        path: 'resurse',
-                        options: {
-                            sort: {date: -1} // 1 este ascending; -1 este descending (pornește cu ultima adusă)
-                            // limit: 5
-                        },
-                        model: Resursa
-                    }
-                ];
-                // Populează modelul!
-                User.populate(user, opts, function clbkExecPopUser (error, res) {
-                    if (error) {
-                        console.log("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
-                        // socket.emit('mesaje', 'A dat eroare căutarea...');
-                    }
-                    // console.log('Din sockets.js[on(personrecord)] -> după populare: ', res);
-                    if (res) {
-                        socket.emit('personrecord', res); // trimite rezultatul în client
-                    }
-                });
-            });
+            // User.findById(id, function clbkFindById (error, user) {
+            //     if (error) {
+            //         console.error("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
+            //         logger.error(error);
+            //         // socket.emit('mesaje', 'A dat eroare căutarea...');
+            //     }
+            //     // setează opțiunile pentru căutare
+            //     var opts = [
+            //         {
+            //             path: 'resurse',
+            //             options: {
+            //                 sort: {date: -1} // 1 este ascending; -1 este descending (pornește cu ultima adusă)
+            //                 // limit: 5
+            //             },
+            //             model: Resursa
+            //         }
+            //     ];
+            //     // Populează modelul!
+            //     User.populate(user, opts, function clbkExecPopUser (error, res) {
+            //         if (error) {
+            //             console.log("[sockets.js::'personrecord'] Eroare la popularea modelului cu date: ", error);
+            //             logger.error(error);
+            //             // socket.emit('mesaje', 'A dat eroare căutarea...');
+            //         }
+            //         // console.log('Din sockets.js[on(personrecord)] -> după populare: ', res);
+            //         if (res) {
+            //             socket.emit('personrecord', res); // trimite rezultatul în client
+            //         }
+            //     });
+            // });
         });
 
         // === STATS === ::STATS GENERAL
@@ -1125,24 +1217,6 @@ module.exports = function sockets (io) {
         
         // === DEL ES7 INDEX ===
         socket.on('es7delidx', deleteIndex);
-
-        // === STATS::MONGODB ===
-        socket.on('mgdbstat', () => {
-            mongoose.connection.db.listCollections().toArray(statDataMgdb);
-        });
-
-        /**
-         * Funcția `es7stats` are rolul de a returna o promisiune 
-         * care odata rezolvată va oferi date statistice despre indecșii existenți în ES7
-         * Este folosită de funcția `statDataMgdb`.
-         * @returns Promise
-         */
-        function es7stats () {
-            return esClient.indices.stats({
-                index: "*,-.*",
-                level: "indices"
-            });
-        }
 
         /**
          * Funcția `statDataMgdb` joacă rol de callback pentru 
@@ -1277,6 +1351,28 @@ module.exports = function sockets (io) {
                 logger.error(`[socket::mgdbstat::statDataMgdb()]A apărut eroarea ${err}`);
             });
         };
+        // === STATS::MONGODB ===
+        socket.on('mgdbstat', () => {
+            mongoose.connection.db.listCollections().toArray((err, names) => {
+                statDataMgdb(err, names).catch((err) => {
+                    console.log(err);
+                    logger.error(error);
+                });
+            });
+        });
+
+        /**
+         * Funcția `es7stats` are rolul de a returna o promisiune 
+         * care odata rezolvată va oferi date statistice despre indecșii existenți în ES7
+         * Este folosită de funcția `statDataMgdb`.
+         * @returns Promise
+         */
+        function es7stats () {
+            return esClient.indices.stats({
+                index: "*,-.*",
+                level: "indices"
+            });
+        }
 
         // === ALLRES === ::TOATE RESURSELE
         socket.on('allRes', () => {
@@ -1290,7 +1386,7 @@ module.exports = function sockets (io) {
 
         // === PAGEDRES === :: RESURSELE PAGINATE
         socket.on('pagedRes', (data) => {
-            // TODO: modelează acest eveniment pentru resursele paginate necesare clientului
+            //_ TODO: modelează acest eveniment pentru resursele paginate necesare clientului
             let dataPromise = pagination(data, Resursa);
             dataPromise.then( data => {
                 socket.emit('pagedRes', data);
@@ -1330,51 +1426,73 @@ module.exports = function sockets (io) {
         });
 
         // === ACTUALIZEAZĂ O COMPETENȚĂ ===
-        socket.on('updateComp', async (record) => {
-            const data = {
-                nume:       record.nume,
-                activitati: record.activitati,
-                cod:        record.cod,
-                coddisc:    record.coddisc,
-                disciplina: record.disciplina,
-                nivel:      record.nivel,
-                parteA:     record.parteA,
-                ref:        record.ref
-            };
-            // Cazul Update
-            if(record.id) {
-                // console.log('Datele primite în server pe `updateComp` sunt: ', record);
-                let filter =  {_id: record.id};
-                let doc = await Competente.findOneAndUpdate(filter, data, {
-                    new: true,
-                    upsert: true // Make this update into an upsert
-                });
-                doc.save();
-            } else {
-                // Cazul Create
-                data._id = new mongoose.Types.ObjectId();
-                let doc = new Competente(data);
-                doc.save().then((result) => {
-                    // trimite clientului 
-                    socket.emit('updateComp', result.id);
-                }).catch(error => {
-                    console.log('Am încercat să salvez o nouă competență, dar a apărut eroarea: ', error.message);
-                    next(error);
-                })
+        async function clbkUpdComp (record) {
+            try {
+                const data = {
+                    nume:       record.nume,
+                    activitati: record.activitati,
+                    cod:        record.cod,
+                    coddisc:    record.coddisc,
+                    disciplina: record.disciplina,
+                    nivel:      record.nivel,
+                    parteA:     record.parteA,
+                    ref:        record.ref
+                };
+                // Cazul Update
+                if(record.id) {
+                    // console.log('Datele primite în server pe `updateComp` sunt: ', record);
+                    let filter =  {_id: record.id};
+                    let doc = await Competente.findOneAndUpdate(filter, data, {
+                        new: true,
+                        upsert: true // Make this update into an upsert
+                    });
+                    doc.save();
+                } else {
+                    // Cazul Create
+                    data._id = new mongoose.Types.ObjectId();
+                    let doc = new Competente(data);
+                    doc.save().then((result) => {
+                        // trimite clientului 
+                        socket.emit('updateComp', result.id);
+                    }).catch(error => {
+                        console.log('Am încercat să salvez o nouă competență, dar a apărut eroarea: ', error.message);
+                        logger.error(error);
+                    })
+                }
+            } catch (error) {
+                console.log(error);
+                logger.error(error);
             }
+        }
+        socket.on('updateComp', (record) => {
+            clbkUpdComp(record).catch((err) => {
+                console.log(err);
+                logger.error(error);
+            })
         });
 
         // === ȘTERGE O COMPETENȚĂ ===
-        socket.on('delComp', async (id) => {
-            if (id) {
-                const res = await Competente.deleteOne({ _id: id });
-                // console.log('Rezultatul ștergerii este: ', res);
-                if (res.ok === 1) {
-                    socket.emit('delComp', id);
-                }
-            } else {
-                console.log('Nu am pe cine să șterg. Id-ul primit este: ', id);
-            }            
+        async function clbkDelComp (id) {
+            try {
+                if (id) {
+                    const res = await Competente.deleteOne({ _id: id });
+                    // console.log('Rezultatul ștergerii este: ', res);
+                    if (res.ok === 1) {
+                        socket.emit('delComp', id);
+                    }
+                } else {
+                    console.log('Nu am pe cine să șterg. Id-ul primit este: ', id);
+                }    
+            } catch (error) {
+                console.log(error);
+                logger.error(error);
+            }
+        }
+        socket.on('delComp', (id) => {
+            clbkDelComp(id).catch((err) => {
+                console.log(err);
+                logger.error(error);
+            })
         });
 
         /**
@@ -1490,6 +1608,60 @@ module.exports = function sockets (io) {
                     }
                 }
             });
+        });
+
+        /**
+         * Folosește în funcția clbkMgmt drept callback evenimentului `mgmt`
+         * Doc pentru upsert https://masteringjs.io/tutorials/mongoose/findoneandupdate
+         * @param {*} data Object date
+         */
+        function clbkMgmt (data) {
+            const filter = {focus: 'general'};
+
+            // CAZUL în care obiectul este gol
+            // Dacă primești un obiect gol de la client, verifică mai întâi să cu cumva să existe deja creată înregistrarea goală, având doar valorile default
+            Mgmtgeneral.findOne(filter, (error, result) => {
+                if (error) {
+                    console.log(error);
+                    logger.error(error);
+                }
+                // dacă obiectul este diferit de null, înseamnă că pasul de creare a primei înregistrări a fost făcut. Trimite-l clientului.
+                if (result) {
+                    socket.emit('mgmt', result);
+                } else {
+                    // dacă te afli în momentul 0, la setările inițiale, se va crea prima înregistrare
+                    Mgmtgeneral.create({}, (error, doc) => {
+                        if (error) {
+                            console.log(error);
+                            logger.error(error);
+                        }
+                        socket.emit('mgmt', doc);
+                    }); 
+                    // se creează prima înregistrare cu cele două câmpuri care capătă valorile default
+                }
+            });
+        }
+        socket.on('mgmt', (data) => {
+            const objFromClient = data.mgmt;
+            const objIsEmpty = objFromClient && Object.keys(objFromClient).length === 0 && Object.getPrototypeOf(objFromClient) === Object.prototype;
+            // console.log(`Obiectul primit de la user este gol: `, objIsEmpty);
+
+            const filter = {focus: 'general'};
+            const opts = { new: true, upsert: true };
+
+            // CAZUL în care obiectul este gol
+            if (objIsEmpty) {
+                clbkMgmt(data);
+            } else {
+                // Aici facem upsertul cu datele noi
+                Mgmtgeneral.findOneAndUpdate(filter, objFromClient, opts, (error, doc) => {
+                    if (error) {
+                        console.log(error);
+                        logger.error(error);
+                    }
+                    socket.emit('mgmt', doc);
+                });
+            }
         });
     });
 

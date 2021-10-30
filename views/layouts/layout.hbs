@@ -4,81 +4,8 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-        <meta name="keywords"    content="{{creator}} {{publisher}} {{brandname}}">
-        <meta name="description" content="{{description}}">
-        <meta name="generator"   content="{{brandname}}">
-        <meta name="creator"     content="{{creator}}">
-        <meta name="autor"       content="Constantinescu Nicolaie">
-        <meta name="publisher"   content="{{publisher}}">
-        
-        <meta property="dc:title"       content="{{brandname}}">
-        <meta property="dc:description" content="{{description}}">
-        
-        <meta itemprop="name" content="{{brandname}}">
-        <meta itemprop="description" content="{{description}}">
-        
-        {{!-- SOCKET --}}
-        <script type="application/javascript" src="/lib/npm/socket.io.min.js"></script>
-
-        {{!-- ES6 SHIM --}}
-        <script type="application/javascript" src="/lib/es6-shim/es6-shim.min.js"></script>
-        {{!-- https://github.com/es-shims/es6-shim --}}
-
-        {{!-- JQUERY --}}
-        <script type="application/javascript" src="/lib/npm/jquery.min.js"></script>
-
-        {{!-- FONTAWESOME --}}
-        <script type="application/javascript" src="/lib/npm/all.min.js"></script>
-    
-        {{!-- BOOTSTRAP 4  JS --}}
-        <script type="application/javascript" src="/lib/npm/bootstrap.bundle.min.js"></script>
-
-        {{!-- JQUERY TOAST --}}
-        <script type="application/javascript" src="/lib/npm/jquery.toast.min.js"></script>
-
-        {{!-- MAIN --}}
-        <link rel="stylesheet" type="text/css" href="/css/main.css">
-
-        {{!-- FONTAWESOME --}}
-        <link title="timeline-styles" rel="stylesheet" type="text/css" href="/lib/npm/all.min.css">
-
-        {{!-- BOOTSTRAP 4  CSS--}}        
-        <link rel="stylesheet" type="text/css" href="/lib/npm/bootstrap.min.css">
-
-        {{!-- JQUERY TOAST --}}
-        <link rel="stylesheet" type="text/css" href="/lib/npm/jquery.toast.min.css">
-
-
-        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-        {{!-- ATENȚIE!!! Popper-ul trebuie încărcat ca modul --}}
-        {{!-- <script type="application/javascript" src="/lib/npm/popper.min.js"></script>      --}}
-        {{!-- <script type="application/javascript" src="/lib/npm/popper-utils.min.js"></script>    --}}
-
-        {{!-- Încărcarea foilor de stil din module --}}
-        {{#each styles}}
-            <link rel="stylesheet" href="{{style}}" charset="utf-8"></script>
-        {{/each}}
-
-        {{!-- Preîncărcarea modulelor --}}
-        {{#each modules}}
-            <script rel="modulepreload" href="{{module}}"></script>
-        {{/each}}
-
-        {{!-- Încărcarea modulelor --}}
-        {{#each modules}}
-            <script type="module" src="{{module}}"></script>
-        {{/each}}
-
-        <title>{{title}}</title>
     </head>
     <body>
-        {{{body}}}
-
-        <footer class="footer">
-            {{> footer}}
-        </footer>
-        
-        <script type="application/javascript" src="/js/custom.js"></script>
+        {{!-- {{{body}}} --}}
     </body>
 </html>
