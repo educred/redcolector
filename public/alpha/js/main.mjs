@@ -34,7 +34,7 @@ if (document.getElementsByName('_csrf')[0].value) {
 
 // === MANAGEMENTUL COMUNICĂRII pe socketuri ===
 // pubComm.on('mesaje', (mess) => {
-//     // TODO: execută funcție care afișează mesajul
+//     //- TODO: execută funcție care afișează mesajul
 
 //     $.toast({
 //         heading: 'Colectorul spune:',
@@ -299,6 +299,52 @@ function getWithExpiry(key, exp) {
 	return item.value; // Dacă este în timpul setat, returnează valoarea
 }
 
+/**
+ * Funcția transformă datele dintr-un obiect DataForm într-un POJO
+ * Sursa: https://stackoverflow.com/questions/41431322/how-to-convert-formdata-html5-object-to-json
+ * https://javascript.info/formdata
+ * @param dataform Este obiectul DataForm
+ * @returns 
+ */
+function frm2obj(dataform) {
+    let object = {};
+    dataform.forEach((value, key) => {
+        if (!Reflect.has(object, key)) {
+            object[key] = value;
+            return;
+        }
+        if (!Array.isArray(object[key])) {
+            object[key] = [object[key]];
+        }
+        object[key].push(value);
+    });
+    return object;
+};
+
+/**
+ * Funcția are rolul de a elimina proprietățile care nu au valoare dintr-un obiect.
+ * Sursa: https://stackoverflow.com/questions/286141/remove-blank-attributes-from-an-object-in-javascript/57625661#57625661
+ * @param obj Obiect care trebuie curățat de proprietățile fără valori sau null
+ * @returns 
+ */
+const cleanEmptyPropsInObj = function(obj, defaults = [undefined, null, NaN, '']) {
+    if (!defaults.length) {
+        return obj;
+    }
+
+    if (defaults.includes(obj)) {
+        return;
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(v => v && typeof v === 'object' ? cleanEmptyPropsInObj(v, defaults) : v).filter(v => !defaults.includes(v));
+    }
+
+    return Object.entries(obj).length ? Object.entries(obj)
+        .map(([k, v]) => ([k, v && typeof v === 'object' ? cleanEmptyPropsInObj(v, defaults) : v]))
+        .reduce((a, [k, v]) => (defaults.includes(v) ? a : { ...a, [k]: v}), {}) : obj;
+}
+
 // let ocalecufis = '/test/ceva/ceva.jpg';
 // let ocale      = '/test/ceva/';
 // let unurl      = 'http://www.ceva.ro/cale1/cale2';
@@ -317,4 +363,4 @@ function getWithExpiry(key, exp) {
 // check4url(real01);     //?
 // check4url(real02);     //?
 
-export {socket, pubComm, setWithExpiry, getWithExpiry, check4url, createElement, decodeCharEntities, datasetToObject};
+export {socket, pubComm, setWithExpiry, getWithExpiry, check4url, createElement, decodeCharEntities, datasetToObject, frm2obj, cleanEmptyPropsInObj};

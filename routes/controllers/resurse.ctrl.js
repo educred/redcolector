@@ -270,7 +270,7 @@ exports.resourcesPool = async function resourcesPool (req, res, next) {
     if(req.session.passport.user.roles.admin){
 
         // Dacă avem un admin, atunci oferă acces neîngrădit
-        res.render(`add-res-red_${gensettings.template}`, {
+        res.render(`add-res_${gensettings.template}`, {
             template: `${gensettings.template}`,       
             title:   "Adauga",
             user:    req.user,
@@ -389,7 +389,7 @@ exports.describeRED = async function describeRED (req, res, next) {
 
         // Dacă avem un admin, atunci oferă acces neîngrădit
         // res.render('adauga-res', {   
-        res.render(`add-res-red_${gensettings.template}`, {   
+        res.render(`add-red_${gensettings.template}`, {   
             template: `${gensettings.template}`,      
             title:     "RED nou",
             user:      req.user,
@@ -415,7 +415,7 @@ exports.describeRED = async function describeRED (req, res, next) {
 
         // res.render('adauga-res', {            
         //     title:     "Adauga",
-        res.render(`add-res-red_${gensettings.template}`, {
+        res.render(`add-red_${gensettings.template}`, {
             template: `${gensettings.template}`,     
             title:     "RED nou",
             user:      req.user,
@@ -507,14 +507,14 @@ exports.describeBFMonograph = async function describeBFMonograph (req, res, next
     };
 
     // roluri pe care un utilizator le poate folosi pentru a încărca monografii
-    let roles = ["cred", "validator", "user"]; // TODO: când vei permite tuturor să adauge resurse, introdu și `user`!!
+    let roles = ["cred", "validator", "user"]; //- TODO: când vei permite tuturor să adauge resurse, introdu și `user`!!
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
     // console.log(req.session.passport.user.roles.rolInCRED);
 
     /* === VERIFICAREA CREDENȚIALELOR === */
     if(req.session.passport.user.roles.admin){
         let user = req.session.passport.user;
-        // FIXME: Renunță la acest artificiu pentru conturile locale de îndată ce unifici localele cu profilurile Google.
+        //- FIXME: Renunță la acest artificiu pentru conturile locale de îndată ce unifici localele cu profilurile Google.
         let given_name =  "Jane" || user.googleProfile.given_name;
         let family_name = "Doe"  || user.googleProfile.family_name;
 
@@ -534,7 +534,7 @@ exports.describeBFMonograph = async function describeBFMonograph (req, res, next
     } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere al resursei.
         
         let user = req.session.passport.user;
-        // FIXME: Introdu în formularul de creare cont câmpurile name și surname pentru a elimina artificiul făcut pentru integrarea cu Livresq
+        //- FIXME: Introdu în formularul de creare cont câmpurile name și surname pentru a elimina artificiul făcut pentru integrarea cu Livresq
         let given_name = 'Jane' || user.googleProfile.given_name;
         let family_name = 'Doe' || user.googleProfile.family_name;
 

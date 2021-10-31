@@ -1082,36 +1082,36 @@ module.exports = function sockets (io) {
         socket.on('personrecord', (id) => {
             console.log('Din sockets.js [personrecord] -> id-ul primit este ', id);
             // https://mongoosejs.com/docs/api.html#model_Model.populate
-            // User.findById(id, function clbkFindById (error, user) {
-            //     if (error) {
-            //         console.error("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
-            //         logger.error(error);
-            //         // socket.emit('mesaje', 'A dat eroare căutarea...');
-            //     }
-            //     // setează opțiunile pentru căutare
-            //     var opts = [
-            //         {
-            //             path: 'resurse',
-            //             options: {
-            //                 sort: {date: -1} // 1 este ascending; -1 este descending (pornește cu ultima adusă)
-            //                 // limit: 5
-            //             },
-            //             model: Resursa
-            //         }
-            //     ];
-            //     // Populează modelul!
-            //     User.populate(user, opts, function clbkExecPopUser (error, res) {
-            //         if (error) {
-            //             console.log("[sockets.js::'personrecord'] Eroare la popularea modelului cu date: ", error);
-            //             logger.error(error);
-            //             // socket.emit('mesaje', 'A dat eroare căutarea...');
-            //         }
-            //         // console.log('Din sockets.js[on(personrecord)] -> după populare: ', res);
-            //         if (res) {
-            //             socket.emit('personrecord', res); // trimite rezultatul în client
-            //         }
-            //     });
-            // });
+            User.findById(id, function clbkFindById (error, user) {
+                if (error) {
+                    console.error("[sockets.js::'personrecord'] Eroare la aducerea resurselor personale cu următoarele detalii: ", error);
+                    logger.error(error);
+                    // socket.emit('mesaje', 'A dat eroare căutarea...');
+                }
+                // setează opțiunile pentru căutare
+                var opts = [
+                    {
+                        path: 'resurse',
+                        options: {
+                            sort: {date: -1} // 1 este ascending; -1 este descending (pornește cu ultima adusă)
+                            // limit: 5
+                        },
+                        model: Resursa
+                    }
+                ];
+                // Populează modelul!
+                User.populate(user, opts, function clbkExecPopUser (error, res) {
+                    if (error) {
+                        console.log("[sockets.js::'personrecord'] Eroare la popularea modelului cu date: ", error);
+                        logger.error(error);
+                        // socket.emit('mesaje', 'A dat eroare căutarea...');
+                    }
+                    // console.log('Din sockets.js[on(personrecord)] -> după populare: ', res);
+                    if (res) {
+                        socket.emit('personrecord', res); // trimite rezultatul în client
+                    }
+                });
+            });
         });
 
         // === STATS === ::STATS GENERAL
@@ -1642,6 +1642,7 @@ module.exports = function sockets (io) {
             });
         }
         socket.on('mgmt', (data) => {
+            // console.log(`Am primit datele: `, data);
             const objFromClient = data.mgmt;
             const objIsEmpty = objFromClient && Object.keys(objFromClient).length === 0 && Object.getPrototypeOf(objFromClient) === Object.prototype;
             // console.log(`Obiectul primit de la user este gol: `, objIsEmpty);

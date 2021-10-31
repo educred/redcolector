@@ -1,4 +1,4 @@
-import {pubComm, createElement} from './main.mjs';
+import {pubComm, createElement, frm2obj, cleanEmptyPropsInObj} from './main.mjs';
 
 // var csrfToken = '';
 
@@ -93,6 +93,7 @@ function showUser (resurse) {
  * Emite pe `personrecord`.
  */
 function exposeUser () {
+    console.log(`Numele celui care a emis evenimentul personrecord este: `, event.target.name);
     // adu toate datele despre user (administrative și contribuții)
     pubComm.emit('personrecord', event.target.name); // este ascultat mai jos
 }
@@ -959,3 +960,55 @@ function collsactions (evt) {
         console.log("[admin.mjs] În urma operatiunii de indexare am primit datele", data);
     });
 }
+
+/* ==== SETĂRI DEPOZIT ==== */
+let brand       = document.querySelector('#brand'),       brandt,
+    publisher   = document.querySelector('#publisher'),   publishert,
+    creator     = document.querySelector('#creator'),     creatort,
+    description = document.querySelector('#description'), descriptiont,
+    contact     = document.querySelector('#contact'),     contactt,
+    template    = document.querySelector('#template'),    templatet,
+    systemTab   = document.querySelector('#system-tab'),
+    mgmtForm    = new FormData(document.getElementById('frmMgmt'));
+
+// când se dă click pe tabul setărilor de sistem, este emis un apel care să aducă datele necesare populării câmpurilor
+systemTab.addEventListener('click', (evt) => {
+    let obi = cleanEmptyPropsInObj(frm2obj(new FormData(document.getElementById('frmMgmt')))); // Va fi mereu gol pentru că formul se încarcă gol.
+    pubComm.emit('mgmt', {mgmt: obi});
+    // Aici pleacă un apel pe `mgmt` cu un obiect gol. Propriu-zis, ceea ce se dorește, este obținerea de date de start.
+});
+
+/**
+ * Funcția introduce handlere pentru evenimentul `keyup` al fiecărui câmp
+ * Acest lucru va fi folosit pentru a actualiza on the fly câmpurile datelor
+ * @param node Object Nodul DOM
+ * @param timer variabilă care va fi alocată timer-ului
+ */
+function fieldBehaviour (node, timer) {
+    node.addEventListener('keyup', (evt) => {
+        const text = evt.currentTarget.value;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            mgmtForm.set(evt.target.name, text);
+            pubComm.emit('mgmt', {mgmt: cleanEmptyPropsInObj(frm2obj(mgmtForm))});
+        }, 5000);
+    })
+}
+
+fieldBehaviour(brand,       brandt);
+fieldBehaviour(publisher,   publishert);
+fieldBehaviour(creator,     creatort);
+fieldBehaviour(description, descriptiont);
+fieldBehaviour(contact,     contactt);
+fieldBehaviour(template,    templatet);
+
+pubComm.on('mgmt', function (data) {
+    if (data) {
+        data.brand ? brand.value = data.brand : data.brand;
+        data.publisher ? publisher.value = data.publisher : data.publisher;
+        data.creator ? creator.value = data.creator : data.creator;
+        data.description ? description.value = data.description : data.description;
+        data.contact ? contact.value = data.contact : data.contact;
+        data.template ? template.value = data.template : data.template;
+    }
+});

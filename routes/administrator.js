@@ -42,7 +42,6 @@ const logger = require('../util/logger');
 /* === /administrator === */
 router.get('/', (req, res, next) => {
     async function clbkAdmRoot (req, res, next) {
-        console.log(`LUCRU PE CALLBACK`);
         // Setări în funcție de template
         let filterMgmt = {focus: 'general'};
         let gensettings = await Mgmtgeneral.findOne(filterMgmt);
@@ -54,7 +53,6 @@ router.get('/', (req, res, next) => {
     
         /* === ADMIN === :: Dacă avem un admin, atunci oferă acces neîngrădit */
         if(req.session.passport.user.roles.admin){
-            console.log(`sunt aici?`);
             // === SCRIPTURI și STILURI COMUNE ===
             let scripts = [       
                 // MOMENT.JS

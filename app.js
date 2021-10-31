@@ -42,6 +42,7 @@ let api        = require('./routes/apiV1');
 
 /* === MONGOOSE === */
 const mongoose = require('./mongoose.config');
+const Mgmtgeneral = require('./models/MANAGEMENT/general'); // Adu modelul management
 
 /* === ELASTICSEARCH env === */
 const esClient = require('./elasticsearch.config');
@@ -60,8 +61,25 @@ app.use(express.static(path.join(__dirname, '/public'), {
     maxAge: "30d"
 }));
 app.use('/repo', express.static(path.join(__dirname, 'repo')));
+
 // app.use(fileUpload());
-app.use(favicon(path.join(__dirname,  'public', 'favicon.ico')));
+
+/**
+ * Funcția are rolul de a seta corect faviconul aplicației
+ * @param {Object} app 
+ * @returns 
+ */
+async function setFavicon (app) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+    app.use(favicon(path.join(__dirname,  'public', `${gensettings.template}`, 'favicon.ico'))); // original line
+    return app;
+}
+setFavicon(app).catch((error) => {
+    console.log(error);
+    logger.error(error)
+})
 
 /* === HELMET === */
 app.use(helmet({
