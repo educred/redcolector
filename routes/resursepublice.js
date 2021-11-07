@@ -26,70 +26,47 @@ const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
 let idxRes = RES_IDX_ALS;
 
 // === RESURSE PUBLICE ===
-async function clbkResPublice (req, res) {
-    // Setări în funcție de template
-    let filterMgmt = {focus: 'general'};
-    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
-
-    let resursePublice = Resursa.find({'generalPublic': true}).sort({"date": -1}).limit(8);
-    resursePublice.exec().then((result) => {
-        let newResultArr = [];
-
-        result.map(function clbkMapResult (obi) {
-            const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-            // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
-            newObi.dataRo = moment(newObi.date).locale('ro').format('LLL');
-            newResultArr.push(Object.assign(newObi));
-        });
-
-        let scripts = [
-            //JQUERY
-            {script: `${gensettings.template}/lib/npm/jquery.slim.min.js`},
-            {script: `${gensettings.template}/lib/npm/jquery.waypoints.min.js`}, 
-            // MOMENT.JS
-            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}, 
-            // FONTAWESOME
-            {script: `${gensettings.template}/lib/npm/all.min.js`},
-            // HOLDERJS
-            {script: `${gensettings.template}/lib/npm/holder.min.js`},
-            // BOOTSTRAP         
-            {script: `${gensettings.template}/lib/npm/bootstrap.bundle.min.js`},
-            {script: `${gensettings.template}/js/custom.js`},
-            {script: `${gensettings.template}/js/resursepublice.js`}
-        ];
-
-        let modules = [
-            {module: `${gensettings.template}/lib/npm/popper.min.js`},
-            
-        ];
-
-        let styles = [
-            {style: `${gensettings.template}/lib/npm/all.min.css`}
-        ];
-
-        res.render(`resursepublice_${gensettings.template}`, {
-            template:     `${gensettings.template}`,
-            title:        "Publice",
-            user:         req.user,
-            logoimg:      `${gensettings.template}/${LOGO_IMG}`,
-            csrfToken:    req.csrfToken(),            
-            resurse:      newResultArr,
-            activeResLnk: true,
-            resIdx:       idxRes,
-            scripts,
-            modules,
-            styles
-        });
-    }).catch((err) => {
-        if (err) throw err;
-    });
-};
+let renderPublicREDs = require('./controllers/public-reds.ctrl');
 router.get('/', (req, res, next) => {
+
+    async function clbkResPublice (req, res, next) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+    
+        const resurse = [
+            [
+                //JQUERY
+                {script: `${gensettings.template}/lib/npm/jquery.slim.min.js`},
+                {script: `${gensettings.template}/lib/npm/jquery.waypoints.min.js`}, 
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}, 
+                // FONTAWESOME
+                {script: `${gensettings.template}/lib/npm/all.min.js`},
+                // HOLDERJS
+                {script: `${gensettings.template}/lib/npm/holder.min.js`},
+                // BOOTSTRAP         
+                {script: `${gensettings.template}/lib/npm/bootstrap.bundle.min.js`},
+                {script: `${gensettings.template}/js/custom.js`},
+                {script: `${gensettings.template}/js/resursepublice.js`}
+            ],
+            [
+                {module: `${gensettings.template}/lib/npm/popper.min.js`},
+                {module: `${gensettings.template}/js/main.mjs`}
+            ],
+            [
+                {style: `${gensettings.template}/lib/npm/all.min.css`}
+            ]
+        ];
+
+        renderPublicREDs(req, res, next, gensettings, Resursa, resurse, 'Public');
+    };
+
     clbkResPublice(req, res, next).catch((error) => {
         console.log(error);
         logger(error);
         next(error);   
-    })
+    });
 });
 
 // === RESURSĂ PUBLICĂ INDIVIDUALĂ ===
@@ -118,7 +95,8 @@ async function clbkResPublicaID (req, res, next) {
             newObi.editorContent = JSON.stringify(resursa);
             
             // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-            res.render(`resursa-publica_${gensettings.template}`, {                
+            res.render(`resursa-publica_${gensettings.template}`, {
+                template: `${gensettings.template}`,                
                 title:     "O resursă",
                 user:      req.user,
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,

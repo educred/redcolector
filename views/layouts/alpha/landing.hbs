@@ -46,12 +46,12 @@
 
         {{!-- Preîncărcarea modulelor --}}
         {{#each modules}}
-            <link rel="modulepreload" href="/{{template}}{{module}}"></script>
+            <link rel="modulepreload" href="{{module}}"></script>
         {{/each}}
 
         {{!-- Încărcarea modulelor --}}
         {{#each modules}}
-            <script type="module" src="/{{template}}{{module}}"></script>
+            <script type="module" src="{{module}}"></script>
         {{/each}}
 
         <title>{{title}}</title>
@@ -61,7 +61,7 @@
         {{{body}}}
 
         <footer class="footer">
-            {{> footer}}
+            {{> footer_alpha}}
         </footer>
 
         <!-- Optional JavaScript -->

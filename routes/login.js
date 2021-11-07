@@ -32,6 +32,7 @@ async function clbkLogin (req, res, next) {
     ]
     // console.log("Din user.ctrl avem din req.body pe /login: ", req.body);
     res.render(`login_${gensettings.template}`, {
+        template: `${gensettings.template}`,
         title:   "login",
         logoimg:   `${gensettings.template}/${LOGO_IMG}`,
         scripts,

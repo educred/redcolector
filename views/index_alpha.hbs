@@ -29,7 +29,7 @@
 <div class="home-inner caption text-center">
 
     <div class="os-animation" data-animation="bounceInUp" data-delay=".3s">
-        <p><img src={{logoimg}} alt="logo" height="100px"> <img src="img/SIGLA-CRED1.png" alt="logo CRED"></p>
+        <p><img src="{{logoimg}}" alt="logo" height="100px"> <img src="{{template}}/img/SIGLA-CRED1.png" alt="logo"></p>
         {{!-- <ul class="nav justify-content-center">
             <li class="nav-item">
                 <a class="nav-link active" href="#"><img src="img/intrumentestructurale-1.png" alt="Instrumente Structurale logo." width="50%"></a>
@@ -194,11 +194,13 @@ Proiect cofinanțat din Fondul Social European prin Programul Operațional Capit
 
                     {{!-- Dacă există copertă, afișeaz-o --}}
                     {{#if this.coperta}}
-                        <img src="{{this.coperta}}" class="coperta card-img-top" alt="{{this.title}}">
+                        <div style="position: relative;">
+                            <img src="{{this.coperta}}" class="coperta card-img-top" alt="{{this.title}}">
+                        </div>
                         {{else}}
                         <div style="position: relative;">
-                            <img src={{logoimg}} alt="" width="100px" style="position: absolute; top: 5; left: 5">
-                            <img data-src="holder.js/100px100&textmode=exact?auto=yes&text=RED" class="card-img-top">
+                            <img src="/{{logoimg}}" alt="logo" width="100px" style="position: absolute; top: 5; left: 5">
+                            <img data-src="holder.js/100px100&textmode=exact?auto=yes&text={{this.title}}" class="card-img-top">
                         </div>
                     {{/if}}
                     
