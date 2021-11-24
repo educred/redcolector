@@ -1,7 +1,9 @@
 {{!< alpha/layout}}
 {{> nav-administrator}}
-{{> messages}}
+{{!-- {{> messages}} --}}
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
+
+<input id="tmpl" type="hidden" name="template" value="{{template}}">
 
 <div id="content">
     <div class="title"><h1>Utilizatorii</h1></div>
@@ -18,5 +20,5 @@
 </template>
 
 {{#each scripts}}
-    <script defer type="application/javascript" src="{{script}}"></script>
+    <script type="application/javascript" src="/{{template}}{{script}}"></script>
 {{/each}}

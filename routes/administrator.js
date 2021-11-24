@@ -190,7 +190,6 @@ router.get('/reds', (req, res, next) => {
                 {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
                 {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
             ];
-    
             let scripts = [       
                 // MOMENT.JS
                 {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
@@ -202,8 +201,8 @@ router.get('/reds', (req, res, next) => {
                 {script: `${gensettings.template}/lib/pdfmake.min.js`},
                 {script: `${gensettings.template}/lib/vfs_fonts.js`}
             ];
-    
             res.render(`res-data-visuals_${gensettings.template}`, {
+                template: `${gensettings.template}`,
                 title:     "Resurse",
                 user:      req.user,
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
@@ -372,7 +371,8 @@ router.get('/reds/:id', (req, res, next) => {
                     resursa.genPub = `<input type="checkbox" id="public" class="generalPublic">`;
                 }
     
-                res.render(`resursa-admin_${gensettings.template}`, {                    
+                res.render(`resursa-admin_${gensettings.template}`, {
+                    template: `${gensettings.template}`,                    
                     title:     "Examinare",
                     user:      req.user,
                     logoimg:   `${gensettings.template}/${LOGO_IMG}`,
@@ -382,7 +382,8 @@ router.get('/reds/:id', (req, res, next) => {
                     styles
                 });
             } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
-                res.render(`resursa_${gensettings.template}`, {                    
+                res.render(`resursa_${gensettings.template}`, {
+                    template: `${gensettings.template}`,                    
                     title:     "Resursa",
                     user:      req.user,
                     logoimg:   `${gensettings.template}/${LOGO_IMG}`,
@@ -438,7 +439,7 @@ router.get('/users', (req, res, next) => {
                 {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
                 {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
                 // LOCALE
-                {module: `/js/users-visuals.mjs`}
+                {module: `${gensettings.template}/js/users-visuals.mjs`}
             ];
     
             let styles = [
@@ -449,15 +450,21 @@ router.get('/users', (req, res, next) => {
                 {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
                 {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
             ];
+
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}
+            ];
     
             res.render(`users-data-visuals_${gensettings.template}`, {
+                template: `${gensettings.template}`,
                 title:     "Users",
                 user:      req.user,
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
-                scripts,
                 modules,
                 styles,
+                scripts,
                 activeAdmLnk: true
             });
         } else {
@@ -509,14 +516,15 @@ router.get('/users/:id', (req, res, next) => {
     
             let styles = [
                 // DATATABLES    
-                {style: `/lib/npm/dataTables.bootstrap4.min.css`},
-                {style: `/lib/npm/responsive.dataTables.min.css`},
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
                 // TIMELINE
-                {style: `/lib/timeline3/css/fonts/font.roboto-megrim.css`},
-                {style: `/lib/timeline3/css/timeline.css`}
+                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
+                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
             ];
                     
             res.render(`user-admin_${gensettings.template}`, {
+                template: `${gensettings.template}`,
                 title:    "User",
                 user:     req.user,
                 logoimg:  `${gensettings.template}/${LOGO_IMG}`,
@@ -557,6 +565,7 @@ router.get('/users/:id', (req, res, next) => {
             ];
     
             res.render(`validator_${gensettings.template}`, {
+                template: `${gensettings.template}`,
                 title:     "Validare",
                 user:      req.user,
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
@@ -620,6 +629,7 @@ router.get('/compets', (req, res, next) => {
             ];
     
             res.render(`comps-data-visuals_${gensettings.template}`, {
+                template: `${gensettings.template}`,
                 title:     "Competențe",
                 user:      req.user,
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
@@ -677,7 +687,8 @@ router.get('/compets/new', (req, res, next) => {
                 // Scripturile caracteristice fiecărei rute vor fi injectate per rută
             ];
     
-            res.render(`comp-id-admin_${gensettings.template}`, {                    
+            res.render(`comp-id-admin_${gensettings.template}`, {         
+                template: `${gensettings.template}`,           
                 title:     "Comp",
                 user:      req.user,
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
@@ -699,13 +710,13 @@ router.get('/compets/new', (req, res, next) => {
 
 /* === /administrator/compets/:id === */
 
-router.get('/compets/:id', (rew, res, next) => {
+router.get('/compets/:id', (req, res, next) => {
     async function clbkAdmCompetsID (req, res) {
         // Setări în funcție de template
         let filterMgmt = {focus: 'general'};
         let gensettings = await Mgmtgeneral.findOne(filterMgmt);
         // DOAR ADMINISTRATORII VAD COMPETENȚA SPECIFICĂ
-        if(req.session.passport.user.roles.admin){
+        if (req.session.passport.user.roles.admin) {
             let modules = [
                 // MAIN
                 {module: `${gensettings.template}/js/main.mjs`},
@@ -768,7 +779,8 @@ router.get('/compets/:id', (rew, res, next) => {
             }).then((comp) => {
                 /* === ADMIN === */
                 if(req.session.passport.user.roles.admin){
-                    res.render(`comp-id-admin_${gensettings.template}`, {                    
+                    res.render(`comp-id-admin_${gensettings.template}`, {
+                        template: `${gensettings.template}`,                    
                         title:     "Comp",
                         user:      req.user,
                         logoimg:   `${gensettings.template}/${LOGO_IMG}`,
@@ -791,6 +803,7 @@ router.get('/compets/:id', (rew, res, next) => {
             res.redirect('/401');
         }
     };
+
     clbkAdmCompetsID(req, res, next).catch((error) => {
         console.log(error);
         logger(error);

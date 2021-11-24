@@ -51,14 +51,18 @@ if (document.getElementsByName('_csrf')[0].value) {
  * Clasa `createElement` va creea elemente HTML
  * @param {string} tag este un șir de caractere care indică ce tip de element va fi creat
  * @param {string} [id] este un șir de caractere care indică un id pentru element
- * @param {Array}  [cls] este un array ce cuprinde clasele elementului
+ * @param {Array | null}  [cls] este un array ce cuprinde clasele elementului. Dacă valoare este `null`, nu crea atributul.
  * @param {Object} [attrs] este un obiect de configurare a elementului care permite definirea de atribute
  */
 class createElement {
     constructor(tag, id, cls, attrs){
-        this.id = id;
         this.tag = tag;
-        this.classes = [...cls];
+        this.id = id;
+        if (cls === null){
+            this.classes = '';
+        } else {
+            this.classes = [...cls];
+        };        
         this.attributes = attrs;    // va fi un un obiect de configurare, fiecare membru fiind un posibil atribut.
     }
     /**
@@ -69,7 +73,9 @@ class createElement {
     creeazaElem (textContent, requiredElem) {
         const element = document.createElement(this.tag);
         if (this.id) element.id = this.id;
-        if (this.classes) element.classList.add(...this.classes);
+        if (this.classes !== '' || this.classes.length > 0) {
+            element.classList.add(...this.classes);
+        };
         if (this.attributes) {
             for (let [key, val] of Object.entries(this.attributes)) {
                 element.setAttribute(key, val);

@@ -83,7 +83,7 @@
     padding: 1rem;
 }
 
-/*===== NAVIGATION ====*/
+/* === NAVIGATION === */
 nav.navbar-light {
     /* background-color: bisque; */
     background-color: dimgray;
@@ -230,13 +230,10 @@ nav.navbar-light {
     width: 100%;
     height: 5.4rem;
     margin-top: .2rem;
-
     border-radius: .2rem;
-    /* padding: .5rem; */
     color: white;
     background-color: rgba(0,0,0, .5);
     text-shadow: -.2rem -.2rem 2rem rgba(255,255,255, .1), .2rem .2rem .2rem rgba(0,0,0, .5);
-    
     text-align: center;
 }
 
@@ -266,7 +263,7 @@ nav.navbar-light {
     text-transform: uppercase;
 }
 
-/*===== RESURSE ALESE ... =====*/
+/* === RESURSE ALESE ... ===*/
 .narrow {
     /* width: 75%; */
     margin: 0 auto;
@@ -413,10 +410,15 @@ tr.shown td.details-control {
     background: url('../img/details_close.png') no-repeat center center;
 }
 
-/* --- GESTIONAREA FORMULARULUI DE DEPUNERE RESURSĂ --- */
+/* === INTRODU RESURSĂ - FRM01 === */
 
 #doi, #trei, #patru {
     display: none;
+}
+
+/* PASUL 1 */
+.frm01-lang-opt {
+    background-color:rgba(226, 222, 222, 0.6);
 }
 
 /* FORMAREA BUTOANELOR DISCIPLINELOR */
@@ -533,22 +535,40 @@ a[class$="8"], label[class$="8"] {
 /* GESTIONAREA SELECTORULUI DE IMAGINE COPERTĂ - FORM 01 */
 .nopad {
     float: left;
+    position: relative;
+    /* border-radius: 50%; */
 	padding-left: 0 !important;
     padding-right: 0 !important;
 }
 /* GALERIA DE IMAGINI - FORMULAR */
 .image-checkbox {
 	cursor: pointer;
-	box-sizing: border-box;
+    height: 8rem;
+    width: 8rem;
+	/* box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	border: .3rem solid transparent;
 	margin-bottom: 0;
-	outline: 0;
+	outline: 0; */
 }
+
+.fa-check-circle {
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    color: #28a745;
+    border-radius: 50%;
+    background-color: white;
+}
+
+/* Fiecare element din galeria de imagini */
 .img-responsive {
+    border-color: #999;
+    padding: .3rem;
+    border-radius: 50%;
     height: 8rem;
-    width: 100%;
+    width: 8rem;
 }
 /*Ascunde checkboxul original*/
 .image-checkbox input[type="checkbox"] {
@@ -573,6 +593,38 @@ a[class$="8"], label[class$="8"] {
 /* ETICHETELE - FORM 01 */
 #tags {
     padding: 0.3rem;
+}
+
+/* CLASA tag */
+.tag {
+    display: inline-block;
+    padding: .3rem;
+    margin-left: .5rem;
+    background-color: #d1ecf1;
+    border-radius: .4rem;
+}
+
+.tag > span {
+    -ms-text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+}
+
+.tag a {
+    display: inline-block;
+    color: #EFC050 !important;
+    cursor: pointer;
+    opacity: 0.8;
+    margin: 0 0 0 0.3em;
+}
+
+.tag a:hover {
+    opacity: 1.0;
+    color: red !important;
+}
+
+.tag .remove {
+    top: 0;
 }
 
 /* === CĂUTARE FAȚETATĂ === */

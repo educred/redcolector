@@ -15,6 +15,8 @@ pubComm.emit('personrecord', window.location.pathname.split('/').pop());
 var userTmpl = document.querySelector('#usertpl');    // Pas 1 - Fă o referință către template
 var renderUsr = document.getElementById('showusers'); // Pas 2 - Fă o referință către elementul din DOM unde va fi inserat conținutul rezultat din compilarea template-ului
 
+// Template-ul de site folosit
+let tmpl = document.getElementById('tmpl').value;
 
 /**
  * Rolul funcției este de a popula un template Handlebars cu datele din backend
@@ -249,7 +251,7 @@ function showUserDetails (descriere) {
         userAvatar.src = descriere.googleProfile.picture;
         userAvatar.alt = descriere.googleProfile.name;
     } else {
-        userAvatar.src = '/img/karl-magnuson-85J99sGggnw-unsplash-small.jpg';
+        userAvatar.src = `/${tmpl}/img/karl-magnuson-85J99sGggnw-unsplash-small.jpg`;
         userAvatar.alt = descriere.username;
     }
 

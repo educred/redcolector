@@ -16,6 +16,9 @@ import {pubComm} from './main.mjs';
 //     pubComm.emit('testconn', 'test');
 // }, 2000);
 
+// Template-ul folosit
+let tmpl = document.getElementById('tmpl').value;
+
 // Resurse afișate tabelar
 var TblTmpl = document.querySelector('#userResTbl'); // ref către template-ul resurselor în format tabelar
 var cloneTbl = TblTmpl.content.cloneNode(true);      // clonarea template-ului pentru afișare tabelară
@@ -35,7 +38,7 @@ pubComm.on('allUsers', (resurse) => {
         // în cazul în care nu ai conturi google, injectează obiectul profilului în datele care nu-l au
         if (obi.hasOwnProperty('googleProfile') === false) {
             obi.googleProfile = {
-                picture: `/img/karl-magnuson-85J99sGggnw-unsplash-small.jpg`,
+                picture: `/${tmpl}/img/karl-magnuson-85J99sGggnw-unsplash-small.jpg`,
                 // Sursa: https://unsplash.com/photos/85J99sGggnw
                 name: obi.username 
             };

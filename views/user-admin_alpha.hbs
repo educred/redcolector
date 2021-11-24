@@ -3,6 +3,8 @@
 
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
 
+<input id="tmpl" type="hidden" name="template" value="{{template}}">
+
 <div id="content">
     <section class="" id="userres">
         {{!-- Va încărca resursele compilate cu ajutorul template-ului --}}
@@ -119,6 +121,6 @@
     </template>
 
     {{#each scripts}}
-        <script type="application/javascript" src="{{script}}"></script>
+        <script defer type="application/javascript" src="/{{template}}{{script}}"></script>
     {{/each}}
 </div>

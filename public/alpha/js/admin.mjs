@@ -281,7 +281,7 @@ function showUserDetails (descriere) {
     } else if (descriere.avatar) {
         userAvatar.src = descriere.avatar;
     } else {
-        userAvatar.src = ''; // FIXME: Generează ceva aleatoriu sau ia de pe net random o imagine, ceva
+        userAvatar.src = ''; //- FIXME: Generează ceva aleatoriu sau ia de pe net random o imagine, ceva
     }
     descriere.googleProfile ? userAvatar.alt = descriere.googleProfile.name : descriere.username;      // cazul localului
 

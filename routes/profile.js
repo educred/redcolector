@@ -60,84 +60,81 @@ router.get('/', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
 });
 
 /* === ACCESAREA PROPRIILOR RESURSE :: /resurse === */
-async function clbkProfRes (req, res) {
-    // Setări în funcție de template
-    let filterMgmt = {focus: 'general'};
-    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
-
-    /* === RESURSELE NECESARE LA RANDARE === */
-    let scripts = [       
-        // MOMENT.JS
-        {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
-        // HOLDERJS
-        {script: `${gensettings.template}/lib/npm/holder.min.js`},
-        // LOCAL
-        //{script: '/js/form02log.js`},
-        // DATATABLES
-        {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
-        {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
-        {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
-        {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
-        {script: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
-        // TIMELINE 3
-        {script: `${gensettings.template}/lib/timeline3/js/timeline.js`}            
-    ];
-
-    let styles = [
-        // FONTAWESOME
-        {style: `${gensettings.template}/lib/npm/all.min.css`},
-        // JQUERY TOAST
-        {style: `${gensettings.template}/lib/npm/jquery.toast.min.css`},
-        // BOOTSTRAP
-        {style: `${gensettings.template}/lib/npm/bootstrap.min.css`},
-        {style: `${gensettings.template}/lib/npm/jquery.dataTables.min.css`},
-        {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
-        {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`}
-    ];
-
-    let modules = [
-        // MAIN
-        {module: `${gensettings.template}/js/main.mjs`},
-        {module: `${gensettings.template}/js/res-visuals-user.mjs`}
-    ];
-    /**
-     * Funncție cu rol de callback
-     * Transformă obiectul primit într-un POJO cu date formatate cu moment
-     * @param {Object} obi 
-     */
-    function clbkMapResult (obi) {
-        const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-        // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
-        newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
-        // newResultArr.push(newObi);
-        return newObi;
-    }
-
-    // Afișează doar ultimele 8 resurse introduse
-    Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((result) => {
-
-        // transformă documentele Mongoose în POJOs cu dată formatată
-        let newResultArr = result.map(clbkMapResult);
-
-        /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
-        res.render(`resurse-profil_${gensettings.template}`, {
-            template: `${gensettings.template}`,               
-            title:     "Profil",
-            user:      req.user,
-            logoimg:   `${gensettings.template}/${LOGO_IMG}`,
-            csrfToken: req.csrfToken(),
-            resurse:   newResultArr,
-            scripts,
-            modules,
-            styles,
-            activeAdmLnk: true
-        });
-    }).catch((error) => {
-        console.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
-        logger.error(error);
-    });
-};
 router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
+
+    async function clbkProfRes (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+    
+        /* === RESURSELE NECESARE LA RANDARE === */
+        let scripts = [       
+            // MOMENT.JS
+            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+            // HOLDERJS
+            {script: `${gensettings.template}/lib/npm/holder.min.js`},
+            // LOCAL
+            //{script: '/js/form02log.js`},
+            // DATATABLES
+            {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+            {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+            {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+            {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+            {script: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+            // TIMELINE 3
+            {script: `${gensettings.template}/lib/timeline3/js/timeline.js`}            
+        ];
+    
+        let styles = [
+            {style: `${gensettings.template}/lib/npm/jquery.dataTables.min.css`},
+            {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+            {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`}
+        ];
+    
+        let modules = [
+            // MAIN
+            {module: `${gensettings.template}/js/main.mjs`},
+            {module: `${gensettings.template}/js/res-visuals-user.mjs`}
+        ];
+
+        /**
+         * Funcție cu rol de callback
+         * Transformă obiectul primit într-un POJO cu date formatate cu moment
+         * @param {Object} obi 
+         */
+        function clbkMapResult (obi) {
+            const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
+            // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
+            newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
+            // newResultArr.push(newObi);
+            return newObi;
+        }
+    
+        // Afișează doar ultimele 8 resurse introduse
+        Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((result) => {
+    
+            // transformă documentele Mongoose în POJOs cu dată formatată
+            let newResultArr = result.map(clbkMapResult);
+    
+            /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
+            res.render(`resurse-profil_${gensettings.template}`, {
+                template: `${gensettings.template}`,               
+                title:     "Profil",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                resurse:   newResultArr,
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+        }).catch((error) => {
+            console.error('[routes::profile::/profile/resurse] Eroare care apare la afișarea resurselor este: ', error);
+            logger.error(error);
+        });
+    };
+
     clbkProfRes(req, res, next).catch((error) => {
         console.log(error);
         logger(error);
@@ -156,7 +153,7 @@ async function clbkProfResID (req, res, next) {
         // MOMENT.JS
         {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
         // HELPER DETECT URLS or PATHS
-        {script: `/js/check4url.js`}
+        {script: `${gensettings.template}/js/check4url.js`}
     ];
 
     let modules = [
@@ -182,11 +179,11 @@ async function clbkProfResID (req, res, next) {
 
     let styles = [
         // FONTAWESOME
-        {style: `${gensettings.template}/js/personal-res.mjs/lib/npm/all.min.css`},
+        {style: `${gensettings.template}/lib/npm/all.min.css`},
         // JQUERY TOAST
-        {style: `${gensettings.template}/js/personal-res.mjs/lib/npm/jquery.toast.min.css`},
+        {style: `${gensettings.template}/lib/npm/jquery.toast.min.css`},
         // BOOTSTRAP
-        {style: `${gensettings.template}/js/personal-res.mjs/lib/npm/bootstrap.min.css`}
+        {style: `${gensettings.template}/lib/npm/bootstrap.min.css`}
     ];
 
     let roles = ["user", "cred", "validator"];
@@ -319,9 +316,10 @@ async function clbkProfResID (req, res, next) {
             // Setul de date va fi disponibil în `data-content` ca string JSON. Este trimis cu helperul `hbs.registerHelper('json', cb)` definit în app.js
             // Acest lucru este necesar pentru a reedita resursa în client.
             res.render(`resursa-admin_${gensettings.template}`, {
+                template: `${gensettings.template}`,
                 title:     "Resursa",
                 user:      req.user,                
-                logoimg:   LOGO_IMG,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,

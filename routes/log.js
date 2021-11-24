@@ -2,8 +2,10 @@ const express    = require('express');
 const router     = express.Router();
 const mongoose   = require('mongoose');
 const moment     = require('moment');
+const logger     = require('../util/logger');
 var content2html = require('./controllers/editorJs2HTML');
-const Log        = require('../models/logentry'); // Adu modelul unei înregistrări de jurnal
+const Log        = require('../models/logentry');               // Adu modelul unei înregistrări de jurnal
+const Mgmtgeneral = require('../models/MANAGEMENT/general');    // Adu modelul management
 
 // CONSTANTE
 const LOGO_IMG = "img/" + process.env.LOGO;
@@ -11,7 +13,11 @@ const LOGO_IMG = "img/" + process.env.LOGO;
 // === VERIFICAREA ROLURILOR ===
 let checkRole = require('./controllers/checkRole.helper');
 
-router.get('/', function clbkLog (req, res, next) {
+async function logRoot (req, res, next) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+
     // Setare hardcodată de ACL
     let roles = ["user", "cred"];
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
@@ -33,36 +39,37 @@ router.get('/', function clbkLog (req, res, next) {
 
             let scripts = [
                 // FA
-                {script: '/lib/npm/all.min.js'},
+                {script: `${gensettings.template}/lib/npm/all.min.js`},
                 // MOMENT.JS
-                {script: '/lib/npm/moment-with-locales.min.js'},
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
                 // JQUERY
-                {script: '/lib/npm/jquery.slim.min.js'},                
+                {script: `${gensettings.template}/lib/npm/jquery.slim.min.js`},                
                 // BOOTSTRAP
-                {script: '/lib/npm/bootstrap.bundle.min.js'},
+                {script: `${gensettings.template}/lib/npm/bootstrap.bundle.min.js`},
                 // HOLDERJS
-                {script: '/lib/npm/holder.min.js'}       
+                {script: `${gensettings.template}/lib/npm/holder.min.js`}       
             ];
 
             let modules = [
-                // {module: '/js/main.mjs'},
+                // {module: `${gensettings.template}/js/main.mjs`},
                 // LOCAL
-                // {module: '/js/form02log.js'} 
+                // {module: `${gensettings.template}/js/form02log.js`} 
             ];
 
             let styles = [
                 // FONTAWESOME
-                {style: '/lib/npm/all.min.css'},
+                {style: `${gensettings.template}/lib/npm/all.min.css`},
                 // JQUERY TOAST
-                {style: '/lib/npm/jquery.toast.min.css'},
+                {style: `${gensettings.template}/lib/npm/jquery.toast.min.css`},
                 // BOOTSTRAP
-                {style: '/lib/npm/bootstrap.min.css'},
+                {style: `${gensettings.template}/lib/npm/bootstrap.min.css`},
             ];
             
-            res.render('logentry', {
+            res.render(`logentry_${gensettings.template}`, {
+                template: `${gensettings.template}`,
                 title:      "Noutăți",
                 user:       req.user,
-                logoimg:    LOGO_IMG,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken:  req.csrfToken(),
                 logentries: newResultArr,
                 scripts,
@@ -76,6 +83,13 @@ router.get('/', function clbkLog (req, res, next) {
     } else {
         res.redirect('/401');
     }
+}
+
+router.get('/', (req, res, next) => {
+    logRoot(req, res, next).catch((error) => {
+        console.log(error);
+        logger.error(error);
+    })
 });
 
 // Jurnalier - introducere articol

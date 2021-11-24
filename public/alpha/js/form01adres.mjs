@@ -4,14 +4,14 @@ import {AttachesToolPlus} from './uploader.mjs';
 // document.addEventListener("DOMContentLoaded", function clbkDOMContentLoaded () {});
 
     /* === VARIABILE NECESARE LA NIVEL DE MODUL ȘI MAI DEPARTE === */
-    var uuid    = document.querySelector("meta[property='uuid']").getAttribute("content") || '',
-        RED     = {},
+    var uuid      = document.querySelector("meta[property='uuid']").getAttribute("content") || '',
+        RED       = {},
         csrfToken = '',
-        imagini = new Set(), // un `Set` cu toate imaginile care au fost introduse în document.
-        fileRes = new Set(); // un `Set` care unifică fișierele, fie imagini, fie atașamente.
+        imagini   = new Set(), // un `Set` cu toate imaginile încărcate.
+        fileRes   = new Set(); // un `Set` care unifică fișierele, fie imagini, fie atașamente.
 
     // TOKEN-ul CSRF
-    if(document.getElementsByName('_csrf')[0].value) {
+    if (document.getElementsByName('_csrf')[0].value) {
         csrfToken = document.getElementsByName('_csrf')[0].value;
     }
     
@@ -422,7 +422,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         }).catch((e) => {
             console.log(e);
         });
-    }
+    };
 
     pubComm.on('delfile', (message) => {
         if (imagini.has(message)) {
@@ -463,7 +463,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             }).creeazaElem(val);
             insertie.appendChild(optionElem);
         });
-    }
+    };
 
     /**
      * Funcția `creeazaTitluAlternativ` generează mecanismul prin care se pot adăuga titluri alternative celui principal
@@ -502,7 +502,8 @@ import {AttachesToolPlus} from './uploader.mjs';
                 insertie.removeChild(document.querySelector(`#${newId}`));
             });
         }
-    }
+    };
+
     globalThis.creeazaTitluAlternativ = creeazaTitluAlternativ; // trimite în global funcția
     
     /**
@@ -540,7 +541,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         divInputGroup.appendChild(deleteTitAlt);
 
         insertie.appendChild(divInputGroup);
-    }
+    };
 
     /* === LIMITAREA NUMĂRULUI DE CARACTERE === */
     var descriere = document.querySelector('#descriereRed');
@@ -576,8 +577,6 @@ import {AttachesToolPlus} from './uploader.mjs';
     // REGULĂ: array-urile disciplinelor nu trebuie să aibă coduri copiate de la array-ul altei discipline (produce ghosturi și orfani pe ecran)
     // REGULĂ: pentru a se face colocarea sub-disciplinelor la o disciplină, cele din array trebuie să pornească cu un fragment de caractere identic.
     */
-
-    // CLASA 0
     mapCodDisc.set("0", 
         [
             /* === LIMBĂ ȘI COMUNICARE === */
@@ -2530,7 +2529,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             }
         });
         return disciplina;
-    }
+    };
 
     /* === SELECTORUL DISCIPLINEI [Bootstrap 4 Vertical pills] === */
     var niveluri   = document.querySelectorAll('.nivel'); // array de clase selectate
@@ -2584,10 +2583,9 @@ import {AttachesToolPlus} from './uploader.mjs';
                 discSelected.removeChild(elemExistent);
             }
         }
-    }
+    };
 
-    // window.clickPeDisciplina = clickPeDisciplina; //_ HACK: expunere pe global!
-    globalThis.clickPeDisciplina = clickPeDisciplina; // WORKING: expune funcția în obiectul global pentru a putea fi accesată la momentul declanșării unui eveniment click
+    globalThis.clickPeDisciplina = clickPeDisciplina; // Expune funcția în obiectul global pentru a putea fi accesată la momentul declanșării unui eveniment click
 
     /**
      * Funcția este callback pentru checkbox de clasă (input type checkbox)
@@ -2716,13 +2714,13 @@ import {AttachesToolPlus} from './uploader.mjs';
                 }
             }
         }
-    }
+    };
 
     /** Este funcția folosită de forEach-ul pe niveluri */
     function alegeClasa (nivel) {
         /* === CLICK PE CLASĂ (bifează clasa) === */
         nivel.addEventListener('click', clbkIncarcDiscipline);
-    }
+    };
 
     /**
      * Pentru fiecare clasă bifată, adaugă un listener la `click`, 
@@ -2795,13 +2793,13 @@ import {AttachesToolPlus} from './uploader.mjs';
         obj.claseDisc = Array.from(dcodes);
 
         return obj;
-    }
+    };
 
     /* === Prezentarea competențelor specifice === */
     // Locul de inserție al tabelului
     var compSpecPaginator = document.querySelector('#actTable');
 
-    // Pentru a preveni orice erori izvorâte din apăsarea prematură a butonului „Alege competetențe specifice”, am ales să-l ascund până când nu este selectată o disciplină
+    // Pentru a preveni orice erori izvorâte din apăsarea prematură a butonului *Alege competetențe specifice*, am ales să-l ascund până când nu este selectată o disciplină
 
     var activitatiFinal = new Map(); // mecanism de colectare al activităților bifate sau nu
     var competenteGen   = new Set(); // este un set necesar colectării competențelor generale pentru care s-au făcut selecții de activități în cele specifice
@@ -2858,7 +2856,7 @@ import {AttachesToolPlus} from './uploader.mjs';
 
         // trebuie returnat lui Data Table, alfel nu se populează datele.
         return sectionW;
-    }
+    };
 
     /* === MAGIE PE RÂNDUL CREAT DINAMIC === */
     // O clasă menită să ofere datele rândului activ care cuprinde toate activitățile
@@ -2882,7 +2880,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         // instanțiază obiectul inception prin pasarea datelor curente în constructorul clasei.
         let inception = new Act(data);
         XY = inception;
-    }
+    };
 
     /** 
      * Funcția are rolul de a restabili starea de dinainte de a scoate din DOM activitățile unei competențe
@@ -2930,7 +2928,7 @@ import {AttachesToolPlus} from './uploader.mjs';
                 ancora.appendChild(nouDiv);
             }
         }
-    }
+    };
 
     /**
      *  Funcția este event handler pentru click-urile de pe input checkbox-urile create dinamic pentru fiecare activitate.
@@ -2970,13 +2968,13 @@ import {AttachesToolPlus} from './uploader.mjs';
         } else {
             document.getElementById('competenteS').querySelector(`input[value="${rowData.cod}"]`).checked = false;
         }
-    }
+    };
 
     globalThis.manageInputClick = manageInputClick; //_ WORKING: Caută o soluție mai elegantă!!!
 
     function addMeDeleteMe () {
         let rowData = XY.getData();
-    } 
+    };
     /* === MAGIA ESTE GATA, APLAUZE!!! === */
 
     /** 
@@ -3075,10 +3073,10 @@ import {AttachesToolPlus} from './uploader.mjs';
             });
         // });
         // modelarea tabelului END
-    }
+    };
 
     /**
-     * Funcția `diciplineBifate` este listener pentru butonul „Alege competențele specifice” - `#actTable`
+     * Funcția `diciplineBifate` este listener pentru butonul *Alege competențele specifice* - `#actTable`
      * Are rolul de a aduce competențele specifice pentru disciplinele bifate folosind socketurile.
      * Apelează funcțiile `tabelFormater(data)` și `activitatiRepopulareChecks()` la momentul când se apasă pe butonul plus
      * @return {Array} `values`
@@ -3111,9 +3109,9 @@ import {AttachesToolPlus} from './uploader.mjs';
         pubComm.on('csuri', clbkTabelGenerator);
 
         return values;
-    }
+    };
 
-    // globalThis.disciplineBifate = disciplineBifate; // _HACK: Expunere în global
+    // globalThis.disciplineBifate = disciplineBifate; //Expunere în global
 
     /**
      * Populează cu date reprezentând competențele specifice pentru disciplinele selectate
@@ -3155,9 +3153,9 @@ import {AttachesToolPlus} from './uploader.mjs';
                 icon: 'error'
             });
         }
-    }
+    };
 
-    /* === MECANISMUL DE AVANS AL FORMULARULUI */
+    /* === MECANISMUL DE AVANS AL FORMULARULUI === */
     let progressTxt1 = document.querySelector('#progressText1');
     let progressTxt2 = document.querySelector('#progressText2');
     let progressTxt3 = document.querySelector('#progressText3');
@@ -3365,14 +3363,13 @@ import {AttachesToolPlus} from './uploader.mjs';
         var licenta       = document.querySelector('#licente');
         var licOpt        = licenta.options[licenta.selectedIndex].value;
         RED.licenta       = licOpt;
-    }
+    };
 
     /* === Pasul 2 === */
     /**
      * Funcția are rolul de a completa cu date obiectul `RED` cu datele de la `Pas2`.
      */
     function pas2 () {
-
         // VERIFICĂ SELECTAREA ARIEI CURRICULARE
         existaAria();
 
@@ -3380,7 +3377,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         // Obținerea valorilor pentru clasele selectate
         var niveluriScolare = document.querySelector('#nivel');
         var noduriInputNiveluri = niveluriScolare.querySelectorAll('input');
-        noduriInputNiveluri.forEach(input => {
+        noduriInputNiveluri.forEach((input) => {
             if (input.checked && RED.level.indexOf(input.value) === -1) {
                 // console.log(input.value);
                 switch (input.value) {
@@ -3456,7 +3453,60 @@ import {AttachesToolPlus} from './uploader.mjs';
                 RED.competenteS.push(v);
             }); 
         }
-    }
+    };
+
+    /* === ETICHETE === */
+    var tagsUnq = new Set(RED.etichete); // construiește un set cu care să gestionezi etichetele constituite din tot ce a colectat `RED.etichete`
+    var newTags = document.getElementById('eticheteRed'); // ref la textarea de introducere a etichetelor
+    var tagsElems = document.getElementById('tags');
+    /**
+     * Funcția are rolul de a crea un element vizual de tip etichetă
+     */
+    function createTag (tag) {
+        // https://stackoverflow.com/questions/22390272/how-to-create-a-label-with-close-icon-in-bootstrap
+        var spanWrapper = new createElement('h5', `${tag}`, ['tag'], null).creeazaElem();
+        var tagIcon = new createElement('span', '', ['fa', 'fa-tag', 'text-warning', 'mr-2'], null).creeazaElem();
+        var spanText = new createElement('span', '', ['text-secondary'], null).creeazaElem(`${tag}`);
+        var aClose = new createElement('a', '', null, null).creeazaElem();
+        var aGlyph = new createElement('i', '', ['remove', 'fa', 'fa-times', 'ml-1'], null).creeazaElem();
+
+        aClose.appendChild(aGlyph);
+        spanWrapper.appendChild(tagIcon);
+        spanWrapper.appendChild(spanText);
+        spanWrapper.appendChild(aClose);
+        tagsElems.appendChild(spanWrapper);
+
+        aClose.addEventListener('click', removeTag);
+    };
+
+    /* Rolul funcției este să permită ștergerea de etichete care nu sunt considerate utile sau care au fost introduse greșit */
+    function removeTag (evt) {
+        evt.preventDefault();
+        // console.log(`Obiectul eveniment`, evt, `target este`, evt.target, `iar current este`, evt.currentTarget);
+        let targetElem = document.getElementById(evt.currentTarget.parentNode.id);
+        // console.log(`Id-ul căutat este`, evt.currentTarget.parentNode.id);
+        tagsUnq.delete(evt.currentTarget.parentNode.id);
+        tagsElems.removeChild(targetElem);
+        // console.log(`După ștergere setul este `, tagsUnq);
+    };
+
+    // Adaugă event pentru a detecta Enter in inputul de introducere
+    newTags.addEventListener('keypress', (evt) => {
+        let charCodeNr = typeof evt.charCode == "number" ? evt.charCode : evt.keyCode;
+        let identifier = evt.key || evt.keyIdentifier; // compatibilitate cu Safari
+        if (identifier === "Enter" || charCodeNr === 13) {
+            let existingValues = newTags.value.split(','), i; // sparge stringul în elemente
+            if (existingValues.length > 0) {
+                for(i = 0; i < existingValues.length; i++) {
+                    let newtag = existingValues[i].trim();
+                    tagsUnq.add(newtag); // curăță elementul și introdu-l în Set.
+                    createTag(newtag);
+                }
+            }
+            newTags.value = '';
+        };
+        // console.log(`Setul acum este `, tagsUnq);
+    });
 
     /**
      * Funcția se execută la intrarea în pasul 4 al formularului
@@ -3488,23 +3538,12 @@ import {AttachesToolPlus} from './uploader.mjs';
         RED.materiale = getMeSelected(materiale, false);
 
         /* === Afișarea ETICHETELOR === */
-        var tagsElems = document.getElementById('tags');
-        RED.etichete.forEach((tag) => {
-            var btnCloseWrapper = new createElement('button', '', ['tag', 'btn', 'btn-sm', 'badge', 'badge-pill', 'badge-info', 'm-1'], null).creeazaElem(`${tag}`);
-            var elemBadge       = new createElement('span', '', ['closebtn', 'm-1'], null).creeazaElem(); // `×`
-            btnCloseWrapper.appendChild(elemBadge);
-            tagsElems.appendChild(btnCloseWrapper);
-        });
-    }
-
-    /* Rolul funcției este să permită ștergerea de etichete care nu sunt considerate utile sau care au for introduse greșit*/
-    function removeTags () {
-
-    }
+        RED.etichete.forEach(createTag);
+    };
 
     /**
-     * Funcția are rolul să prelucreze un element select cu opțiunea multiple activă
-     * @param {Object} elem Este elementul DOM select din care se dorește returnarea unui array cu valorile celor selectate
+     * Funcția are rolul să prelucreze un element `select` cu opțiunea `multiple` activă și valorile să le introducă ca etichete în `RED.etichete`
+     * @param {Object} elem Este elementul DOM `select` din care se dorește returnarea unui array cu valorile celor selectate
      * @param {Boolean} eticheta Dacă valoarea este `true`, valorile vor fi adăugate ca etichete
      * @return {Array} Array cu valorile select-urilor pentru care utilizatorul a optat.
      */
@@ -3517,7 +3556,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             }
             return option.value;
         });
-    }
+    };
 
     /**
      * Funcția are rolul de a închide bagul după ce toate resursele au fost contribuite.
@@ -3530,67 +3569,49 @@ import {AttachesToolPlus} from './uploader.mjs';
         pubComm.on('closeBag', (mesaj) => {
             console.log("Am închis bag-ul cu următoarele detalii: ", mesaj);
         });
-    }
+    };
 
     // Afișează selectorul de imagini - https://codepen.io/kskhr/pen/pRwKjg
     /**
      * Funcția este receptor pentru containerele imaginilor timbru
      * Funcția are rolul de a bifa și debifa imaginile din galeria celor expuse selecției.
      */
-    function clickImgGal () {
+    function clickImgGal (evt) {
         // selectează toate elementele care au clasa `.image-checkbox`
         let elementContainer = document.querySelectorAll('.image-checkbox'); // e o HTMLColection de div-uri care conțin fiecare următorii copii: img, input, svg
-        // console.log(elementContainer.length); // 2
-        // console.log(this);
 
-        // caută între cei trei copii elementul <input>
-        elementContainer.forEach( liveNode => {
-            // caută primul element <input type="checkbox">, care este în mod normal și primul care are atributul `checked`
-            let inputCollection = liveNode.querySelectorAll('input[type=checkbox]');
-            inputCollection.forEach(element => {
+        elementContainer.forEach( (liveNode) => {
+            // verifică dacă copilul img are clasa `image-checkbox-checked` și șterge-o
+            let imgelem = liveNode.querySelector('img');
+            if (imgelem.classList.contains(`image-checkbox-checked`)) {
+                imgelem.classList.toggle(`image-checkbox-checked`);
+            }
 
+            // verifică dacă copilul svg are clasa `d-block` și șterge-o
+            let svgelem = liveNode.querySelector('svg');
+            if (svgelem.classList.contains('d-block')) {
+                svgelem.classList.toggle('d-block');
+            }
 
-                // adaugă-i acestui element clasa `image-checkbox-checked`
-                if (element.checked) {
-                    element.classList.add('image-checkbox-checked');
-                    
-                    // FIXME: Vezi dacă este selectat vreun alt element și dacă este, pune-le pe toate pe checked === false
-                    // for (let sibling of elem.parentNode.children) {
-                    //     // console.log(sibling);        
-                    //     if (sibling !== checkbox) {
-                    //         sibling.checkbox = false;
-                    //         sibling.classList.remove('image-checkbox-checked');
-                    //     }
-                    // }
-
-                } else {
-                    // altfel, sterge-i clasa `image-checkbox-checked`
-                    element.classList.remove('image-checkbox-checked');
-                }
-            });
+            // caută elementul input și setează-i `checked` la `false`
+            let inputCollection = liveNode.querySelector('input[type=checkbox]');
+            inputCollection.checked = false;
         });
 
-        this.classList.toggle('image-checkbox-checked');
+        // this.classList.toggle('image-checkbox-checked');
+        evt.target.classList.toggle('image-checkbox-checked');
         var checkbox = this.querySelector('input[type=checkbox]');
         // console.log(checkbox, checkbox.checked);
 
-        if(checkbox.checked === false) {
+        if (checkbox.checked === false) {
             checkbox.checked = true;
-        } else {
-            checkbox.checked = false;
-        }
-
-        if (checkbox.checked === true) {
-            this.querySelector('svg').classList.add('d-block');
+            // verifică dacă mai sunt alte elemente input cu checked true
+            this.querySelector('svg').classList.toggle('d-block');
         } else {
             this.querySelector('svg').classList.add('d-none');
-        }
-
-        if(checkbox.checked === true){
-            this.querySelector('svg').classList.remove('d-none');
             this.querySelector('svg').classList.toggle('d-block');
         }
-    }
+    };
 
     var insertGal = document.getElementById('imgSelector');
     /**
@@ -3598,7 +3619,8 @@ import {AttachesToolPlus} from './uploader.mjs';
      */
     function pickCover () {
         insertGal.innerHTML = '';
-        for (let img of imagini) {
+        let img;
+        for (img of imagini) {
             // console.log('imaginea selectată pentru copertă este: ', img);
             
             let container = new createElement('div', '', [`col-xs-4`, `col-sm-3`, `col-md-2`, `nopad`, `text-center`], null).creeazaElem();
@@ -3607,7 +3629,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             
             let imgElem   = new createElement('img', '', [`img-responsive`], {src: `${img}`}).creeazaElem();
             let inputElem = new createElement('input', '', [`inputCheckGal`], {type: 'checkbox', value: `${img}`}).creeazaElem();
-            let inputI    = new createElement('i', '', [`fa`, 'fa-check', 'd-none'], null).creeazaElem();
+            let inputI    = new createElement('i', '', [`fas`, 'fa-check-circle', 'fa-3x', 'd-none'], null).creeazaElem();
 
             imgCheck.appendChild(imgElem);
             imgCheck.appendChild(inputElem);
@@ -3616,7 +3638,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             insertGal.appendChild(container);
         }
         return insertGal;
-    }
+    };
 
     /**
      * Funcția are rolul de a colecta care dintre imagini va fi coperta și de a colecta etichetele completate de contribuitor.
@@ -3631,20 +3653,6 @@ import {AttachesToolPlus} from './uploader.mjs';
             RED.relatedTo.push(relRed);
         });
 
-        // colectarea etichetelor
-        //_ TODO: Diferențiază-le pe cele care sunt redactate cu `[]` de celelalte. Cele cu `[]` trebuie să genereze în backend colecții!!! IMPLEMENTEAZĂ!
-        var newTags = document.getElementById('eticheteRed'); // ref la textarea de introducere
-        // detectează când s-a introdus o etichetă în momentul în care apare o virgulă
-        newTags.addEventListener('input', (evt) => {
-            // evt.preventDefault();
-            // console.log(newTags.value);
-            
-            if (newTags.value.indexOf(',') > -1) {
-                console.log('A apărut o virgulă');
-            }
-        });
-        var arrNewTags = newTags.value.split(',');
-
         // Completează RED.coperta cu linkul către imaginea bifată din galerie
         var inputCheckGal = document.querySelectorAll('.inputCheckGal');
         inputCheckGal.forEach(input => {
@@ -3653,9 +3661,18 @@ import {AttachesToolPlus} from './uploader.mjs';
             }
         });
 
+        /* === colectarea etichetelor === */ 
+        //_ TODO: Diferențiază-le pe cele care sunt redactate cu `[]` de celelalte. Cele cu `[]` trebuie să genereze în backend colecții!!! IMPLEMENTEAZĂ!
+        let arrNewTags = RED.etichete.concat(...tagsUnq);
+        alert(arrNewTags.join());
+        // în cazul în care au fost introduse etichete în ultimul pas, se va înlocui array-ul ariginal cu cel generat din Set
+        if (RED.etichete.length < arrNewTags.length) {
+            RED.etichete = arrNewTags;
+        }
+
         // colectează bibliografia
         RED.bibliografie = document.getElementById('bibliografie').value;
-    }
+    };
 
     /* === USERUL RENUNȚĂ === */
     // fă o referință către butonul de ștergere
