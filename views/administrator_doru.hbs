@@ -1,5 +1,5 @@
 {{!< doru/layout}}
-{{> nav-administrator}}
+{{> nav-administrator_doru}}
 
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
 
@@ -9,21 +9,22 @@
 
 <div id="content">
     <h1>Zona de administrare</h1>
+    
     <section class="container-fluid" id="adm-nav">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="userres-tab" data-toggle="tab" href="#userres" role="tab" aria-controls="userres" aria-selected="true">Utilizatori</a>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="userres-tab" data-bs-toggle="tab" data-bs-target="#userres" role="tab" aria-controls="userres" aria-selected="true">Utilizatori</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" id="elk-tab" data-toggle="tab" href="#system-elk" role="tab" aria-controls="system-elk" aria-selected="false">Stare ELK</a>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="elk-tab" data-bs-toggle="tab" data-bs-target="#system-elk" role="tab" aria-controls="system-elk" aria-selected="false">Stare ELK</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" id="mgdb-tab" data-toggle="tab" href="#system-mgdb" role="tab" aria-controls="system-mgdb" aria-selected="false">Stare MongoDB</a>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="mgdb-tab" data-bs-toggle="tab" data-bs-target="#system-mgdb" role="tab" aria-controls="system-mgdb" aria-selected="false">Stare MongoDB</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" id="system-tab" data-toggle="tab" href="#system" role="tab" aria-controls="system" aria-selected="false">Setări depozit</a>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" role="tab" aria-controls="system" aria-selected="false">Setări depozit</a>
             </li>
-        </ul>        
+        </ul>
     </section>
 
     <div class="tab-content" id="adm-nav-content">
@@ -34,16 +35,7 @@
             </div>
 
             {{!-- Va încărca resursele compilate cu ajutorul template-ului --}}
-            <div id="contributii" class="">
-                {{!-- Background video --}}
-                <div class="bg-video">
-                    <video class="bg-video__content" autoplay muted loop>
-                        {{!-- https://coverr.co/videos/modem-lights-u4MPlcF4EE --}}
-                        <source src="img/coverr-typing-in-laptop-1578678668153.mp4" type="video/mp4">
-                        Browserul tău nu are support pentru caracteristicile web moderne. Actualizează-l!
-                    </video>
-                </div>
-                
+            <div id="contributii">
                 {{!-- Formularul câmpului de căutare --}}
                 <form id="searchU" onsubmit="return false">
                     <div id="findUser" class="input-group mb-3">
@@ -68,10 +60,9 @@
                 </div>
             </div>
         </section>
-
         <section class="container-fluid tab-pane fade" id="system-elk" role="tabpanel" aria-labelledby="elk-tab"></section>
         <section class="container-fluid tab-pane fade" id="system-mgdb" role="tabpanel" aria-labelledby="mgdb-tab"></section>
-        <section class="container tab-pane fade" id="system" role="tabpanel" aria-labelledby="system-tab">
+        <section class="container-fluid tab-pane fade" id="system" role="tabpanel" aria-labelledby="system-tab">
             <form id="frmMgmt" name="frmMgmt" action="#" class="mt-4">
                 <div class="input-group p-1">
                     <div class="input-group-prepend">

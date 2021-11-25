@@ -30,14 +30,13 @@
         
         {{!-- ES6 SHIM --}}
         <script type="application/javascript" src="/{{template}}/lib/es6-shim/es6-shim.min.js"></script>
-        {{!-- BOOTSTRAP --}}
-        <link rel="stylesheet" type="text/css" href="/{{template}}/lib/npm/bootstrap.min.css">
-        
-        <link rel="stylesheet" href="/{{template}}/css/main.css">
-        <link rel="stylesheet" href="/{{template}}/css/animate.css">
-        <link rel="stylesheet" href="/{{template}}/css/arrow.css">
-        <link rel="stylesheet" href="/{{template}}/css/fixed.css">
-        <link rel="stylesheet" href="/{{template}}/css/waypoints.css">
+
+        {{!-- BOOTSTRAP 5 --}}
+        <link rel="stylesheet" type="text/css" href="/{{template}}/lib/npm/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="/{{template}}/lib/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+        {{!-- MAIN --}}
+        <link rel="stylesheet" type="text/css" href="/{{template}}/css/main.css">
 
         {{!-- Încărcarea foilor de stil din module --}}
         {{#each styles}}
@@ -60,7 +59,7 @@
 
         {{{body}}}
 
-        <footer class="footer">
+        <footer class="py-4 bg-light">
             {{> footer_doru}}
         </footer>
 

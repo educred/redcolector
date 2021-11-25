@@ -1,3 +1,10 @@
+Când trecem integral pe Boostrap 5:
+app.use('/bootstrap', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
+
+Instalează Bootstrap icons (doru tmpl) 
+npm i bootstrap-icons
+
+
 {
   id: 'nSnITY31xtA',
   created_at: '2021-10-14T04:45:53-04:00',

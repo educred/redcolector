@@ -1,6 +1,6 @@
 {{!< doru/landing}}
 
-{{> nav-landing}}
+{{> nav-landing_doru}}
 
 <input type="hidden" name="_csrf" value="{{csrfToken}}">
 
@@ -14,67 +14,49 @@
     <script defer type="application/javascript" src="{{script}}"></script>
 {{/each}}
 
-
-{{!-- secțiunea landing --}}
-<!--<div class="landing">-->
-<!--    <div class="home-wrap">-->
-<!--        <div class="">-->
-<!--            {{!-- "Ants" by revolution540 is licensed under CC BY 2.0 --}}-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</div>-->
-{{!-- secțiune landing final --}}
-
-{{!-- secțiune întâmpinare --}}
-<div class="home-inner caption text-center">
-
-    <div class="os-animation" data-animation="bounceInUp" data-delay=".3s">
-        <p><img src="{{logoimg}}" alt="logo" height="100px"> <img src="{{template}}/img/SIGLA-CRED1.png" alt="logo"></p>
-        {{!-- <ul class="nav justify-content-center">
-            <li class="nav-item">
-                <a class="nav-link active" href="#"><img src="img/intrumentestructurale-1.png" alt="Instrumente Structurale logo." width="50%"></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#"><img src="img/ue-1.png" alt="Uniunea Europeană logo."  width="50%"></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#"><img src="img/guvern-1.png" alt="Uniunea Europeană logo."  width="50%"></a>
-            </li>
-        </ul> --}}
+<!-- Header-->
+<header class="bg-dark py-5">
+    <div class="container px-5">
+        <div class="row gx-5 justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center my-5">
+            <h1 class="display-5 fw-bolder text-white mb-2">Resurse educaționale deschise</h1>
+            <p class="lead text-white-50 mb-4">Acces deschis la resurse educaționale, facilitat de tehnologiile informației și comunicațiilor, pentru consultare, utilizare și adaptare de către comunitatea utilizatorilor, în scopuri necomerciale.</p>
+            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                {{!-- <a class="btn btn-primary btn-lg px-4 me-sm-3" href="#features">Adăugați o resursă</a> --}}
+                {{!-- <a class="btn btn-outline-light btn-lg" href="/resurse">Vizualizați resurse</a> </div> --}}
+            </div>
+        </div>
+        </div>
     </div>
-    {{!-- <div class="os-animation" data-animation="bounceInUp" data-delay=".4s">
-        <h1>Bine ai venit!</h1>
-    </div> --}}
-    <div id="txthead" class="os-animation" data-animation="bounceInUp" data-delay=".5s">
-        <p>
-            Colectorul de Resurse Educaționale Deschise este o aplicație creată în cadrul proiectului <em>CRED-Curriculum relevant, educație deschisă pentru toți</em>– cod SMIS 2014+:118327
-Proiect cofinanțat din Fondul Social European prin Programul Operațional Capital Uman 2014-2020
-        </p>
-        <p>
-            Pentru a vă ajuta în efortul de elaborare a Resurselor Educaționale Deschise, aducem în atenția dumneavoastră un portal elaborat în cadrul proiectului cu scopul de a vă oferi sprijin: <a href="http://digital.educred.ro">digital.educred.ro</a>
-            Acest spațiu a fost creat pentru toți profesorii care doresc să valorifice noile tehnologii în activitățile de învățare cu elevii, valorificând experiența și rezultatele obținute până acum în proiectul CRED (<a href="https://www.educred.ro/" target="_black">site</a> si <a href="https://www.facebook.com/ProiectulCRED/" target="_blank">pagina Facebook</a>). Ne dorim astfel să contribuim la dezvoltarea competențelor cadrelor didactice de a utiliza și de a dezvolta resurse educaționale deschise (<a href="https://www.youtube.com/watch?v=d_Xov5X2iMk&t=230s">RED</a>). În egală măsură, așteptăm  ca în timp acest spațiu să susțină comunități de învățare dedicate resurselor educaționale deschise.
-            Pentru alte propuneri, inclusiv de grupuri de bune practici în educație, ne puteți scrie la adresa resurse@educred.ro
-        </p>
-        {{!-- <p><a href="http://digital.educred.ro"><img src="img/digitalPeEducred.png" alt="fragment din headerul digital.educred.ro"></a></p> --}}
+</header>
+
+<!-- Features section-->
+<section class="py-5 border-bottom" id="features">
+    <div class="container px-5 my-5">
+        <div class="row gx-5">
+        <div class="col-lg-4 mb-5 mb-lg-0">
+            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3">
+                <i class="bi bi-collection"></i>
+            </div>
+            <h2 class="h4 fw-bolder">Materiale pentru predare - învățare</h2>
+            <p>Proiecte deschise (open courseware și open content), cursuri free, directoare de obiecte de învățare (learning objects), jurnale educaționale</p>
+        </div>
+        <div class="col-lg-4 mb-5 mb-lg-0">
+            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-terminal"></i></div>
+            <h2 class="h4 fw-bolder">Platforme și aplicații care generează conținut deschis</h2>
+            <p>Pentru dezvoltarea, utilizarea, reutilizarea, căutarea, organizarea și accesul la resurse; includ si medii virtuale de învățare (LMS), comunități de învățare</p>
+        </div>
+        <div class="col-lg-4">
+            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-toggles2"></i></div>
+            <h2 class="h4 fw-bolder">Licențe de proprietate intelectuală</h2>
+            <p>Care promovează publicarea deschisă a materialelor, principii de design și bune practici, localizarea conținutului</p>
+        </div>
+        </div>
     </div>
+</section>
 
-    <div class="os-animation" data-animation="bounceInUp" data-delay=".6s">
-        <a class="btn btn-outline-light btn-lg" href="/resursepublice">Zona resurselor deschise public</a>
-    </div>
-
-</div>
-
-{{!-- secțiune întâmpinare final--}}
-<!--- Indicator săgeată -->
-<a class="down-arrow" href="#resurse">
-    <div class="arrow bounce d-none d-md-block">
-        <i class="fas fa-angle-down" aria-hidden="true"></i>
-    </div>
-</a>
-
-{{!-- <div class="container"> --}}
-    {{!-- {{> mainInfo}} --}}
-<div class="offset">
+<section class="offset bg-light py-5 border-bottom">
 
     {{!-- <h3 class="heading">
         Resurse la îndemâna dumneavoastră
@@ -169,17 +151,14 @@ Proiect cofinanțat din Fondul Social European prin Programul Operațional Capit
         </div> --}}
 <!--    </div>-->
 
-    <div id="resurse" class="resurse os-animation" data-animation="fadeInUp">
+
+    <div class="container">
+        <div class="text-center mb-5">
+        <h3>Ultimele resurse deschise adăugate</h3>
+    </div>
+
+    <div id="resurse" class="row gx-5 justify-content-center">
         <div class="resurse">
-            {{!-- Background video --}}
-            <div class="bg-video">
-                <video class="bg-video__content" autoplay muted loop>
-                    {{!-- https://coverr.co/videos/modem-lights-u4MPlcF4EE --}}
-                    <source src="img/Modem-lights.mp4" type="video/mp4">
-                    <source src="img/Modem-lights.webm" type="video/webm">
-                    Browserul tău nu are support pentru caracteristicile web moderne. Actualizează-l!
-                </video>
-            </div>
 
             {{!-- Randează resursele în landing --}}
             {{#each resurse}}
@@ -220,7 +199,7 @@ Proiect cofinanțat din Fondul Social European prin Programul Operațional Capit
             {{/each}}
         </div>
     </div>
-</div>
+</section>
 
 <template id="infot">
     <article class="infotoken">
