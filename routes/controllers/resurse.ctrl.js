@@ -30,6 +30,7 @@ getStructure().then((val) => {
     RES_IDX_ES7 = val.RES_IDX_ES7;
 }).catch((error) => {
     console.log(`resurse.ctrl.js`, error);
+    logger.error(error);
 });
 
 // LOGO
@@ -82,10 +83,10 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
             let csrfToken = req.csrfToken();
 
             res.render(`resurse_${gensettings.template}`, {
-                template: `${gensettings.template}`,
+                template:     `${gensettings.template}`,
                 title:        "Administrativ",
                 user,
-                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                logoimg:      `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken,
                 resurse:      newResultArr,
                 activeResLnk: true,
@@ -112,7 +113,7 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
             });
         
             res.render(`resurse_${gensettings.template}`, {
-                template: `${gensettings.template}`,
+                template:     `${gensettings.template}`,
                 title:        "Publice",
                 user:         req.user,
                 logoimg:      `${gensettings.template}/${LOGO_IMG}`,
@@ -144,26 +145,37 @@ exports.loadOneResource = async function loadOneResource (req, res, next) {
     let scripts = [
         // MOMENT.JS
         {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
-        // EDITOR.JS
-        {script: `${gensettings.template}/lib/editorjs/editor.js`},
-        {script: `${gensettings.template}/lib/editorjs/header.js`},
-        {script: `${gensettings.template}/lib/editorjs/paragraph.js`},
-        {script: `${gensettings.template}/lib/editorjs/list.js`},
-        {script: `${gensettings.template}/lib/editorjs/image.js`},
-        {script: `${gensettings.template}/lib/editorjs/table.js`},
-        {script: `${gensettings.template}/lib/editorjs/attaches.js`},
-        {script: `${gensettings.template}/lib/editorjs/embed.js`},
-        {script: `${gensettings.template}/lib/editorjs/code.js`},
-        {script: `${gensettings.template}/lib/editorjs/quote.js`},
-        {script: `${gensettings.template}/lib/editorjs/inlinecode.js`},
         // HOLDER.JS
-        {script: `${gensettings.template}/lib/npm/holder.min.js`}   
+        // {script: `${gensettings.template}/lib/npm/holder.min.js`},
+        // HELPER DETECT URLS or PATHS
+        {script: `${gensettings.template}/js/check4url.js`}
     ];
 
     let modules = [
+        // EDITOR.JS
+        {module: `${gensettings.template}/lib/editorjs/editor.js`},
+        {module: `${gensettings.template}/lib/editorjs/header.js`},
+        {module: `${gensettings.template}/lib/editorjs/paragraph.js`},
+        {module: `${gensettings.template}/lib/editorjs/checklist.js`},
+        {module: `${gensettings.template}/lib/editorjs/list.js`},
+        {module: `${gensettings.template}/lib/editorjs/image.js`},
+        {module: `${gensettings.template}/lib/editorjs/embed.js`},
+        {module: `${gensettings.template}/lib/editorjs/code.js`},
+        {module: `${gensettings.template}/lib/editorjs/quote.js`},
+        {module: `${gensettings.template}/lib/editorjs/inlinecode.js`},
+        {module: `${gensettings.template}/lib/editorjs/table.js`},
+        {module: `${gensettings.template}/lib/editorjs/attaches.js`},
+        {module: `${gensettings.template}/lib/editorjs/ajax.js`},
+        // JQuery
+        {module: `${gensettings.template}/lib/npm/jquery.min.js`},
+        // Toast
+        {module: `${gensettings.template}/lib/npm/jquery.toast.min.js`},
+        // MOTORUL FORM-ULUI
+        {module: `${gensettings.template}/js/custom.js`},
+        {module: `${gensettings.template}/js/uploader.mjs`},
         // LOCALE
         {module: `${gensettings.template}/js/uploader.mjs`},
-        {module: `${gensettings.template}/js/cred-res.js`}                
+        {module: `${gensettings.template}/js/cred-res.js`}           
     ];
 
     function renderRED (resursa) {
@@ -206,8 +218,8 @@ exports.loadOneResource = async function loadOneResource (req, res, next) {
                 csrfToken: req.csrfToken(),
                 resursa:   obi,
                 data,
-                modules,
-                scripts
+                scripts,
+                modules                
             });
         }
     };

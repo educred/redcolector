@@ -39,7 +39,7 @@
 }
 
 /* HEADER */
-header {
+#header-landing {
     background: linear-gradient(0deg, rgb(0 0 0 / 56%), rgb(0 0 0 / 90%)), url(../img/photo-header.jpg);
     background-size: cover;
 }
@@ -70,16 +70,6 @@ footer.bg-light {
 }
 
 /* FOOTER */
-/* .footer {
-    display: flex;
-    flex-wrap: nowrap;
-    position: relative;
-    margin-top: .4rem;
-    padding: .3rem;
-    font-size: smaller;
-    color: rgb(255,255,255);
-    background-color: #275382;
-} */
 footer.bg-light {
     background: #FFF !important;
 }
@@ -192,15 +182,6 @@ footer.bg-light {
     /* padding: 1rem 0 1rem; */
     margin: 0 auto;
     z-index: 10;
-}
-
-#resursaincred {
-    position: relative;
-}
-
-.redcontent {
-    background-color: beige;
-    /* margin: .3rem; */
 }
 
 .card {
@@ -571,9 +552,13 @@ a[class$="8"], label[class$="8"] {
 
 /* === CĂUTARE FAȚETATĂ [END] === */
 
+/* EDITOR TEXT */
 #codex-editor {
     border: .1rem;
-    border-style: solid;
+}
+
+.codex-editor__redactor {
+    padding-bottom: 1rem !important;
 }
 
 /* TRATAREA LOGURILOR */
@@ -684,7 +669,6 @@ a[class$="8"], label[class$="8"] {
 }
 
 /* === RESURSĂ UNICĂ AFIȘATĂ === */
-
 .resursa {
     background-color: transparent;
 }
@@ -1127,8 +1111,6 @@ a[class$="8"], label[class$="8"] {
     padding: .4rem;
 }
 
-
-
 #form01adres {
     margin-top:50px;
     background:none;
@@ -1314,7 +1296,6 @@ fieldset #nivel .form-check{
     margin-left:10px;
 }
 
-
 /* Gestionarea CARD-urilor */
 .card{
     padding: 0;
@@ -1368,9 +1349,6 @@ fieldset #nivel .form-check{
     padding:10px;
 }
 
-.landing{
-    position: static;
-}
 .home-inner.caption.text-center{
     filter: initial;
     -webkit-filter: initial;
@@ -1403,35 +1381,6 @@ fieldset #nivel .form-check{
     color: #fff;
 }
 
-.redcontent{
-    background: initial;
-}
-.redcontent > div:first-child{
-    width: 120%;
-    margin-left:-10%;
-    margin-top:4rem;
-}
-
-.redcontent > div{
-    padding:0 2rem;
-}
-
-.card-title.jumbotron{
-    background: #fff;
-    margin-top:-3rem;
-    position: relative;
-    padding-top: 2rem;
-}
-
-@media (max-width: 800px){
-    .card-title.jumbotron{
-        margin-top:1rem;
-    }
-}
-.aired-medium{
-    margin-top:1.5rem;
-    margin-bottom:1.5rem;
-}
 .cardx .card-header{
     padding:2rem 0;
 }
@@ -1479,3 +1428,5 @@ fieldset #nivel .form-check{
 .modal { 
     background: rgba(0, 0, 0, 0.8);
 }
+
+

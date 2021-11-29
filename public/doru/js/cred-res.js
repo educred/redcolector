@@ -1,4 +1,4 @@
-import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
+import {pubComm, createElement, decodeCharEntities, datasetToObject} from './main.mjs';
 import {AttachesToolPlus} from './uploader.mjs';
 
 var csrfToken = '';
@@ -7,9 +7,9 @@ if(document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
 }
 
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
 
 // OBȚINEREA DATELOR
 let dataRes = document.querySelector('.resursa').dataset;
@@ -50,10 +50,12 @@ function validURL(str) {
 
 /* === Integrarea lui EditorJS === https://editorjs.io */
 const editorX = new EditorJS({
+    placeholder: '',
+    logLevel: 'VERBOSE',
     data: resObi.content,
     onReady: () => {
-        // console.log('Editor.js e gata de treabă!');
-        //TODO: Construiește logica pentru a popula `imagini` și `fisiere` de îndată ce s-au încărcat datele
+        console.log('Editor.js e gata de treabă!');
+        //_ TODO: Construiește logica pentru a popula `imagini` și `fisiere` de îndată ce s-au încărcat datele
         resObi.content.blocks.map(obj => {
             switch (obj.type) {
                 case 'image':
@@ -65,7 +67,7 @@ const editorX = new EditorJS({
             }
         });
     },
-    holder: 'edi',    
+    holder: 'codex-editor',    
     /* Obiectul tuturor instrumentelor pe care le oferă editorul */ 
     tools: { 
         header: {
