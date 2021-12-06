@@ -7,11 +7,8 @@ const Resursa  = require('../models/resursa-red');              // Adu modelul r
 const Mgmtgeneral = require('../models/MANAGEMENT/general');    // Adu modelul management
 const logger   = require('../util/logger');
 
-// LOGO
-let LOGO_IMG = "img/" + process.env.LOGO;
-
 /* === LANDING :: / === */
-let renderPublicREDs = require('./controllers/public-reds.ctrl');
+let renderPublic = require('./controllers/public.ctrl');    // adu funcția `renderPublic` din `/controllers`.
 router.get('/', (req, res, next) => {
     async function clbkRootRoute (req, res, next) {
 
@@ -46,7 +43,20 @@ router.get('/', (req, res, next) => {
             ]
         ];
 
-        renderPublicREDs(req, res, next, gensettings, Resursa, resurse, 'Acasă');
+        /* 
+        * Configurări pentru `Model.find`
+        * Adu ultimele 8 RESURSE pe landing cu ultimele resurse introduse afișate primele
+        * */
+        modelOpts = {
+            projection: {generalPublic: true},
+            queryOpts: {
+                sort: {date: -1},
+                limit: 8
+            }
+        };
+
+        // Afișează resursele găsite
+        renderPublic(req, res, next, gensettings, Resursa, modelOpts, resurse, 'Acasă');
     };
     clbkRootRoute(req, res, next).catch((error) => {
         console.log(error);

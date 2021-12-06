@@ -44,7 +44,7 @@ let primeREDidxAl = process.env.MONGO_REDS;
  * Dacă indexul nu există și în consecință alias-ul, vor fi create și va fi indexat primul document.
  * În cazul în care indexul există, va fi indexat documentul dacă acesta nu există deja în index.
  * ATENȚIE!! Este rolul apelantului să paseze valori pentru `idx`, cât și pentru `aliasidx`.
- * @param {Object} schema Este schema ES7 în baza căreia creezi index nou
+ * @param {Object} schema Este schema ES7 în baza căreia creezi index nou în Elasticsearch, dacă acest lucru este necesar!!!
  * @param {Object} data Este un obiect care mapează documentul Mongoose și constituie un POJO nou remodelat, dacă e nevoie
  * @param {String} idx Este un string din Redis cu numele indexului ES pentru care s-a constituit alias-ul
  * @param {String} aliasidx Este un string din .env cu numele indexului alias la care trebuie indexată înregistrarea
@@ -52,60 +52,25 @@ let primeREDidxAl = process.env.MONGO_REDS;
 exports.searchIdxAndCreateDoc = async function searchIdxAndCreateDoc (schema, data, idx, aliasidx) {
     // https://stackoverflow.com/questions/44395313/node-mongoose-how-to-get-a-full-list-of-schemas-documents-and-subdocuments
     // console.log('[es7-helper.js::searchIdxAlCreateDoc()] `schema.paths` are valorile: ', schema);
-    /*
-    {
-        settings: {
-            index: { number_of_shards: 3, number_of_replicas: 2 },
-            analysis: { analyzer: [Object], filter: [Object] }
-        },
-        mappings: {
-            properties: {
-                date: [Object],
-                idContributor: [Object],
-                emailContrib: [Object],
-                uuid: [Object],
-                autori: [Object],
-                langRED: [Object],
-                title: [Object],
-                titleI18n: [Object],
-                arieCurriculara: [Object],
-                level: [Object],
-                discipline: [Object],
-                disciplinePropuse: [Object],
-                competenteGen: [Object],
-                description: [Object],
-                identifier: [Object],
-                dependinte: [Object],
-                content: [Object],
-                bibliografie: [Object],
-                contorAcces: [Object],
-                generalPublic: [Object],
-                contorDescarcare: [Object],
-                etichete: [Object],
-                utilMie: [Object],
-                expertCheck: [Object]
-            }
-        },
-        aliases: { resedus: {} }
-    }
-    */
+    // https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html
+    // https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/exists_examples.html (verifică dacă un anumit document există)
 
     try {
-        // #1 Testează dacă există index și alias-ul său. https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/exists_examples.html
+        // #1 Testează dacă există index și alias-ul său. https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#_indices_exists
         let idxE = await esClient.indices.exists(
-            {index: aliasidx}, 
+            {index: idx}, 
             {errorTrace: true}
         );
         let idxAlE = await esClient.indices.existsAlias({name: aliasidx, index: idx});
 
         // dacă indexul există și are alias creat, verifică existența documentului
         if (idxE.statusCode === 200 && idxAlE.statusCode === 200) {
-            console.log('[es7-helper.js::searchIdxAlCreateDoc] Indexul pasat există și are și alias.');
+            // console.log('[es7-helper.js::searchIdxAlCreateDoc] Indexul pasat există și are și alias.');
 
             // INDEXEAZĂ DOCUMENT!!!
             await esClient.create({
                 id:      data.id,
-                index:   aliasidx,
+                index:   idx,
                 refresh: true,
                 body:    data
             });
@@ -304,7 +269,6 @@ exports.delAndCreateNew = async function delAndReindex (schema, oldIdx, vs = '',
         next(error);
     }
 }
-
 
 /**
  * Funcția are rolul de a face o reindexare cu date existente în indexul vechi.

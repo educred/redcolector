@@ -1,5 +1,5 @@
-// import {createElement, decodeCharEntities, datasetToObject} from './main.mjs';
-// import {AttachesToolPlus} from './uploader.mjs';
+import {socket, pubComm, createElement, check4url, decodeCharEntities, datasetToObject} from './main.mjs';
+import {AttachesToolPlus} from './uploader.mjs';
 
 var csrfToken = '';
 
@@ -7,9 +7,9 @@ if(document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
 }
 
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
 
 var log = {
     contorAcces: 0
@@ -48,7 +48,7 @@ const editorX = new EditorJS({
     /**
      * Id of Element that should contain Editor instance
      */
-    holder: 'codex-editor',
+    holder: 'codex',
     /**
      * Enable autofocus
      */ 
@@ -162,7 +162,7 @@ const editorX = new EditorJS({
                          */
                         function validateResponse(response) {
                             if (!response.ok) {
-                                // pubComm.emit('mesaje', `Am încercat să „trag” imaginea de la URL-ul dat, dar: ${response.statusText}`);
+                                // pubComm.emit('mesaje', `Am încercat să trag imaginea de la URL-ul dat, dar: ${response.statusText}`);
                                 console.log('[uploadByUrl::validateResponse] Am detectat o eroare: ', response.statusText);
                             }
                             // console.log('[uploadByUrl::validateResponse] fetch a adus: ', response); // response.body este deja un ReadableStream
@@ -289,8 +289,6 @@ const editorX = new EditorJS({
         }
     }
 });
-
-
 
 var submitBtn = document.querySelector('#enterlog');
 var idContributor = document.querySelector('#idContributor');

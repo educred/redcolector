@@ -3,17 +3,25 @@ const mongoose      = require('mongoose');
 const validator     = require('validator');
 const Schema        = mongoose.Schema;
 const redisClient   = require('../redis.config');
-const schema        = require('./resursa-red-es7');
+const schema        = require('./resursa-red-es7'); // aceasta este schema de mapping pentru indexul din Elasticsearch (necesar pe hook save)
 const editorJs2TXT  = require('../routes/controllers/editorJs2TXT'); 
-// const ES7Helper     = require('./model-helpers/es7-helper');
+const ES7Helper     = require('./model-helpers/es7-helper');
 const logger        = require('../util/logger');
+let {getStructure} = require('../util/es7');
 
 /* INDECȘII ES7 */
-// Pornești setând valori de pornire. Atenție, aici se face hardcodarea denumirilor indecșilor. Fiecare index este varianta la plural a numelui schemei la export
-// let RES_IDX_ES7 = ES7Helper.ESNAMES.RES_IDX_ES7, 
-//     RES_IDX_ALS = ES7Helper.ESNAMES.RES_IDX_ALS;
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+//_ FIXME: creează valori default pentru numele indecșilor ES7 necesari în cazul în care  indexul și alias-ul său nu au fost create încă
 
-// let {RES_IDX_ES7, RES_IDX_ALS} = ES7Helper.esnames;
+getStructure().then((val) => {
+    USR_IDX_ALS = val.USR_IDX_ALS;
+    USR_IDX_ES7 = val.USR_IDX_ES7;
+    RES_IDX_ALS = val.RES_IDX_ALS;
+    RES_IDX_ES7 = val.RES_IDX_ES7;
+}).catch((error) => {
+    console.log(`resurse.ctrl.js`, error);
+    logger.error(error);
+});
 
 var softwareSchema = new mongoose.Schema({
     nume:     {
@@ -123,7 +131,7 @@ var ResursaSchema = Schema({
     toObject: { virtuals: true } // So `toObject()` output includes virtuals
 });
 
-/* === HOOKS PRE=== */
+/* === HOOKS PRE === */
 
 // Stergerea comentariilor asociate utiliatorului atunci când acesta este șters din baza de date.
 ResursaSchema.pre('remove', function hRemoveClbk (next) {
@@ -135,7 +143,7 @@ ResursaSchema.pre('remove', function hRemoveClbk (next) {
 });
 
 /* === HOOKS POST === */ 
-// Indexare în Elasticsearch!
+// Indexare în Elasticsearch după ce resursa a fost salvată în baza de date!
 ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
     // console.log("[models/sursa-red.js] a primit în post save următorul obiect pentru doc._doc: ", doc._doc._id);
     
@@ -178,7 +186,8 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
         contorDescarcare: obi.contorDescarcare,
         etichete:         obi.etichete,
         utilMie:          obi.utilMie,
-        expertCheck:      obi.expertCheck
+        expertCheck:      obi.expertCheck,
+        rating:           obi.rating
     };
 
     //- FIXME: Aici este funcția care generează indexul numit `false`
@@ -305,6 +314,6 @@ function clbkResFindPostHookREDschema (doc, next) {
 // Resursa.static.nume_metodă = function () {}; // metodă care poate fi folosită pe model
 
 /**
- * EXPORTUL MODULULUI
+ * Modelul mongoose pentru o Resursă Educațională Deschisă
  */
 module.exports = mongoose.model('resursedu', ResursaSchema);

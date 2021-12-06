@@ -470,7 +470,7 @@ module.exports = function sockets (io) {
             });
 
             /* 
-            ==== Salvează în baza de date ==== 
+                ==== Salvează în baza de date ==== 
                 # Salvează ca json întreaga înregistrare în `./data`;
                 # Creează repo-ul git-ului
             */
@@ -486,7 +486,7 @@ module.exports = function sockets (io) {
                 await git.init({ fs, dir: calea }); // Atenție, urmează să se facă și primul commit.
 
                 /* === SCRIE OBIECTUL JSON în BAG === */                
-                const data = Buffer.from(JSON.stringify(newRes));   // transformă în `Buffer` obiectul `newRes`
+                const data = Buffer.from(JSON.stringify(newRes)); // transformă în `Buffer` obiectul `newRes`
                 let strm = new Readable();
                 strm._read = () => {}; // _read este necesar!!!
                 strm.push(data);
@@ -499,6 +499,7 @@ module.exports = function sockets (io) {
                 pipeline(strm, destinationStream, function clbkAfterREDWrittenStrm (error, val) {
                     if (error) {
                         console.error("[sockets.js::'red'] Nu s-a reușit scrierea fișei JSON în Bag", error);
+                        logger.error(error);
                     }
                     // console.log("[sockets.js::'red'] Înainte de a încerca să fac commit-ul", res);
                     commitAll(calea, res.autori, res.emailContrib, res.title);

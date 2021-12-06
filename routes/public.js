@@ -26,7 +26,7 @@ const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
 let idxRes = RES_IDX_ALS;
 
 // === RESURSE PUBLICE ===
-let renderPublicREDs = require('./controllers/public-reds.ctrl');
+let renderPublicREDs = require('./controllers/public.ctrl');
 router.get('/', (req, res, next) => {
 
     async function clbkResPublice (req, res, next) {
@@ -59,7 +59,19 @@ router.get('/', (req, res, next) => {
             ]
         ];
 
-        renderPublicREDs(req, res, next, gensettings, Resursa, resurse, 'Public');
+        /* 
+        * Configurări pentru `Model.find`
+        * Adu ultimele 8 RESURSE pe landing cu ultimele resurse introduse afișate primele
+        * */
+        modelOpts = {
+            projection: {generalPublic: true},
+            queryOpts: {
+                sort: {date: -1},
+                limit: 8
+            }
+        };
+
+        renderPublicREDs(req, res, next, gensettings, Resursa, modelOpts, resurse, 'Public');
     };
 
     clbkResPublice(req, res, next).catch((error) => {

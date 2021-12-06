@@ -5,15 +5,36 @@ const logger = require('../../util/logger');
 // LOGO
 let LOGO_IMG = "img/" + process.env.LOGO;
 
-module.exports = function renderPublicREDs (req, res, next, gensettings, Model, resurse, tabtitle) {
+/**
+ * Funcția are rolul de a randa resursele care sunt publice.
+ * - Numărul resurselor afișat este hardcodat la 8
+ * - fii foarte atent la ordinea elementelor din `resurse`: `[scripts, modules, styles]`
+ * 
+ * @param {Object} req Obiectul `request`
+ * @param {Object} res Obiectul `response`
+ * @param {Function} next Funcția `next()`
+ * @param {Object} gensettings obiectul rezultat al promisiunii - setările generale ale aplicației
+ * @param {Object} Model Modelul mongoose care va fi folosit
+ * @param {Object} modelOpts este proiecția necesară lui `find`
+ * @param {Array} resurse Array de array-uri cu toate resursele necesare randării (`script`, `module`, `style`) 
+ * @param {String} tabtitle Numele care apare în tab
+ */
+function renderPublic (req, res, next, gensettings, Model, modelOpts, resurse, tabtitle) {
+    let [scripts, modules, styles] = resurse;  // fii foarte atent la ordine.
 
-    let [scripts, modules, styles] = resurse;
+    // creează obiectul `Query`
+    let findObj = Model.find(modelOpts.projection);
 
-    /* Adu ultimele 8 RESURSE pe landing */
-    Model.find({'generalPublic': true}).sort({"date": -1}).limit(8).exec().then((result) => {
-        let newResultArr = [];
-        let user = req.user;
-        let csrfToken = req.csrfToken();
+    // Parametrizează obiectul Query. A înlocuit Model.find(modelOpts.projection).sort({"date": -1}).limit(8)
+    for (let [opt, val] of Object.entries(modelOpts.queryOpts)) {
+        findObj[opt](val);
+    }
+
+    // execută pentru a crea `Promise`
+    findObj.exec().then((result) => {
+        let newResultArr = [],
+            user = req.user,
+            csrfToken = req.csrfToken();
 
         async function clbkMapResult (obi) {
             const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
@@ -30,6 +51,7 @@ module.exports = function renderPublicREDs (req, res, next, gensettings, Model, 
 
             newResultArr.push(Object.assign(newObi));
         };
+        
         result.map((obi) => {
             clbkMapResult(obi).catch((error) => {
                 console.log(`Eroarea apărută este `, error);
@@ -62,3 +84,5 @@ module.exports = function renderPublicREDs (req, res, next, gensettings, Model, 
         }
     });
 };
+
+module.exports = renderPublic;

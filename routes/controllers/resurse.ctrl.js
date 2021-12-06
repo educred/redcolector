@@ -174,7 +174,6 @@ exports.loadOneResource = async function loadOneResource (req, res, next) {
         {module: `${gensettings.template}/js/custom.js`},
         {module: `${gensettings.template}/js/uploader.mjs`},
         // LOCALE
-        {module: `${gensettings.template}/js/uploader.mjs`},
         {module: `${gensettings.template}/js/cred-res.js`}           
     ];
 

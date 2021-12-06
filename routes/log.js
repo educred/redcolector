@@ -22,7 +22,7 @@ async function logRoot (req, res, next) {
     let roles = ["user", "cred"];
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
 
-    let loguriPublice = Log.find().sort({"date": -1}).limit(10); // doar ultimele zece anunțuri.
+    let loguriPublice = Log.find().sort({"date": -1}).limit(10); // Hardcodare loguri: doar ultimele zece anunțuri.
     let promiseLogPub = loguriPublice.exec();
 
     if (confirmedRoles.length > 0) {
@@ -78,6 +78,7 @@ async function logRoot (req, res, next) {
             });
         }).catch((err) => {
             console.error(err);
+            logger.error(err);
             next(err);
         });
     } else {
@@ -93,56 +94,65 @@ router.get('/', (req, res, next) => {
 });
 
 // Jurnalier - introducere articol
-router.get('/new', function (req, res) {
+async function addLog (req, res, next) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+
     let scripts = [
         // FA
-        {script: '/lib/npm/all.min.js'},
+        {script: `${gensettings.template}/lib/npm/all.min.js`},
         // MOMENT.JS
-        {script: '/lib/npm/moment-with-locales.min.js'},
+        {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
         // JQUERY
-        {script: '/lib/npm/jquery.slim.min.js'},                
+        {script: `${gensettings.template}/lib/npm/jquery.slim.min.js`},                
         // BOOTSTRAP
-        {script: '/lib/npm/bootstrap.bundle.min.js'},
+        {script: `${gensettings.template}/lib/npm/bootstrap.bundle.min.js`},
         // HOLDERJS
-        {script: '/lib/npm/holder.min.js'}   
+        {script: `${gensettings.template}/lib/npm/holder.min.js`}   
     ];
 
     let modules = [
         // EDITOR.JS
-        {module: '/lib/editorjs/editor.js'},
-        {module: '/lib/editorjs/header.js'},
-        {module: '/lib/editorjs/paragraph.js'},
-        {module: '/lib/editorjs/checklist.js'},
-        {module: '/lib/editorjs/list.js'},
-        {module: '/lib/editorjs/image.js'},
-        {module: '/lib/editorjs/embed.js'},
-        {module: '/lib/editorjs/code.js'},
-        {module: '/lib/editorjs/quote.js'},
-        {module: '/lib/editorjs/inlinecode.js'},
-        {module: '/lib/editorjs/table.js'},
-        {module: '/lib/editorjs/attaches.js'},
-        {module: '/lib/editorjs/ajax.js'},
+        {module: `${gensettings.template}/lib/editorjs/editor.js`},
+        {module: `${gensettings.template}/lib/editorjs/header.js`},
+        {module: `${gensettings.template}/lib/editorjs/paragraph.js`},
+        {module: `${gensettings.template}/lib/editorjs/checklist.js`},
+        {module: `${gensettings.template}/lib/editorjs/list.js`},
+        {module: `${gensettings.template}/lib/editorjs/image.js`},
+        {module: `${gensettings.template}/lib/editorjs/embed.js`},
+        {module: `${gensettings.template}/lib/editorjs/code.js`},
+        {module: `${gensettings.template}/lib/editorjs/quote.js`},
+        {module: `${gensettings.template}/lib/editorjs/inlinecode.js`},
+        {module: `${gensettings.template}/lib/editorjs/table.js`},
+        {module: `${gensettings.template}/lib/editorjs/attaches.js`},
+        {module: `${gensettings.template}/lib/editorjs/ajax.js`},
+        // JQuery
+        {module: `${gensettings.template}/lib/npm/jquery.min.js`},
+        // Toast
+        {module: `${gensettings.template}/lib/npm/jquery.toast.min.js`},
         // LOCAL
-        {module: '/js/uploader.mjs'},
-        {module: '/js/form02log.js'} 
+        {module: `${gensettings.template}/js/uploader.mjs`},
+        {module: `${gensettings.template}/js/form02log.mjs`} 
     ];
 
     let styles = [
         // FONTAWESOME
-        {style: '/lib/npm/all.min.css'},
+        {style: `${gensettings.template}/lib/npm/all.min.css`},
         // JQUERY TOAST
-        {style: '/lib/npm/jquery.toast.min.css'},
+        {style: `${gensettings.template}/lib/npm/jquery.toast.min.css`},
         // BOOTSTRAP
-        {style: '/lib/npm/bootstrap.min.css'},
+        {style: `${gensettings.template}/lib/npm/bootstrap.min.css`},
     ];
 
     /* === VERIFICAREA CREDENȚIALELOR === */
     if(req.session.passport.user.roles.admin){
         // Dacă avem un admin, atunci oferă acces neîngrădit
-        res.render('logentry-form', {
+        res.render(`logentry-form_${gensettings.template}`, {
+            template: `${gensettings.template}`,
             title:     "Adaugă în log",
             user:      req.user,
-            logoimg:   LOGO_IMG,
+            logoimg:   `${gensettings.template}/${LOGO_IMG}`,
             csrfToken: req.csrfToken(),
             scripts,
             modules,
@@ -151,6 +161,12 @@ router.get('/new', function (req, res) {
     } else {
         res.redirect('/401');
     }
+};
+router.get('/new', (req, res, next) => {
+    addLog(req, res, next).catch((error) => {
+        console.log(error);
+        logger.error(error);
+    })
 });
 
 module.exports = router;
