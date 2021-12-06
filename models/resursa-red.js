@@ -11,15 +11,15 @@ let {getStructure} = require('../util/es7');
 
 /* INDECȘII ES7 */
 let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
-//_ FIXME: creează valori default pentru numele indecșilor ES7 necesari în cazul în care  indexul și alias-ul său nu au fost create încă
 
 getStructure().then((val) => {
-    USR_IDX_ALS = val.USR_IDX_ALS;
-    USR_IDX_ES7 = val.USR_IDX_ES7;
-    RES_IDX_ALS = val.RES_IDX_ALS;
-    RES_IDX_ES7 = val.RES_IDX_ES7;
+    // creează valori default pentru numele indecșilor ES7 necesari în cazul în care  indexul și alias-ul său nu au fost create încă
+    USR_IDX_ALS = val.USR_IDX_ALS || 'users';
+    USR_IDX_ES7 = val.USR_IDX_ES7 || 'users0';
+    RES_IDX_ALS = val.RES_IDX_ALS || 'resursedus';
+    RES_IDX_ES7 = val.RES_IDX_ES7 || 'resursedus0';
 }).catch((error) => {
-    console.log(`resurse.ctrl.js`, error);
+    console.log(`Schema mongoose pentru resurse`, error);
     logger.error(error);
 });
 
@@ -131,8 +131,7 @@ var ResursaSchema = Schema({
     toObject: { virtuals: true } // So `toObject()` output includes virtuals
 });
 
-/* === HOOKS PRE === */
-
+/* === HOOKS PRE REMOVE === */
 // Stergerea comentariilor asociate utiliatorului atunci când acesta este șters din baza de date.
 ResursaSchema.pre('remove', function hRemoveClbk (next) {
     const Coment = mongoose.model('coment'); // acces direct la model fără require
@@ -142,7 +141,11 @@ ResursaSchema.pre('remove', function hRemoveClbk (next) {
     }).then(() => next()); // -> acesta este momentul în care putem spune că înregistrarea a fost eliminată complet.
 });
 
-/* === HOOKS POST === */ 
+/* === HOOKS POST === */
+// Fii foarte atent să coordoneze toate câmpurile existente în fișierul de mapping pentru indexul din Elasticsearch
+// cu cele precizate la `const data` în `.post('save'` și `post(/^find/`. Trebuie să fie unu-la-unu cu mapping-ul `/models/resursa-red-es7.js`
+
+/* === POST SAVE === */
 // Indexare în Elasticsearch după ce resursa a fost salvată în baza de date!
 ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
     // console.log("[models/sursa-red.js] a primit în post save următorul obiect pentru doc._doc: ", doc._doc._id);
@@ -191,10 +194,13 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
     };
 
     //- FIXME: Aici este funcția care generează indexul numit `false`
-    // NOTE: Vezi ca acest helper sa raspunda cazului in care ai de-a face cu prima resursă, caz în care nu ai nici idx, nici alias-ul său
-    // if (RES_IDX_ES7) {
-    //     ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
-    // }
+    // NOTE: Vezi ca acest helper răspunde cazului in care ai de-a face cu prima resursă, caz în care nu ai nici idx, nici alias-ul său în Elasticsearch
+    if (RES_IDX_ES7) {
+        ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS).catch((error) => {
+            console.log(error);
+            logger.error(error);
+        });
+    }
     next();
 });
 
@@ -203,18 +209,16 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
 /**
  * Funcția se aplică pe fiecare înregistrarea dintr-un array, dacă sunt mai multe (`doc.map(checkRecord)`)
  * Funcția este cerută de `clbkResFindPostHookREDschema()`
- * @param {*} res 
+ * @param {Array} res Este un set de resurse care au fost găsite pe find+ceva
  */
-
 function checkRecord (res) {
     // console.log('[resursa-red.js] Ptr cazul array-ului, indexul este ', RES_IDX_ALS, 'iar documentul este ', res);
 
     // MAI ÎNTÂI VERIFICĂ DACĂ EXISTĂ INDEXUL ȘI ALIAS-uL. POATE INTRE TIMP NU MAI E SAU ESTI CHIAR LA INCEPUT CAND NU EXISTA
-
     if (RES_IDX_ALS) {
         // console.log("[models/sursa-red.js] De pe hook-ul `post` metoda ^find, ramura unui singur document. Titlul doc: ", res.title);
         
-        // verifică dacă înregistrarea din Mongo există în ES?
+        // verifică dacă înregistrarea din Mongo este indexată în ES?
         ES7Helper.recExists(res._id, RES_IDX_ALS).then((e) => {
             // console.log("resursa-red::test daca exista in ES", e);
             if (e === false) {
@@ -258,33 +262,16 @@ function checkRecord (res) {
                     contorDescarcare: obi.contorDescarcare,
                     etichete:         obi.etichete,
                     utilMie:          obi.utilMie,
-                    expertCheck:      obi.expertCheck
+                    expertCheck:      obi.expertCheck,
+                    rating:           obi.rating
                 };
 
                 ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
-
-                //- FIXME: Se dublează această funcție cu cea de verificare a înregistrării.
-                // ES7Helper.searchIdxAlCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
-
-                /* TODO: === REINDEXARE ÎN BAZA HASHULUI DE CONȚINUT :: componentă a REEDITĂRII de resursă === */
-                // else {
-                    //  version conflict, document already exists (statusCode === 409)
-                    // Aici va fi tratat cazul în care documentul există, dar conținutul a fost actualizat și ca urmare este necesară reindexare
-                    // Verifică dacă nu cumva documentul deja există în index
-                    // const {body} = await esClient.exists({
-                    //     index: aliasidx,
-                    //     id:    data.id
-                    // });
-                    // Compară HASH-ul conținutului existent al lui `body` in ES cu hash-ul documentului curent
-                    // În cazul în care diferă, REINDEXEAZĂ DOCUMENT!!!
-                // } 
             }   
         }).catch((error) => {
             console.error(JSON.stringify(error, null, 2));
             logger.error(error);
         });
-    } else {
-        // DACĂ NU AI ALIAS_UL, VERIFICĂ DACĂ AI INDEXUL. DACĂ AI indexul creează alias-ul, dacă nu creează tot
     }
 }
 
@@ -292,7 +279,7 @@ function checkRecord (res) {
  * Funcția are rol de callback pentru hook-ul mongoose post definit prin regexp-ul `/^find/`
  * Când se face căutarea unei resurse folosindu-se metodele`find`, `findOne`, `findOneAndUpdate`, vezi dacă a fost indexat. 
  * Dacă nu, se indexează!
- * @param {Array | Object} doc Înregistrarea(le)
+ * @param {Array | Object} doc înregistrarea(le)
  * @param {*} next 
  */
 function clbkResFindPostHookREDschema (doc, next) {
@@ -307,8 +294,8 @@ function clbkResFindPostHookREDschema (doc, next) {
     }
 }
 
-// Adăugare middleware pe `post` pentru toate operațiunile `find`
-// ResursaSchema.post(/^find/, clbkResFindPostHookREDschema);
+/* === POST /^find/ === */
+ResursaSchema.post(/^find/, clbkResFindPostHookREDschema);  // Adăugare middleware pe `post` pentru toate operațiunile `find` folosind un regexp
 
 // Resursa.methods.nume_metodă = function () {}; // metodă care poate fi folosită pe un singur obiect instanțiat în baza schemei. obiectul adus din bază!!!
 // Resursa.static.nume_metodă = function () {}; // metodă care poate fi folosită pe model

@@ -463,6 +463,7 @@ pubComm.on('addRole', (resurce) => {
 
 // DATELE STATISTICE PRIVIND COLECȚIILE
 pubComm.emit('stats', {descriptors: ['reds', 'users', 'compets']}); // Se pasează descriptorii pentru care se dorește aducerea datelor corespondente. Prin convenție, fiecare descriptor înseamnă un set de date.
+
 // la primirea datelor statistice, se generează articole.
 pubComm.on('stats', (stats) => {
     restatsEntry = document.querySelector('#restats');
@@ -569,7 +570,7 @@ function createRow4Idx (id, data, tBody) {
     }); // clone (trebuie făcută o clonă/iterație) para1: id; para2: title; para3: body; para4: confirmation text; para5: close text  
 
     let trow = document.createElement('tr');    // inițiază rândul        
-    trow.id  = "tr-" + id;                      // atribuie id
+    trow.id  = `tr-${id}`;                      // atribuie id
     
     /* ==== ACȚIUNI pe index ==== BEGIN */
     let td0           = document.createElement('td');    // introdu acțiunile asupra indexurilor => primul TD     

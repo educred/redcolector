@@ -7,12 +7,11 @@ const redisClient  = require('../redis.config');
 const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
 
 /* INDECȘII ES7 */
-// Setezi valori de inițializare. Atenție, aici se face hardcodarea denumirilor indecșilor. Fiecare index este varianta la plural a numelui schemei la export
 var ESIDXS = {
-    RES_IDX_ES7: 'resursedus0', 
-    RES_IDX_ALS: 'resursedu', 
-    USR_IDX_ES7: 'users0', 
-    USR_IDX_ALS: 'users'
+    RES_IDX_ES7: '', 
+    RES_IDX_ALS: '', 
+    USR_IDX_ES7: '', 
+    USR_IDX_ALS: ''
 };
 
 /*
@@ -27,7 +26,7 @@ exports.getStructure = async function getStructure () {
             ESIDXS[k[i]] = val[k[i]];
         };
         return ESIDXS;
-    }catch(errror){
+    } catch (errror) {
         console.log(error);
         logger.error(errror);
     }

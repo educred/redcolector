@@ -1,6 +1,5 @@
 require('dotenv').config();
 const logger      = require('./util/logger');
-const redisClient = require('./redis.config');
 const { Client }  = require('@elastic/elasticsearch');
 const setRedis    = require('./util/setInRedisESIndexs');
 
@@ -22,7 +21,7 @@ process.env.APP_RUNTIME === 'virtual' ? CONFIG.node = 'http://es01:9200' : CONFI
 // instanțiere client
 const client = new Client(CONFIG);
 
-// Afișare date în consolă
+// Afișare date în consolă și introducerea reperelor în Redis
 client.info().then((r) => {
     console.log("Conectare reușită la Elasticsearch \x1b[32m", r.body.version.number, "\x1b[37m Stare:\x1b[32m", r.meta.connection.status, "\x1b[37m a clusterului:\x1b[32m", r.body.cluster_name, "\x1b[37m");
     setRedis(client); // Funcția are rolul de a seta informație în Redis privind indecșii disponibili în Elastisearch.
@@ -30,12 +29,6 @@ client.info().then((r) => {
     console.log(`A apărut o eroare de conectare la Elasticsearch`);
     logger.error(error);
 });
-
-
-// redisClient.get("RES_IDX_ES7", (err, reply) => {
-//     if (err) console.error;
-//     console.log(reply);
-// })
 
 // client.cluster.health().then(r => console.log(r)).catch(e => console.error);
 // client.info().then(r => console.log(r)).catch(e => console.error);

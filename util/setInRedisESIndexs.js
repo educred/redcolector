@@ -2,9 +2,13 @@ require('dotenv').config();
 const logger      = require('./logger');
 const redisClient = require('../redis.config');
 
+/**
+ * Funcția setează datele privind indecșii disponibili în Elasticsearch în Redis
+ * @param {Object} client Este obiectul client de conexiune la Elasticsearch
+ */
 module.exports = function setInRedisESIndexes (client) {
     /**
-     *Funcția are rol de callback pentru then-ul din care se încarcă în REDIS numele indecșilor și ale alias-urilor
+    *Funcția are rol de callback pentru then-ul din care se încarcă în REDIS numele indecșilor și ale alias-urilor
     *Funcția investighează ce indecși există deja, dacă aceștia au o formă *canonică*, iar dacă nu (motive istorice)
     *corectează prin constituirea unui index nou după forma canonică (`numeindex0`), pentru care creează și alias, după care reindexează
     * @param {Object} r
@@ -19,23 +23,18 @@ module.exports = function setInRedisESIndexes (client) {
             for (d in r.body.indices) {
                 let alsr = '';  // alias-ul
 
-                // Dacă am un nume de index care este format din nume plus versiune, precum în `resedus1` [CANONIC VERSION!]
+                // Am un nume de index care este format din nume plus versiune, precum în `resedus1` [CANONIC VERSION!]
+                // Extrage alias-ul!!!
                 if ((/(\d{1,})+/g).test(d)) {
                     // taie fragmentul de nume până la cifra care indica versiunea
                     // console.log("[elasticsearch.config.js::clbkIndices()] Pot taia", d.slice(0, d.search(/(\d{1,})+/g)));
                     alsr = d.slice(0, d.search(/(\d{1,})+/g)); // extrage numele alias-ului pentru index
-                } else {
-                    // dacă nu am un index de forma `resedus1`, atunci avem o mare problemă pentru că este un alias
-                    alsr = d; // am pus această opțiune din motive istorice, când nu era plănuită vreo reindexare folosind alias-uri
-                    //- WORKING: Aici ar trebui reparat in sensul ștergerii indexului, a constituiri unuia nou cu zero în coadă și a alias-ului său
-                    //         urmat de o reindexare a tuturor datelor colecției din Mongo pe noul index.
-                    // Funcția ES7Helper.delAndCreateNew() face acest lucru la accesarea statisticilor privind Elasticsearch în administrator
                 }
 
                 // setează valorile în Redis
                 switch (alsr) {
                     case "users":
-                        redisClient.hset( process.env.APP_NAME + ":es", "USR_IDX_ES7", d); // se creează o cheie redcolector:red:USR_IDX_ES7
+                        redisClient.hset( process.env.APP_NAME + ":es", "USR_IDX_ES7", d); // se creează o cheie redcolector:es:USR_IDX_ES7 cu valoarea numele indexului
                         redisClient.hset( process.env.APP_NAME + ":es", "USR_IDX_ALS", alsr);
                         break;
                     case "resursedus":

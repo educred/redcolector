@@ -1,3 +1,18 @@
+Am eliminat din setInRedisESIndexs.js următoarea secvență.
+
+ else {
+                    // dacă nu am un index de forma `resedus1`, atunci avem o mare problemă pentru că este un alias
+                    alsr = d; // am pus această opțiune din motive istorice, când nu era plănuită vreo reindexare folosind alias-uri
+                    
+                    //_ FIXME: Aici ar trebui reparat in sensul ștergerii indexului, a constituiri unuia nou cu zero în coadă și a alias-ului său
+                    //         urmat de o reindexare a tuturor datelor colecției din Mongo pe noul index.
+                    // NOTE: Funcția ES7Helper.delAndCreateNew() face acest lucru la accesarea statisticilor privind Elasticsearch în administrator
+                }
+
+Ar fi trebuit să alerg după cai morți. Mai bine refac indecșii de la 0 pentru că oricum s-a modificat și mapping-ul.
+
+
+
 Când trecem integral pe Boostrap 5:
 app.use('/bootstrap', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/css')));
 

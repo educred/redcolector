@@ -63,7 +63,7 @@ exports.searchIdxAndCreateDoc = async function searchIdxAndCreateDoc (schema, da
         );
         let idxAlE = await esClient.indices.existsAlias({name: aliasidx, index: idx});
 
-        // dacă indexul există și are alias creat, verifică existența documentului
+        // #2 dacă indexul există și are alias creat, creează documentului în index
         if (idxE.statusCode === 200 && idxAlE.statusCode === 200) {
             // console.log('[es7-helper.js::searchIdxAlCreateDoc] Indexul pasat există și are și alias.');
 
@@ -74,9 +74,10 @@ exports.searchIdxAndCreateDoc = async function searchIdxAndCreateDoc (schema, da
                 refresh: true,
                 body:    data
             });
+        // #3 Indexul și alias-ul său nu există (te afli la prima înregistrare în bază)
         } else if (idxE.statusCode === 404) {
             // console.log("[es7-helper.js::searchIdxAlCreateDoc] Indexul și alias-ul nu există. Le creez acum!");
-            // creează indexul și aliasul. NOTE: Este de datoria apelantului să ofere valori pentru idx și aliasidx. La apelare trebuie verificate.
+            // creează indexul și aliasul. 
             await esClient.indices.create({
                 index: idx,
                 body:  schema
@@ -95,7 +96,14 @@ exports.searchIdxAndCreateDoc = async function searchIdxAndCreateDoc (schema, da
                 refresh: true,
                 body:    data
             });
-            //- TODO: Actualizează numele indecșilor in Redis            
+
+            // Scrie hset-ul în REDIS cu umele indecșilor din Elasticsearch [doar în cazul în care nu existau]
+            esClient.info().then((r) => {
+                setRedis(esClient); // Funcția are rolul de a seta informație în Redis privind indecșii disponibili în Elastisearch.
+            }).catch((error) => {
+                console.log(`În timp ce actualizam Redisul, a apărut o eroare de conectare la Elasticsearch`);
+                logger.error(error);
+            });      
         }        
     } catch (error) {
         console.error(JSON.stringify(error.body, null, 2));
@@ -103,6 +111,12 @@ exports.searchIdxAndCreateDoc = async function searchIdxAndCreateDoc (schema, da
     };
 };
 
+/**
+ * Funcția are rolul de a căuta o înregistrare după id într-un index Elasticsearch care este precizat
+ * @param {String} id Id-ul resursei
+ * @param {String} idx Numele indexului din Elasticsearch
+ * @returns 
+ */
 exports.recExists = async function recExists (id, idx) {
     try {
         const {body} = await esClient.exists({
