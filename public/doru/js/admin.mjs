@@ -579,19 +579,19 @@ function createRow4Idx (id, data, tBody) {
 
     let btnRidx       = document.createElement('button'); // reindexare [REINDEX]
     btnRidx.classList = "btn btn-warning";
-    btnRidx.id        = 'ridx-' + id;
+    btnRidx.id        = `ridx-${id}`;
     btnRidx.innerText = "Reindexare";
 
     let btnBkup       = document.createElement('button'); // backup     [BACKUP]
     btnBkup.classList = "btn btn-info m-2";
-    btnBkup.id        = "bkpidx-" + id;
+    btnBkup.id        = `bkpidx-${id}`;
     btnBkup.innerText = "Backup";
 
     //- FIXME: Adaugă eveniment și listener
     let btnDel        = document.createElement('button'); // ștergere   [DELETE]
     btnDel.classList  = "btn btn-danger m-2";
     btnDel.type       = "button";
-    btnDel.id         = "delidx-" + id;
+    btnDel.id         = `delidx-${id}`;
     btnDel.setAttribute('data-toggle', 'modal');
     btnDel.setAttribute('data-target', `#modl-delidx-${id}`);
     btnDel.innerText  = "Șterge";
@@ -690,10 +690,10 @@ pubComm.on('elkstat', (data = {}) => {
  * Funcția `idxactions` are rol de listener pentru tab-ul identificat ca `system-elk`
  * Funcția listener va colecta si analiza evenimentele `click` pe elementele interne.
  * În funcție de cine emite eveniment, o decizie se va lua care influiențează indexurile ES7
- * @param evt 
+ * @param {Object} evt obiectul eveniment 
  */
 function idxactions (evt) {
-    let idx, id, endIdx, vs, alsr; 
+    let idx = '', id = '', endIdx = '', vs, alsr = ''; 
     // [`idx`::es7 index] | [`id`::`evt.target.id`] | [`endIdx`::indexul la care începe nr versiunii] | [`vs`::versiunea extrasă] | [`alsr`::alias index necesar versionării]
 
     // extrage numele indexului pe care operezi din id-ul elementului (ex. `ridx-resedus1` => `resedus1`)
@@ -702,8 +702,8 @@ function idxactions (evt) {
     id = evt.target.id.split("-").shift();
     
     /*
-        Creează valorile de lucru pentru index, alias-ul său și numărul versiunii
-        verifică dacă numele indexului are cifre în coadă. Primul caz este că nu are (indecși vechi sau constituiți greșit)
+    * Creează valorile de lucru pentru index, alias-ul său și numărul versiunii
+    * Verifică dacă numele indexului are cifre în coadă. Primul caz este că nu are (indecși vechi sau constituiți greșit)
     */
     if (idx.search(/\d{1,}/g) === -1) {
         endIdx = idx.length;
@@ -720,11 +720,11 @@ function idxactions (evt) {
         case "ridx":
             // verifică mai întâi dacă există un alias; dacă nu există, mai întâi creează-l
             let obi = {vs, alsr};
-            console.log("Datele care ar trebui să plece pe `es7reidx` sunt: ", obi)
+            // console.log("Datele care ar trebui să plece pe `es7reidx` sunt: ", obi)
             pubComm.emit('es7reidx', obi); // Formula este `alsr` + `vs` = numele indexului.
             break;
         case "bkpidx":
-            console.log("[admin.mjs::idxactions()] Faci backup?");
+            // console.log("[admin.mjs::idxactions()] Faci backup?");
             break;
         case "delnow":
             // console.log("Ștergi indexul: ", idx);

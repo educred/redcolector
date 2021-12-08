@@ -1,10 +1,11 @@
 require('dotenv').config();
 // const esClient     = require('../elasticsearch.config');
 const logger = require('./logger');
-const { promisify } = require("util");
+// const { promisify } = require("util");
 const redisClient  = require('../redis.config');
+
 // promisifcare metodă `hgetall`
-const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
+// const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
 
 /* INDECȘII ES7 */
 var ESIDXS = {
@@ -20,14 +21,14 @@ De fiecare dată când se realizează o conexiune, vezi `elasticsearch.config.js
 */
 exports.getStructure = async function getStructure () {
     try {
-        let val = await hgetallAsync(process.env.APP_NAME + ":es");
+        let val = await redisClient.hgetall(process.env.APP_NAME + ":es");
         let k = Object.keys(val), i;
         for (i = 0; i < k.length; i++) {
             ESIDXS[k[i]] = val[k[i]];
         };
         return ESIDXS;
-    } catch (errror) {
+    } catch (error) {
         console.log(error);
-        logger.error(errror);
+        logger.error(error);
     }
 };

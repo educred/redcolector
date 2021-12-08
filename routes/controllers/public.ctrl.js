@@ -1,6 +1,7 @@
 const moment = require('moment');
 const got    = require('got');
 const logger = require('../../util/logger');
+const mongoose = require('mongoose');
 
 // LOGO
 let LOGO_IMG = "img/" + process.env.LOGO;
@@ -19,24 +20,28 @@ let LOGO_IMG = "img/" + process.env.LOGO;
  * @param {Array} resurse Array de array-uri cu toate resursele necesare randării (`script`, `module`, `style`) 
  * @param {String} tabtitle Numele care apare în tab
  */
-function renderPublic (req, res, next, gensettings, Model, modelOpts, resurse, tabtitle) {
+async function renderPublic (req, res, next, gensettings, Model, modelOpts, resurse, tabtitle) {
+    
     let [scripts, modules, styles] = resurse;  // fii foarte atent la ordine.
 
     // creează obiectul `Query`
-    let findObj = Model.find(modelOpts.projection);
+    let findQuery = Model.find(modelOpts.projection);
 
     // Parametrizează obiectul Query. A înlocuit Model.find(modelOpts.projection).sort({"date": -1}).limit(8)
     for (let [opt, val] of Object.entries(modelOpts.queryOpts)) {
-        findObj[opt](val);
+        findQuery[opt](val);
     }
 
+    // console.log(findQuery instanceof mongoose.Query);
+    // console.log(findQuery.getFilter());
+
     // execută pentru a crea `Promise`
-    findObj.exec().then((result) => {
+    findQuery.exec().then((result) => {
         let newResultArr = [],
             user = req.user,
             csrfToken = req.csrfToken();
 
-        async function clbkMapResult (obi) {
+        function clbkMapResult (obi) {
             const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
             // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
             newObi.dataRo = moment(newObi.date).locale('ro').format('LLL');
@@ -46,18 +51,15 @@ function renderPublic (req, res, next, gensettings, Model, modelOpts, resurse, t
                 // newObi.coperta = bodyobi.urls.regular;
                 newObi.coperta = `/${gensettings.template}/img/black-1072366_1920.jpg`;
                 // console.log(newObi);
-                // newResultArr.push(Object.assign(newObi));
+                // newResultArr.push(Object.assign(newObi))1;
             }
 
-            newResultArr.push(Object.assign(newObi));
+            return Object.assign(newObi);
         };
         
-        result.map((obi) => {
-            clbkMapResult(obi).catch((error) => {
-                console.log(`Eroarea apărută este `, error);
-                logger.error(error);
-            });
-        });
+        newResultArr = result.map((obi) => {return clbkMapResult(obi)});
+
+        // console.log(newResultArr);
         
         return res.render(`index_${gensettings.template}`, {
             template:  `${gensettings.template}`,

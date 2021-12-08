@@ -84,8 +84,7 @@ setFavicon(app).catch((error) => {
 /* === HELMET === */
 app.use(helmet({
     contentSecurityPolicy: false
-})); // .js” was blocked due to MIME type (“text/html”) mismatch (X-Content-Type-Options: nosniff)
-// https://helmetjs.github.io/docs/dont-sniff-mimetype/
+})); // https://helmetjs.github.io/docs/dont-sniff-mimetype/
 
 /* === PROXY SUPPORT === */
 app.enable('trust proxy');

@@ -1,7 +1,6 @@
 require('dotenv').config();
 const logger = require('./util/logger');
 const redis  = require('redis');
-
 /* === REDIS - configurare === */
 // creează clientul conform https://github.com/tj/connect-redis/blob/HEAD/migration-to-v4.md
 

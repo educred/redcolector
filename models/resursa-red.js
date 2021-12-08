@@ -13,11 +13,11 @@ let {getStructure} = require('../util/es7');
 let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
 
 getStructure().then((val) => {
-    // creează valori default pentru numele indecșilor ES7 necesari în cazul în care  indexul și alias-ul său nu au fost create încă
-    USR_IDX_ALS = val.USR_IDX_ALS || 'users';
-    USR_IDX_ES7 = val.USR_IDX_ES7 || 'users0';
-    RES_IDX_ALS = val.RES_IDX_ALS || 'resursedus';
-    RES_IDX_ES7 = val.RES_IDX_ES7 || 'resursedus0';
+    // creează valori default pentru numele indecșilor ES7 necesari în cazul în care indexul și alias-ul său nu au fost create încă
+    USR_IDX_ALS = val.USR_IDX_ALS ?? 'users';
+    USR_IDX_ES7 = val.USR_IDX_ES7 ?? 'users0';
+    RES_IDX_ALS = val.RES_IDX_ALS ?? 'resursedus';
+    RES_IDX_ES7 = val.RES_IDX_ES7 ?? 'resursedus0';
 }).catch((error) => {
     console.log(`Schema mongoose pentru resurse`, error);
     logger.error(error);
@@ -285,9 +285,13 @@ function checkRecord (res) {
 function clbkResFindPostHookREDschema (doc, next) {
     // cazul când rezultatele sunt multiple într-un array.
     if (Array.isArray(doc)){
-        doc.map(checkRecord);
+        // doc.map(checkRecord);
+        doc.map((doc) => {
+            console.log(`Am primit obiectul `, doc);
+        });
     // cazul unei singure înregistrări
-    } else if(doc._id) {
+    } else if(doc.id) {
+        // checkRecord(doc);
         checkRecord(doc);
     } else {
         next();
@@ -295,7 +299,7 @@ function clbkResFindPostHookREDschema (doc, next) {
 }
 
 /* === POST /^find/ === */
-ResursaSchema.post(/^find/, clbkResFindPostHookREDschema);  // Adăugare middleware pe `post` pentru toate operațiunile `find` folosind un regexp
+// ResursaSchema.post(/^find/, clbkResFindPostHookREDschema);  // Adăugare middleware pe `post` pentru toate operațiunile `find` folosind un regexp
 
 // Resursa.methods.nume_metodă = function () {}; // metodă care poate fi folosită pe un singur obiect instanțiat în baza schemei. obiectul adus din bază!!!
 // Resursa.static.nume_metodă = function () {}; // metodă care poate fi folosită pe model

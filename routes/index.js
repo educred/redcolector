@@ -10,8 +10,9 @@ const logger   = require('../util/logger');
 /* === LANDING :: / === */
 let renderPublic = require('./controllers/public.ctrl');    // adu funcția `renderPublic` din `/controllers`.
 router.get('/', (req, res, next) => {
+    
     async function clbkRootRoute (req, res, next) {
-
+        
         // Setări în funcție de template
         let filterMgmt = {focus: 'general'};
         let gensettings = await Mgmtgeneral.findOne(filterMgmt);

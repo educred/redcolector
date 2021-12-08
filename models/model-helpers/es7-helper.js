@@ -136,7 +136,7 @@ exports.recExists = async function recExists (id, idx) {
  * @returns 
  */
 exports.deleteIndex = function deleteIndex (data) {
-    // console.log('[es7-helper.js::deleteIndex] Datele primite sunt: ', data);
+    console.log('[es7-helper.js::deleteIndex] Datele primite sunt: ', data);
     // dacă există și alias pentru index, șterge alias-ul și indexul
     if (data.alsr) {
         delAlias(data).then((r) => {
@@ -164,8 +164,9 @@ function delIdx (idx) {
     }).then((body) => {
         if (body.error) {            
             // console.log('\x1b[33m' + 'Nu am reușit să șterg indexul' + '\x1b[37m');
-            // console.log(JSON.stringify(body, null, 4));
-            logger.error(body.error);
+            console.log(JSON.stringify(body.error, null, 4));
+            throw error;
+            // logger.error(body.error);
         }
     }).catch((err) => {
         logger.error(err);

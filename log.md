@@ -1,3 +1,36 @@
+  // "type": "module",
+
+Patch Update Backwards-compatible bug fixes.
+ ◉ bootstrap           5.1.1   ❯  5.1.3   https://getbootstrap.com/
+ ◉ bootstrap-icons     1.7.1   ❯  1.7.2   https://icons.getbootstrap.com/
+ ◉ cookie-parser       1.4.5   ❯  1.4.6   https://github.com/expressjs/cookie-parser#readme
+ ◉ got                 11.8.2  ❯  11.8.3  https://github.com/sindresorhus/got#readme
+ ◉ mocha               9.1.2   ❯  9.1.3   https://mochajs.org/
+ ◉ multer              1.4.3   ❯  1.4.4   https://github.com/expressjs/multer#readme
+ ◉ nodemon             2.0.14  ❯  2.0.15  https://nodemon.io
+ ◉ postcss-cli devDep  9.0.1   ❯  9.0.2   https://github.com/postcss/postcss-cli#readme
+  
+ Minor Update New backwards-compatible features.
+ ◉ datatables.net-buttons     2.0.1   ❯  2.1.1   https://datatables.net
+ ◉ datatables.net-buttons-dt  2.0.1   ❯  2.1.1   https://datatables.net
+ ◉ elasticdump                6.75.0  ❯  6.79.0  https://github.com/elasticsearch-dump/elasticsearch-dump#readme
+ ◉ express-rate-limit         5.4.0   ❯  5.5.1   https://github.com/nfriedly/express-rate-limit
+ ◉ mongoose                   6.0.8   ❯  6.1.0   https://mongoosejs.com
+ ◉ socket.io                  4.2.0   ❯  4.4.0   https://github.com/socketio/socket.io#readme
+ ◉ socket.io-client           4.2.0   ❯  4.4.0   https://github.com/socketio/socket.io-client#readme
+ ◉ autocannon devDep          7.4.0   ❯  7.5.0   https://github.com/mcollina/autocannon#readme
+ ◉ autoprefixer devDep        10.3.6  ❯  10.4.0  https://github.com/postcss/autoprefixer#readme
+ ◉ webpack-cli devDep         4.8.0   ❯  4.9.1   https://github.com/webpack/webpack-cli/tree/master/packages/webpack-cli
+  
+ Major Update Potentially breaking API changes. Use caution.
+ ◯ globby                      11.0.4  ❯  12.0.2  https://github.com/sindresorhus/globby#readme
+ ◯ redis                       3.1.2   ❯  4.0.0   https://github.com/redis/node-redis
+ ◉ copy-webpack-plugin devDep  9.0.1   ❯  10.0.0  https://github.com/webpack-contrib/copy-webpack-plugin
+❯◉ eslint devDep               7.32.0  ❯  8.4.1   https://eslint.org
+  
+
+
+
 Am eliminat din setInRedisESIndexs.js următoarea secvență.
 
  else {
