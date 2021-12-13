@@ -22,7 +22,7 @@ let LOGO_IMG = "img/" + process.env.LOGO;
  */
 async function renderPublic (req, res, next, gensettings, Model, modelOpts, resurse, tabtitle) {
     
-    let [scripts, modules, styles] = resurse;  // fii foarte atent la ordine.
+    let [scripts, modules, styles] = resurse;  // fii foarte atent la ordinea din array
 
     // creează obiectul `Query`
     let findQuery = Model.find(modelOpts.projection);

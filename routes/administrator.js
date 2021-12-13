@@ -13,25 +13,6 @@ const schema      = require('../models/resursa-red-es7');
 // let content2html = require('./controllers/editorJs2HTML');
 let editorJs2TXT  = require('./controllers/editorJs2TXT');
 
-// INDECȘII ES7
-let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
-redisClient.get("RES_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ES7 = reply;
-});
-redisClient.get("RES_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ALS = reply;
-});
-redisClient.get("USR_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    USR_IDX_ES7 = reply;
-});
-redisClient.get("USR_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    USR_IDX_ALS = reply;
-});
-
 // LOGO
 let LOGO_IMG = "img/" + process.env.LOGO;
 
@@ -139,6 +120,7 @@ router.get('/', (req, res, next) => {
             ];
     
             res.render(`validator_${gensettings.template}`, {
+                template: `${gensettings.template}`,
                 title:     "Validator",
                 user:      req.user,
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,

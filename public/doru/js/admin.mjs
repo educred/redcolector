@@ -726,7 +726,7 @@ function idxactions (evt) {
         case "bkpidx":
             // console.log("[admin.mjs::idxactions()] Faci backup?");
             break;
-        case "delnow":
+        case "delidx":
             // console.log("Ștergi indexul: ", idx);
 
             // șterge și row-ul în care era indexul
