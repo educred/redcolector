@@ -471,14 +471,14 @@ pubComm.on('stats', (stats) => {
     if (stats.hasOwnProperty('reds')) {
         const resObi = {
             descriptor: 'reds',
-            categorie:  'Resurse Educaționale Deschise',
+            categorie:  'Resurse',
             figure:     stats.reds
         };
         populateStatisticArticle(resObi);
     } else if (stats.hasOwnProperty('users')) {
         const userObi = {
             descriptor: 'users',
-            categorie:  'Conturi utilizatori existente',
+            categorie:  'Utilizatori',
             figure:     stats.users
         };
         populateStatisticArticle(userObi);
@@ -551,24 +551,16 @@ var es7StatsTmpl  = document.querySelector('#es7tpl'),      // ref către templa
     mdl           = mdlTmpl.content;                        // ref la conținut template modal
 
 /**
- *La apelare, funcția are rolul de a crea un nou tr în tabelul din template-ul `es7statsTmpl` (în pagină `es7tpl`)
- *
- * id va fi vechiul d[0], iar obiectul cu date va fi vechiul d[1]
+ * Creează rând pentru fiecare index ES
+ * Apelată din pubComm.on('elkstat', ()=>{}) pentru fiecare rând din tabel
+ * La apelare, funcția are rolul de a crea un nou tr în tabelul din template-ul `es7statsTmpl` (în pagină `es7tpl`)
+ * Pentru fiecare rând este generat câte un modal
+ * @param id
+ * @param data
+ * @param tBody
  */
 function createRow4Idx (id, data, tBody) {
     // console.log("ID-ul este", id, "iar datele sunt", data);
-
-    // Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație.
-    generateModal({
-        clone: mdl.cloneNode(true),
-        id:    id,
-        para1: `modl-delidx-${id}`,
-        para2: `Ștergi indexul?`,
-        para3: 'Fii foarte atent pentru că la ștergerea indexului se va dispărea și alias-ul. Ești sigur că vrei să ștergi?',
-        para4: 'Șterge',
-        para5: 'Renunță'
-    }); // clone (trebuie făcută o clonă/iterație) para1: id; para2: title; para3: body; para4: confirmation text; para5: close text  
-
     let trow = document.createElement('tr');    // inițiază rândul        
     trow.id  = `tr-${id}`;                      // atribuie id
     
@@ -587,13 +579,12 @@ function createRow4Idx (id, data, tBody) {
     btnBkup.id        = `bkpidx-${id}`;
     btnBkup.innerText = "Backup";
 
-    //- FIXME: Adaugă eveniment și listener
     let btnDel        = document.createElement('button'); // ștergere   [DELETE]
     btnDel.classList  = "btn btn-danger m-2";
     btnDel.type       = "button";
     btnDel.id         = `delidx-${id}`;
-    btnDel.setAttribute('data-toggle', 'modal');
-    btnDel.setAttribute('data-target', `#modl-delidx-${id}`);
+    btnDel.setAttribute('data-bs-toggle', 'modal');             // data-bs-toggle="modal"
+    btnDel.setAttribute('data-bs-target', `#delidxmdl-${id}`);  // data-bs-target="#delidxmdl-${id}"
     btnDel.innerText  = "Șterge";
 
     actIdx.appendChild(btnRidx);
@@ -624,23 +615,110 @@ function createRow4Idx (id, data, tBody) {
     trow.appendChild(td3);
     trow.appendChild(td4);
     trow.appendChild(td5);
-    // tBody.appendChild(trow);
-    // _FIXME: AICI AR TREBUI SĂ AM DEJA STRUCTURA
     tBody.appendChild(trow);
+
+    // Creează modalul care să fie pregătit.
+    return generateModal({
+        clone: mdl.cloneNode(true),
+        id:    id, // id-ul este chiar numele indexului din ES7
+        para1: `delidxmdl-${id}`,
+        para2: `Ștergi indexul?`,
+        para3: 'La ștergerea indexului va dispărea și alias-ul. Ești sigur că vrei să-l ștergi?',
+        para4: 'Șterge',
+        para5: 'Renunță'
+    });
 };
 
-/* NOTE: ==== Listener tabul `system-elk` ==== */
+/**
+ * Pentru fiecare rând cu date ES, se creează un modal folosind template-ul- apelată de `createRow4Idx()`
+ * Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație dictată de funcția unui anumit buton.
+ * @param {Object} opts 
+ * {
+        clone: mdl.cloneNode(true),
+        id:    id,
+        para1: `delidxmdl-${id}`,
+        para2: `Ștergi indexul?`,
+        para3: 'La ștergerea indexului va dispărea și alias-ul. Ești sigur că vrei să-l ștergi?',
+        para4: 'Șterge',
+        para5: 'Renunță'
+    }
+ */
+function generateModal (opts) {
+    // modal
+    var mdlDiv = opts.clone.querySelector('.modal');
+    mdlDiv.id = opts.para1;
+    mdlDiv.setAttribute("aria-labelledby", opts.para1 + "Title");
+    mdlDiv.style.zIndex = "2000";   // necesar pentru că altfel, dialogul ar fi sub masca întunecată
+
+    // modal-title
+    var mdlTitle = opts.clone.querySelector('.modal-title');
+    mdlTitle.id = opts.para1 + "Title";
+    mdlTitle.textContent = opts.para2;
+
+    // modal-body
+    var mdlBody = opts.clone.querySelector('.modal-body');
+    mdlBody.textContent = opts.para3;   
+
+    // btn-primary
+    var mdlDoBtn = opts.clone.querySelector('.btn-primary');
+    mdlDoBtn.id = "exit-" + opts.id;
+    mdlDoBtn.textContent = opts.para4;
+
+    // btn-secondary
+    var mdlCloseBtn = opts.clone.querySelector('.btn-secondary');
+    mdlCloseBtn.textContent = opts.para5;
+
+    // opts.clone.appendChild(mdlDiv);
+    systemElk.appendChild(opts.clone);
+    // opts.anchor.appendChild(opts.clone);
+};
+
+/* ==== Listener tabul `system-elk` ==== */
 // #1 Emite eveniment aducere date specifice Elasticsearch
 elkTab.addEventListener('click', (event) => {
     // Emite event de interogare Elasticsearch
     pubComm.emit('elkstat', '');
 });
-// #2 Tratează datele primite
+// #2 Tratează datele primite; creează rândurile tabelului + modalele pentru fiecare buton de ștergere
+let eventedElements = new WeakMap();
+
+/**
+ * `addEvtElem` este o funcție care adaugă un eveniment unui element stocat într-un WeakMap
+ * @param wkMap un obiect WeakMap cu care se gestionează elemente pentru fiecare este creat câte un `Set` care acumulează evenimentele elementului
+ * @param elem  elementul DOM pentru care adaug evenimentul
+ * @param listener funcția cu rol de listener
+ */
+function addEvt4Elem (wkMap, elem, listener) {
+    // dacă obiectul nu există, va fi creat
+    if(!wkMap.has(elem)){
+        // pentru fiecare obiect element se creează un set dedicat stocării funcțiilor listener
+        wkMap.set(elem, new Set([listener]));
+    }
+    // dacă elementul/obiect există, doar adaugă funcția listener
+    wkMap.get(elem).add(listener);
+};
+
+/**
+ * `exeEvt4Elem` are rolul de a executa toate funcțiile listener asociate unui element/obiect
+ * @param wkMp instanța obiectului `WeakMap` folosită
+ * @param elem elementul/obiectul pentru care se dorește declanșarea funcțiilor listener
+ */
+function exeEvt4Elem (wkMp, elem) {
+    // verifică mai întâi să existe elementul
+    if (wkMp.get(elem)) {
+        // execută toate evenimentele pentru element
+        let evt;
+        for (evt of wkMp.get(elem)) {
+            evt();
+        }
+    }
+};
+
 pubComm.on('elkstat', (data = {}) => {
     systemElk.innerHTML = ''; // clear tab!!!
     // console.log("Datele care trebuie afișate sunt", data.health);
 
-    let es7statsTmpl      = es7StatsTmpl.content,               // ref la template statses7
+    let es7statsTmpl      = es7StatsTmpl.content,               // ref la template `#es7tpl`
         cloneEs7statsTmpl = es7statsTmpl.cloneNode(true),       // clonează template-ul
         hdet              = cloneEs7statsTmpl.querySelector('#es7healthdetails'), 
         tBody             = cloneEs7statsTmpl.querySelector('tbody'),
@@ -673,7 +751,8 @@ pubComm.on('elkstat', (data = {}) => {
         // generează rânduri în tabel pentru fiecare indice ES7
         for (d of indicesArr) {
             // console.log("d[0] este", d[0], "iar d[1]", d[1]);
-            createRow4Idx(d[0], d[1], tBody);
+            createRow4Idx(d[0], d[1], tBody); // d[0] este id-ul, iar d[1] sunt chiar datele care formează conținutul rândului
+            let delBtn = document.querySelector(`#exit-${d[0]}`);  // butonul de ștergere din modal
         }
 
         // integrează template-ul completat al tuturor rândurilor adăugate în DOM
@@ -681,7 +760,7 @@ pubComm.on('elkstat', (data = {}) => {
     } else {
         // În cazul în care obiectul este gol
         let messageEmpty = document.createElement('div');
-        messageEmpty.innerHTML = `<p>În acest moment nu există niciun index. Acestea vor fi create la momentul încărcărilor resurselor.</p>`
+        messageEmpty.innerHTML = `<p>În acest moment nu există niciun index. Acestea vor fi create la momentul încărcărilor resurselor.</p>`;
         systemElk.appendChild(messageEmpty);
     }
 });
@@ -693,28 +772,36 @@ pubComm.on('elkstat', (data = {}) => {
  * @param {Object} evt obiectul eveniment 
  */
 function idxactions (evt) {
-    let idx = '', id = '', endIdx = '', vs, alsr = ''; 
-    // [`idx`::es7 index] | [`id`::`evt.target.id`] | [`endIdx`::indexul la care începe nr versiunii] | [`vs`::versiunea extrasă] | [`alsr`::alias index necesar versionării]
+    let idx = '', id = '', endIdx = '', vs, alsr = '';
 
     // extrage numele indexului pe care operezi din id-ul elementului (ex. `ridx-resedus1` => `resedus1`)
     idx = evt.target.id.split("-").pop();
+
     // extrage identificatorul tipului operațiunii (ex. `ridx-resedus1` => `ridx`)
     id = evt.target.id.split("-").shift();
     
-    /*
-    * Creează valorile de lucru pentru index, alias-ul său și numărul versiunii
-    * Verifică dacă numele indexului are cifre în coadă. Primul caz este că nu are (indecși vechi sau constituiți greșit)
-    */
-    if (idx.search(/\d{1,}/g) === -1) {
-        endIdx = idx.length;
-        vs     = undefined;
-        alsr   = undefined;
-    } else {
+    /* Creează valorile de lucru pentru index, alias-ul său și numărul versiunii. Verifică dacă numele indexului are cifre în coadă.*/
+    if (idx.search(/\d{1,}/g) !== -1) {
         endIdx = idx.search(/\d{1,}/g); // indexul de la care începe cifra versiunii
         vs     = idx.slice(endIdx);     // versiunea extrasă din numele indexului
         alsr   = idx.slice(0, endIdx);  // aliasul este numele indexului fără versiune
-    };
-    // console.log("[admin.mjs::idxactions()] Alias-ul ar trebui să fie ", alsr, ', iar versiunea indexului este: ', vs);
+    }
+
+
+    /**
+     * Evenimentul de pe `Șterge` -> șterge indexul și rândul din tabel!!! Atât!!!.
+     */
+
+    let delIDXSelect = document.querySelector(`#exit-${idx}`);  // butonul de ștergere din modal
+
+    // Adaugă event listener pe butonul `Șterge` al modalului
+    let lDelIdx = delIDXSelect.addEventListener('click', (evt) => {
+        // șterge și row-ul în care era indexul
+        let rowt = document.querySelector(`#tr-${idx}`);
+        rowt.parentNode.removeChild(rowt);
+
+        pubComm.emit('es7delidx', {idx, alsr});
+    });
 
     switch (id) {
         case "ridx":
@@ -727,17 +814,9 @@ function idxactions (evt) {
             // console.log("[admin.mjs::idxactions()] Faci backup?");
             break;
         case "delidx":
-            // console.log("Ștergi indexul: ", idx);
+            console.log("Ștergi indexul: ", idx); 
 
-            // șterge și row-ul în care era indexul
-            let rowt = document.querySelector(`#tr-${idx}`);
-            rowt.parentNode.removeChild(rowt);
-
-            // Șterge modalul din DOM
-            let mdlDel = document.querySelector(`#modl-delidx-${idx}`);
-            systemElk.removeChild(mdlDel);
-
-            pubComm.emit('es7delidx', {idx, alsr});
+            document.removeEventListener("click", lDelIdx);  // Șterge listenerul care a fost creat anterior            
             break;
     }
 }
@@ -755,39 +834,7 @@ pubComm.on("es7reidx", function clbkEs7reidx (data) {
 
         pubComm.emit('elkstat', '');
     }
-})
-
-/**
- * Rolul funcției este să populeze template-ul modalului 
- * și să-l insereze în DOM
- * Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație dictată de funcția unui anumit buton.
- * @param {Object} opts 
- */
-function generateModal (opts) {
-    // console.log("[admin.js] :: Valoarea obiectului opts este: ", opts);
-
-    var mdlDiv = opts.clone.querySelector('.modal');
-    // console.log("[admin.js] :: Valoarea mdlDiv este: ", mdlDiv);
-    mdlDiv.id = opts.para1;
-    mdlDiv.setAttribute("aria-labelledby", opts.para1 + "Title");
-
-    var mdlTitle = opts.clone.querySelector('.modal-title');
-    mdlTitle.id = opts.para1 + "Title";
-    mdlTitle.textContent = opts.para2;
-
-    var mdlBody = opts.clone.querySelector('.modal-body');
-    mdlBody.textContent = opts.para3;   
-
-    var mdlDoBtn = opts.clone.querySelector('.btn-primary');
-    mdlDoBtn.id = "delnow-" + opts.id;
-    mdlDoBtn.textContent = opts.para4;
-
-    var mdlCloseBtn = opts.clone.querySelector('.btn-secondary');
-    mdlCloseBtn.textContent = opts.para5;
-
-    opts.clone.appendChild(mdlDiv);
-    systemElk.appendChild(opts.clone);
-};
+});
 
 /**
  * === Listener pentru tab-ul MongoDB 4 === 

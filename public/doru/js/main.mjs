@@ -48,7 +48,7 @@ if (document.getElementsByName('_csrf')[0].value) {
 // });
 
 /**
- * Clasa `createElement` va creea elemente HTML
+ * Clasa `createElement` va crea elemente HTML
  * @param {string} tag este un șir de caractere care indică ce tip de element va fi creat
  * @param {string} [id] este un șir de caractere care indică un id pentru element
  * @param {Array | null}  [cls] este un array ce cuprinde clasele elementului. Dacă valoare este `null`, nu crea atributul.
@@ -368,5 +368,9 @@ const cleanEmptyPropsInObj = function(obj, defaults = [undefined, null, NaN, '']
 // check4url(unurlfisS);  //?
 // check4url(real01);     //?
 // check4url(real02);     //?
+
+class EventedElements {
+    
+}
 
 export {socket, pubComm, setWithExpiry, getWithExpiry, check4url, createElement, decodeCharEntities, datasetToObject, frm2obj, cleanEmptyPropsInObj};
