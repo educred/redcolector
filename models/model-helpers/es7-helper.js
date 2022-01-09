@@ -28,13 +28,29 @@ const userES7       = require('../user-es7');
 // utilități pentru Elasticsearch
 let {getStructure}  = require('../../util/es7'); // `getStructure()` este o promisiune a cărui rezultat sunt setările indecșilor și ale alias-urilor (vezi `elasticsearch.config.js`, unde sunt setați)
 
-// CARE COLECȚIE CE MAPPING ARE: cheile vor fi numele colecțiilor din MongoDB, iar valorile mapping-ul
+if (Resursa instanceof mongoose.Model) {
+    console.log(`Resursa este un obiect de tip Model`);
+}
+
+if (User instanceof mongoose.Model) {
+    console.log(`User este un obiect de tip Model`);
+}
+
+
+/*
+Această structură are scopul de a oferi informație pentru fiecare index ES7
+Cheile obiectului sunt numele de alias. Valoarea este un hash care pune în conexiune mappingul indexului ES7 cu modelul mongoose în baza căruia s-a creat colecția
+Structura a fost creată pentru a adresa necesitatea de căutare dinamică în funcție de alias-ul comunicat din browserul clientului.
+Această structură evită crearea de hardcodări în funcțiile cu rol de helper în lucrul cu ES7. Este un registru util.
+*/
 const col2idx = {
     users:      {mapping: userES7, mongModel: User},
     resursedus: {mapping: resursaRedES7, mongModel: Resursa}
 }
-
+// contorul pentru ținerea evidenței documentelor care au fost deja procesate.
 var procesate = 0;
+
+
 // stabilirea denumirii indexului zero pentru resurse și a alias-ului.
 let primeREDidx   = process.env.MONGO_REDS + '0';
 let primeREDidxAl = process.env.MONGO_REDS;
@@ -135,7 +151,7 @@ exports.recExists = async function recExists (id, idx) {
  * @param {Object} data Numele indexului și a alias-ului care trebuie șterse `{idx: "nume", alsr: "numeals"}`
  * @returns 
  */
-exports.deleteIndex = function deleteIndex (data) {
+exports.deleteIndex = function deleteIndex (data, socket) {
     console.log('[es7-helper.js::deleteIndex] Datele primite sunt: ', data);
     // dacă există și alias pentru index, șterge alias-ul și indexul
     if (data.alsr) {
@@ -149,6 +165,9 @@ exports.deleteIndex = function deleteIndex (data) {
                 logger.error(error);
             }
         });
+    } else if (data.idx) {
+        delIdx(data.idx); // șterge indexul
+        socket.emit(`es7delidx`, {als: false, idx: data.idx, msg: `Am șters indexul totuși.`});
     };
 };
 
@@ -164,9 +183,8 @@ function delIdx (idx) {
     }).then((body) => {
         if (body.error) {            
             // console.log('\x1b[33m' + 'Nu am reușit să șterg indexul' + '\x1b[37m');
-            console.log(JSON.stringify(body.error, null, 4));
+            // console.log(JSON.stringify(body.error, null, 4));
             throw error;
-            // logger.error(body.error);
         }
     }).catch((err) => {
         logger.error(err);
@@ -299,7 +317,7 @@ exports.reidxincr = function reidxincr (data, socket) {
     
     // console.log("[es7-helper.js::reidxincr] Am primit in `reidxincr` datele", data);
 
-    let  idx = data.alsr + data.vs,
+    let idx = data.alsr + data.vs,
         nvs = ''; // noua versiune
 
     // Verifică mai întâi dacă ai mapping pentru colecția respectivă. Dacă cu ai mapping, trimite înapoi mesaj că acesta nu există și nu se va face indexarea
@@ -420,7 +438,7 @@ exports.reidxincr = function reidxincr (data, socket) {
 };
 
 /**
- * Funcția creează de la 0 un index pentru o colecție MongoDB.
+ * Funcția creează de la 0 un index ES7 pentru o colecție MongoDB.
  * Funcția are rol de handler pentru tratarea datelor pe evenimentul `mgdb2es7` din socket.js
  *  
  * @param {Object} es7 Obiect cu datele necesare creării unui nou index
@@ -517,93 +535,107 @@ function createIdxAls (data) {
  * @param {String} idx Este indexul ES7 în care ajung datele
  */
 function indexMongoColInES7 (col, idx) {
-    // console.log("[es-helper::indexMongoColInES7] Am primit la `col`:", col, 'iar indexul este', idx);
+    console.log("[es-helper::indexMongoColInES7] Am primit la `col`:", col, 'iar indexul este', idx);
     try {
+        // verifică mai întâi să ai colecția în registrul `col2idx`
+        if (col in col2idx) {
 
-        // Specificitatea colecției `resursedus`
-        if (col === 'resursedus') {
-            let cursor = Resursa.find({}).populate('competenteS').cursor();
-            cursor.eachAsync(async (doc) => {
-                let obi = Object.assign({}, doc._doc);
-                // verifică dacă există conținut
-                var content2txt = '';
-                if ('content' in obi) {
-                    content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                }
-                // indexează documentul
-                const data = {
-                    id:               obi._id,
-                    date:             obi.date,
-                    idContributor:    obi.idContributor,
-                    emailContrib:     obi.emailContrib,
-                    uuid:             obi.uuid,
-                    autori:           obi.autori,
-                    langRED:          obi.langRED,
-                    title:            obi.title,
-                    titleI18n:        obi.titleI18n,
-                    arieCurriculara:  obi.arieCurriculara,
-                    level:            obi.level,
-                    discipline:       obi.discipline,
-                    disciplinePropuse:obi.disciplinePropuse,
-                    competenteGen:    obi.competenteGen,
-                    rol:              obi.rol,
-                    abilitati:        obi.abilitati,
-                    materiale:        obi.materiale,
-                    grupuri:          obi.grupuri,
-                    domeniu:          obi.demersuri,
-                    spatii:           obi.spatii,
-                    invatarea:        obi.invatarea,
-                    description:      obi.description,
-                    dependinte:       obi.dependinte,
-                    coperta:          obi.coperta,
-                    content:          content2txt,
-                    bibliografie:     obi.bibliografie,
-                    contorAcces:      obi.contorAcces,
-                    generalPublic:    obi.generalPublic,
-                    contorDescarcare: obi.contorDescarcare,
-                    etichete:         obi.etichete,
-                    utilMie:          obi.utilMie,
-                    expertCheck:      obi.expertCheck
-                };
-                await esClient.create({
-                    id:      data.id,
-                    index:   idx,
-                    refresh: true,
-                    body:    data
-                });
-                // Ține contul documentelor procesate
-                ++procesate;                    
-            });
+            let model = col2idx[col]['mongModel'];
+            // cazurile speciale vor fi gestionate folosind un switch
+            switch (col) {
+                case 'resursedus':
+                    const Resursa     = require('../resursa-red');
+                    // let cursorResedus = model.find({}).populate('competenteS').cursor();
+                    let cursorResedus = Resursa.find({}).populate('competenteS').cursor();
+
+                    cursorResedus.eachAsync(async (doc) => {
+                        let obi = Object.assign({}, doc._doc);
+                        // verifică dacă există conținut
+                        var content2txt = '';
+                        if ('content' in obi) {
+                            content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+                        }
+                        // indexează documentul
+                        const data = {
+                            id:               obi._id,
+                            date:             obi.date,
+                            idContributor:    obi.idContributor,
+                            emailContrib:     obi.emailContrib,
+                            uuid:             obi.uuid,
+                            autori:           obi.autori,
+                            langRED:          obi.langRED,
+                            title:            obi.title,
+                            titleI18n:        obi.titleI18n,
+                            arieCurriculara:  obi.arieCurriculara,
+                            level:            obi.level,
+                            discipline:       obi.discipline,
+                            disciplinePropuse:obi.disciplinePropuse,
+                            competenteGen:    obi.competenteGen,
+                            rol:              obi.rol,
+                            abilitati:        obi.abilitati,
+                            materiale:        obi.materiale,
+                            grupuri:          obi.grupuri,
+                            domeniu:          obi.demersuri,
+                            spatii:           obi.spatii,
+                            invatarea:        obi.invatarea,
+                            description:      obi.description,
+                            dependinte:       obi.dependinte,
+                            coperta:          obi.coperta,
+                            content:          content2txt,
+                            bibliografie:     obi.bibliografie,
+                            contorAcces:      obi.contorAcces,
+                            generalPublic:    obi.generalPublic,
+                            contorDescarcare: obi.contorDescarcare,
+                            etichete:         obi.etichete,
+                            utilMie:          obi.utilMie,
+                            expertCheck:      obi.expertCheck,
+                            rating:           obi.rating
+                        };
+                        await esClient.create({
+                            id:      data.id,
+                            index:   idx,
+                            refresh: true,
+                            body:    data
+                        });
+                        // Ține contul documentelor procesate
+                        ++procesate;                    
+                    });
+                    
+                    console.log(`Am procesat un număr de ${procesate} documente.`);
+                    break;
+
+                case 'users':
+                    let cursorUsers = model.find({}).cursor();
+                    cursorUsers.eachAsync(async (doc) => {
+                        let obi = Object.assign({}, doc._doc);
+                        // indexează documentul
+                        const data = {
+                            id:       obi._id,
+                            created:  obi.created,
+                            email:    obi.email,
+                            roles:    obi.roles,
+                            ecusoane: obi.ecusoane,
+                            googleID: obi.googleID,
+                            googleProfile: obi.googleProfile
+                        };
+                        await esClient.create({
+                            id:      data.id,
+                            index:   idx,
+                            refresh: true,
+                            body:    data
+                        });
+                        // Ține contul documentelor procesate
+                        ++procesate;
+                    });
+                    console.log(`[es-helper::indexMongoColInES7] Am procesat un număr de ${procesate} documente.`);
+                    break;
+            }
+            setRedis(esClient); // actualizează datele din Redis după ce s-a făcut indexarea unei colecții MongoDB
         }
-
-        if (col === 'users') {
-            let cursor = User.find({}).cursor();
-            cursor.eachAsync(async (doc) => {
-                let obi = Object.assign({}, doc._doc);
-                // indexează documentul
-                const data = {
-                    id:       obi._id,
-                    created:  obi.created,
-                    email:    obi.email,
-                    roles:    obi.roles,
-                    ecusoane: obi.ecusoane,
-                    googleID: obi.googleID,
-                    googleProfile: obi.googleProfile
-                };
-                await esClient.create({
-                    id:      data.id,
-                    index:   idx,
-                    refresh: true,
-                    body:    data
-                });
-                // Ține contul documentelor procesate
-                procesate++;  
-            });
-        }
-
-        setRedis(esClient); // actualizează datele din Redis după ce s-a făcut indexarea unei colecții MongoDB
-        console.log(`[es-helper::indexMongoColInES7] Am indexat un număr de ${procesate} documente`);
+        // cazul în care se cere indexarea unei colecții pentru care nu există cod.
+        console.log(`[es-helper::indexMongoColInES7] Colecția pentru care se cere îndexare, încă nu are suport în cod`);
     } catch (error) {
         console.log("[es-helper::indexMongoColInES7] Eroare:", error);
+        logger.error(error);
     }
 }

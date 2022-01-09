@@ -1217,7 +1217,9 @@ module.exports = function sockets (io) {
         });
         
         // === DEL ES7 INDEX ===
-        socket.on('es7delidx', deleteIndex);
+        socket.on('es7delidx', function es7delidxHandle (data) {
+            return deleteIndex(data, socket);
+        });
 
         /**
          * Funcția `statDataMgdb` joacă rol de callback pentru 

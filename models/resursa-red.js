@@ -107,8 +107,9 @@ var ResursaSchema = Schema({
     bibliografie:  String, // este o listă de referințe bibliografice dacă acest lucru există. Formatul este APA, versiunea 6.
 
     // #7. METRICI
-    contorAcces:      Number,  // de câte ori a fost accesată individual resursa
     generalPublic:    Boolean, // o valoare 'true' semnifică faptul că prezenta resursă intră în zona publică
+    contorAcces:      Number,  // de câte ori a fost accesată individual resursa
+    contorRating:     Number,  // de câte ori a fost apreciată resursa
     contorDescarcare: Number,  // de câte ori a fost descărcată resursa
     etichete:         [{
         type: String

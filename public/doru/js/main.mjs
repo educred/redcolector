@@ -369,8 +369,111 @@ const cleanEmptyPropsInObj = function(obj, defaults = [undefined, null, NaN, '']
 // check4url(real01);     //?
 // check4url(real02);     //?
 
-class EventedElements {
-    
-}
+class EventedElementsMgmt {
+    constructor () {
+        this.elements = new WeakMap();
+    }
 
-export {socket, pubComm, setWithExpiry, getWithExpiry, check4url, createElement, decodeCharEntities, datasetToObject, frm2obj, cleanEmptyPropsInObj};
+    /**
+     * Metoda `add` permite adăugarea unui element cu un Set pentru
+     * toți receptorii pe care îi poate avea pentru un eveniment
+     * @param {Object} elem Obiectul din DOM care primește listener pe event
+     * @param {String} eventname numele evenimentului
+     * @param {Function} listener obiectul funcție cu rol de receptor
+     */
+    add (elem, eventname, listener) {
+        let listeners = this.elements.get(elem); // încarcă cheia/obiectul element
+
+        // inițializare cheie nouă în WeakMap dacă nu există
+        if (listeners === undefined) {
+            listeners = {}; // de ex: {click: Set[fnc1, fnc2]}
+        }
+
+        // accesează proprietatea cu numele evenimentului -> ref la Set
+        let listenersSet4evt = listeners[eventname];
+
+        // inițializarea primului eveniment cu listenerul său
+        if (listenersSet4evt === undefined) {
+            listenersSet4evt = new Set();
+        }
+
+        listenersSet4evt.add(listener); // ai grijă, că lucrezi pe ref!!!
+
+        listeners[eventname] = listenersSet4evt; // actualizează cheia WeakMap-ului cu datele nou adăugate
+
+        this.elements.set(elem, listeners); // actualizează valoarea cheii din `WeakMap`.
+    }
+
+    /**
+     * Metoda are rolul de a elimina receptorul 
+     * @param {Object} elem 
+     * @param {String} eventname 
+     * @param {String} listener 
+     * @returns {Boolean} true pentru reușita ștergerii, false în caz contrar
+     */
+    remove (elem, eventname, listener) {
+        let listeners = this.elements.get(elem); // încarcă cheia/obiectul element
+        if (!listeners) return false;
+        // accesează proprietatea cu numele evenimentului -> ref la Set
+        let listenersSet4evt = listeners[eventname]; // este Set-ul cu toți receptorii asociați unui eveniment
+
+        // verifică dacă există un Set asociat tipului de eveniment.
+        if (!listenersSet4evt) {
+            return false;
+        } else if (listenersSet4evt.delete(listener)) {
+            // dacă ștergerea a returnat `true`, returnează `true`
+            return true;
+        }
+    }
+
+    /**
+     * Metoda declanșează execuția tuturor funcțiilor receptor pentru un tip de eveniment
+     * @param {Object} evt 
+     * @returns {Boolean} `false` în cazul în care nu există funcțiie receptor
+     */
+     fire (evt) {
+        // console.log(this.elements.has(evt.currentTarget));
+        let elem = evt.currentTarget, eventname = evt.type, listener; //srcElement
+        // console.log("dE LUCRU ", elem, eventname);
+        let listeners = this.elements.get(elem); // încarcă cheia/obiectul element
+        if (!listeners) return false;
+        // accesează proprietatea cu numele evenimentului -> ref la `Set`
+        let listenersSet4evt = listeners[eventname];
+        if (!listenersSet4evt) return false;
+        for (listener of listenersSet4evt) {
+            setTimeout(listener, 0, evt); // execuția trebuie să fie asincronă.
+        }
+     }
+}
+/**
+ * Mai întâi instanțiezi clasa, apoi pentru fiecare listener pe care vrei să-l adaugi, faci câte o intrare înainte de a atașa metoda care le execută
+ * Observă faptul că pentru posibilele elemente pe care la un moment dat le vei elimina, referința este construită dinamic (`document.querySelector('#a')`)
+ * fără legarea acesteia la vreun identificator
+ * 
+    EVTM.add(document.querySelector('#a'), 'click', (evt) => {
+        // codul listener-ului
+        console.log(EVTM);
+    });
+
+ * Apoi atașezi un listener pe element al cărui singur jos este să execute metoda `fire`
+    document.querySelector('#a').addEventListener('click', (evt) => {
+        VTM.fire(evt);
+    });
+
+ * Pentru ștergerea unui element, vezi să nu faci nicio referință către părinte legată de un identificator precum în: `let parinte = document.querySelector('#a').parentNode;`
+ * Făcând acest lucru, vei ține o legătură și la elementul copil care te-a ajutat să găsești părintele.
+ * Soluția este referirea directă: `document.querySelector('#a').parentNode.removeChild(document.querySelector('#a'));`
+
+    let dela = document.querySelector('#dela');
+
+    EVTM.add(dela, 'click', () => {
+        document.querySelector('#a').parentNode.removeChild(document.querySelector('#a')); //sau
+        document.querySelector('#a').remove();
+    });
+
+    dela.addEventListener('click', (evt) => {
+        EVTM.fire(evt);
+    })
+ */
+
+export {socket, pubComm, EventedElementsMgmt, setWithExpiry, getWithExpiry, check4url, createElement, decodeCharEntities, datasetToObject, frm2obj, cleanEmptyPropsInObj};

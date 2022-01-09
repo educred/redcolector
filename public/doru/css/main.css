@@ -1429,4 +1429,8 @@ fieldset #nivel .form-check{
     background: rgba(0, 0, 0, 0.8);
 }
 
-
+/* FIX necesar pentru modale */
+.modal-backdrop {
+    /* bug fix - no overlay */    
+    display: none;    
+}

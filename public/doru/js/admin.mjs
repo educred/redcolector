@@ -1,4 +1,4 @@
-import {pubComm, createElement, frm2obj, cleanEmptyPropsInObj} from './main.mjs';
+import {pubComm, EventedElementsMgmt, createElement, frm2obj, cleanEmptyPropsInObj} from './main.mjs';
 
 // var csrfToken = '';
 
@@ -16,6 +16,10 @@ import {pubComm, createElement, frm2obj, cleanEmptyPropsInObj} from './main.mjs'
 //     pubComm.emit('testconn', 'test');
 // }, 2000);
 
+// instanțiere manager evenimente
+const AdmEvts = new EventedElementsMgmt();
+
+
 /* === CĂUTAREA UNUI UTILIZATOR === */
 var findUser = document.getElementById('findUser');
 var findUserBtn = document.querySelector("#findUserBtn");
@@ -25,7 +29,13 @@ function clbkFindUser (evt) {
     evt.preventDefault();
     pubComm.emit('person', document.querySelector('#findUserField').value);
 }
-findUserBtn.addEventListener('click', clbkFindUser);
+// findUserBtn.addEventListener('click', clbkFindUser);
+AdmEvts.add(findUserBtn, 'click', clbkFindUser);
+
+findUserBtn.addEventListener('click', (evt) => {
+    AdmEvts.fire(evt);
+});
+
 
 // Tratează cazul browserelor mai vechi
 findUser.addEventListener('keypress', (evt) => {
@@ -46,7 +56,7 @@ pubComm.on('person', (data) => {
     if (data.length === 0) {
         $.toast({
             heading: 'Neindexat, poate?',
-            text: "Schimbă cheia de căutare!",
+            text: 'Schimbă cheia de căutare!',
             position: 'top-center',
             showHideTransition: 'fade',
             icon: 'error',
@@ -632,18 +642,13 @@ function createRow4Idx (id, data, tBody) {
 /**
  * Pentru fiecare rând cu date ES, se creează un modal folosind template-ul- apelată de `createRow4Idx()`
  * Funcția populează un modal de confirmare care să fie adaptat pentru fiecare situație dictată de funcția unui anumit buton.
- * @param {Object} opts 
- * {
-        clone: mdl.cloneNode(true),
-        id:    id,
-        para1: `delidxmdl-${id}`,
-        para2: `Ștergi indexul?`,
-        para3: 'La ștergerea indexului va dispărea și alias-ul. Ești sigur că vrei să-l ștergi?',
-        para4: 'Șterge',
-        para5: 'Renunță'
-    }
+ * @param {Object} opts
  */
 function generateModal (opts) {
+    // creez un container al modalului
+    var mdlDivContainer = document.createElement('div');
+    mdlDivContainer.id = `container-${opts.para1}`;
+
     // modal
     var mdlDiv = opts.clone.querySelector('.modal');
     mdlDiv.id = opts.para1;
@@ -660,17 +665,19 @@ function generateModal (opts) {
     mdlBody.textContent = opts.para3;   
 
     // btn-primary
-    var mdlDoBtn = opts.clone.querySelector('.btn-primary');
-    mdlDoBtn.id = "exit-" + opts.id;
+    var mdlDoBtn = opts.clone.querySelector('.btn-primary');        // [Șterge]
+    let idx = "exit-" + opts.id;
+    mdlDoBtn.id = idx;
     mdlDoBtn.textContent = opts.para4;
 
     // btn-secondary
-    var mdlCloseBtn = opts.clone.querySelector('.btn-secondary');
+    var mdlCloseBtn = opts.clone.querySelector('.btn-secondary');   // [Renunță]
     mdlCloseBtn.textContent = opts.para5;
 
-    // opts.clone.appendChild(mdlDiv);
-    systemElk.appendChild(opts.clone);
-    // opts.anchor.appendChild(opts.clone);
+    // systemElk.appendChild(opts.clone);
+    mdlDivContainer.appendChild(opts.clone); // A muscat rău! Vezi că modalul trebuie să stea cât mai sus în pagină. Aclanșat chiar la `content`.
+    // document.querySelector(`#content`).appendChild(mdlDivContainer); // A muscat rău! Vezi că modalul trebuie să stea cât mai sus în pagină. Aclanșat chiar la `content`.
+    document.body.appendChild(mdlDivContainer); // A muscat rău! Vezi că modalul trebuie să stea cât mai sus în pagină. Aclanșat chiar la `content`.
 };
 
 /* ==== Listener tabul `system-elk` ==== */
@@ -679,41 +686,8 @@ elkTab.addEventListener('click', (event) => {
     // Emite event de interogare Elasticsearch
     pubComm.emit('elkstat', '');
 });
+
 // #2 Tratează datele primite; creează rândurile tabelului + modalele pentru fiecare buton de ștergere
-let eventedElements = new WeakMap();
-
-/**
- * `addEvtElem` este o funcție care adaugă un eveniment unui element stocat într-un WeakMap
- * @param wkMap un obiect WeakMap cu care se gestionează elemente pentru fiecare este creat câte un `Set` care acumulează evenimentele elementului
- * @param elem  elementul DOM pentru care adaug evenimentul
- * @param listener funcția cu rol de listener
- */
-function addEvt4Elem (wkMap, elem, listener) {
-    // dacă obiectul nu există, va fi creat
-    if(!wkMap.has(elem)){
-        // pentru fiecare obiect element se creează un set dedicat stocării funcțiilor listener
-        wkMap.set(elem, new Set([listener]));
-    }
-    // dacă elementul/obiect există, doar adaugă funcția listener
-    wkMap.get(elem).add(listener);
-};
-
-/**
- * `exeEvt4Elem` are rolul de a executa toate funcțiile listener asociate unui element/obiect
- * @param wkMp instanța obiectului `WeakMap` folosită
- * @param elem elementul/obiectul pentru care se dorește declanșarea funcțiilor listener
- */
-function exeEvt4Elem (wkMp, elem) {
-    // verifică mai întâi să existe elementul
-    if (wkMp.get(elem)) {
-        // execută toate evenimentele pentru element
-        let evt;
-        for (evt of wkMp.get(elem)) {
-            evt();
-        }
-    }
-};
-
 pubComm.on('elkstat', (data = {}) => {
     systemElk.innerHTML = ''; // clear tab!!!
     // console.log("Datele care trebuie afișate sunt", data.health);
@@ -752,7 +726,7 @@ pubComm.on('elkstat', (data = {}) => {
         for (d of indicesArr) {
             // console.log("d[0] este", d[0], "iar d[1]", d[1]);
             createRow4Idx(d[0], d[1], tBody); // d[0] este id-ul, iar d[1] sunt chiar datele care formează conținutul rândului
-            let delBtn = document.querySelector(`#exit-${d[0]}`);  // butonul de ștergere din modal
+            // let delBtn = document.querySelector(`#exit-${d[0]}`);  // butonul de ștergere din modal
         }
 
         // integrează template-ul completat al tuturor rândurilor adăugate în DOM
@@ -787,20 +761,22 @@ function idxactions (evt) {
         alsr   = idx.slice(0, endIdx);  // aliasul este numele indexului fără versiune
     }
 
-
     /**
-     * Evenimentul de pe `Șterge` -> șterge indexul și rândul din tabel!!! Atât!!!.
+     * Evenimentul de pe butonul `Șterge` din modal -> șterge indexul din ES și rândul din tabel
      */
-
-    let delIDXSelect = document.querySelector(`#exit-${idx}`);  // butonul de ștergere din modal
-
     // Adaugă event listener pe butonul `Șterge` al modalului
-    let lDelIdx = delIDXSelect.addEventListener('click', (evt) => {
+    AdmEvts.add(document.querySelector(`#exit-${idx}`), 'click', (evt) => {
         // șterge și row-ul în care era indexul
         let rowt = document.querySelector(`#tr-${idx}`);
         rowt.parentNode.removeChild(rowt);
 
+        // stergem întregul modal
+        document.querySelector(`#container-delidxmdl-${idx}`).remove();
+
         pubComm.emit('es7delidx', {idx, alsr});
+    });
+    document.querySelector(`#exit-${idx}`).addEventListener('click', (evt) => {
+        AdmEvts.fire(evt);
     });
 
     switch (id) {
@@ -814,14 +790,20 @@ function idxactions (evt) {
             // console.log("[admin.mjs::idxactions()] Faci backup?");
             break;
         case "delidx":
-            console.log("Ștergi indexul: ", idx); 
-
-            document.removeEventListener("click", lDelIdx);  // Șterge listenerul care a fost creat anterior            
+            // console.log("Ștergi indexul: ", idx); 
+            // console.log(AdmEvts);          
             break;
     }
 }
 // Atașează receptorul pe elementul <section id="system-elk">
 systemElk.addEventListener('click', idxactions);
+
+// Tratează cazul în care ai indecși care nu au alias-uri
+pubComm.on('es7delidx', function clbkEes7delidx (data) {
+    if (data.als == false) {
+        console.log(data);
+    }
+});
 
 // Primire date în cazul reindexării.
 pubComm.on("es7reidx", function clbkEs7reidx (data) {

@@ -196,4 +196,7 @@ User.static.findByCredentials = async (email, password) => {
 };
 
 // module.exports = User;
+/**
+ * Modelul mongoose pentru un User
+ */
 module.exports = new mongoose.model('user', User);

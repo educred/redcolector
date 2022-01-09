@@ -1,3 +1,135 @@
+[es-helper::indexMongoColInES7] Eroare: TypeError: model.find is not a function
+    at indexMongoColInES7 (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:547:47)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:472:21
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+[09-01-2022 17:35:19] [error] [undefined]:      model.find is not a function
+[09-01-2022 17:35:19] [error] [undefined]:      model.find is not a function
+(node:65596) Warning: Accessing non-existent property 'find' of module exports inside circular dependency
+    at emitCircularRequireWarning (node:internal/modules/cjs/loader:707:11)
+    at Object.get (node:internal/modules/cjs/loader:721:5)
+    at indexMongoColInES7 (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:547:47)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:472:21
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+
+
+
+ Patch Update Backwards-compatible bug fixes.
+ ◉ datatables.net-select     1.3.3   ❯  1.3.4   https://datatables.net
+ ◉ datatables.net-select-dt  1.3.3   ❯  1.3.4   https://datatables.net
+ ◉ express                   4.17.1  ❯  4.17.2  http://expressjs.com/
+ ◉ isomorphic-git            1.10.1  ❯  1.10.3  https://isomorphic-git.org/
+ ◉ mongoose                  6.1.0   ❯  6.1.5   https://mongoosejs.com
+ ◉ socket.io                 4.4.0   ❯  4.4.1   https://github.com/socketio/socket.io#readme
+ ◉ socket.io-client          4.4.0   ❯  4.4.1   https://github.com/socketio/socket.io-client#readme
+ ◉ autocannon devDep         7.5.0   ❯  7.5.1   https://github.com/mcollina/autocannon#readme
+ ◉ autoprefixer devDep       10.4.0  ❯  10.4.2  https://github.com/postcss/autoprefixer#readme
+  
+ Minor Update New backwards-compatible features.
+ ◉ @elastic/elasticsearch              7.15.0  ❯  7.16.0  http://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
+ ◉ copy-webpack-plugin devDep          10.0.0  ❯  10.2.0  https://github.com/webpack-contrib/copy-webpack-plugin
+ ◉ eslint devDep                       8.4.1   ❯  8.6.0   https://eslint.org
+ ◉ eslint-plugin-security-node devDep  1.0.14  ❯  1.1.0   https://github.com/gkouziik/eslint-plugin-security-node
+❯◉ postcss-cli devDep                  9.0.2   ❯  9.1.0   https://github.com/postcss/postcss-cli#readme
+  
+ Major Update Potentially breaking API changes. Use caution.
+ ◯ express-rate-limit  5.5.1   ❯  6.0.5   https://github.com/nfriedly/express-rate-limit
+ ◯ globby              11.0.4  ❯  12.0.2  https://github.com/sindresorhus/globby#readme
+ ◯ got                 11.8.3  ❯  12.0.1  https://github.com/sindresorhus/got#readme
+ ◯ helmet              4.6.0   ❯  5.0.1   https://helmetjs.github.io/
+ ◯ redis               3.1.2   ❯  4.0.1   https://github.com/redis/node-redis
+  
+ Non-Semver Versions less than 1.0.0, caution.
+ ◯ passport  0.5.0  ❯  0.5.2  https://www.passportjs.org/
+
+
+
+(node:61486) Warning: Accessing non-existent property 'Symbol(Symbol.toStringTag)' of module exports inside circular dependency
+    at emitCircularRequireWarning (node:internal/modules/cjs/loader:707:11)
+    at Object.get (node:internal/modules/cjs/loader:721:5)
+    at Object.toString (<anonymous>)
+    at console.log (<anonymous>)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:45:13)
+    at Module._compile (node:internal/modules/cjs/loader:1095:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1147:10)
+    at Module.load (node:internal/modules/cjs/loader:975:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+    at Module.require (node:internal/modules/cjs/loader:999:19)
+    at require (node:internal/modules/cjs/helpers:102:18)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/resursa-red.js:8:23)
+    at Module._compile (node:internal/modules/cjs/loader:1095:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1147:10)
+    at Module.load (node:internal/modules/cjs/loader:975:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+(node:61486) Warning: Accessing non-existent property 'Symbol(nodejs.util.inspect.custom)' of module exports inside circular dependency
+    at emitCircularRequireWarning (node:internal/modules/cjs/loader:707:11)
+    at Object.get (node:internal/modules/cjs/loader:721:5)
+    at formatValue (node:internal/util/inspect:752:30)
+    at inspect (node:internal/util/inspect:340:10)
+    at formatWithOptionsInternal (node:internal/util/inspect:2006:40)
+    at formatWithOptions (node:internal/util/inspect:1888:10)
+    at console.value (node:internal/console/constructor:323:14)
+    at console.log (node:internal/console/constructor:359:61)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:45:13)
+    at Module._compile (node:internal/modules/cjs/loader:1095:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1147:10)
+    at Module.load (node:internal/modules/cjs/loader:975:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+    at Module.require (node:internal/modules/cjs/loader:999:19)
+    at require (node:internal/modules/cjs/helpers:102:18)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/resursa-red.js:8:23)
+(node:61486) Warning: Accessing non-existent property 'constructor' of module exports inside circular dependency
+    at emitCircularRequireWarning (node:internal/modules/cjs/loader:707:11)
+    at Object.getOwnPropertyDescriptor (node:internal/modules/cjs/loader:728:5)
+    at getOwnPropertyDescriptor (<anonymous>)
+    at getConstructorName (node:internal/util/inspect:552:24)
+    at formatRaw (node:internal/util/inspect:803:23)
+    at formatValue (node:internal/util/inspect:793:10)
+    at inspect (node:internal/util/inspect:340:10)
+    at formatWithOptionsInternal (node:internal/util/inspect:2006:40)
+    at formatWithOptions (node:internal/util/inspect:1888:10)
+    at console.value (node:internal/console/constructor:323:14)
+    at console.log (node:internal/console/constructor:359:61)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:45:13)
+    at Module._compile (node:internal/modules/cjs/loader:1095:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1147:10)
+    at Module.load (node:internal/modules/cjs/loader:975:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+(node:61486) Warning: Accessing non-existent property 'Symbol(Symbol.toStringTag)' of module exports inside circular dependency
+    at emitCircularRequireWarning (node:internal/modules/cjs/loader:707:11)
+    at Object.get (node:internal/modules/cjs/loader:721:5)
+    at formatRaw (node:internal/util/inspect:809:18)
+    at formatValue (node:internal/util/inspect:793:10)
+    at inspect (node:internal/util/inspect:340:10)
+    at formatWithOptionsInternal (node:internal/util/inspect:2006:40)
+    at formatWithOptions (node:internal/util/inspect:1888:10)
+    at console.value (node:internal/console/constructor:323:14)
+    at console.log (node:internal/console/constructor:359:61)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:45:13)
+    at Module._compile (node:internal/modules/cjs/loader:1095:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1147:10)
+    at Module.load (node:internal/modules/cjs/loader:975:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+    at Module.require (node:internal/modules/cjs/loader:999:19)
+    at require (node:internal/modules/cjs/helpers:102:18)
+(node:61486) Warning: Accessing non-existent property 'Symbol(Symbol.iterator)' of module exports inside circular dependency
+    at emitCircularRequireWarning (node:internal/modules/cjs/loader:707:11)
+    at Object.get (node:internal/modules/cjs/loader:721:5)
+    at formatRaw (node:internal/util/inspect:833:12)
+    at formatValue (node:internal/util/inspect:793:10)
+    at inspect (node:internal/util/inspect:340:10)
+    at formatWithOptionsInternal (node:internal/util/inspect:2006:40)
+    at formatWithOptions (node:internal/util/inspect:1888:10)
+    at console.value (node:internal/console/constructor:323:14)
+    at console.log (node:internal/console/constructor:359:61)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:45:13)
+    at Module._compile (node:internal/modules/cjs/loader:1095:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1147:10)
+    at Module.load (node:internal/modules/cjs/loader:975:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+    at Module.require (node:internal/modules/cjs/loader:999:19)
+    at require (node:internal/modules/cjs/helpers:102:18)  
+  
+  
   // "type": "module",
 
 Patch Update Backwards-compatible bug fixes.
