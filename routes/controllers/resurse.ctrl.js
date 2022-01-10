@@ -33,7 +33,6 @@ getStructure().then((val) => {
     logger.error(error);
 });
 
-
 // LOGO
 let LOGO_IMG = "img/" + process.env.LOGO;
 
@@ -225,13 +224,13 @@ exports.loadOneResource = async function loadOneResource (req, res, next) {
     };
 
     Resursa.findById(req.params.id).populate({path: 'competenteS'})
-        .then(renderRED).catch(err => {
-            if (err) {
-                console.log(JSON.stringify(err.body, null, 2));
-                logger.error(err);
-                next(err);
-            }
-        });
+            .then(renderRED).catch(err => {
+                if (err) {
+                    console.log(JSON.stringify(err.body, null, 2));
+                    logger.error(err);
+                    next(err);
+                }
+            });
 };
 
 /* Afișarea meniului de selecție pentru tipologia de resurse posibile */

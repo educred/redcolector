@@ -6,12 +6,25 @@ const router      = require('express').Router();
 const Resursa     = require('../models/resursa-red');
 const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
 const Competente  = require('../models/competenta-specifica');
+let {getStructure} = require('../util/es7');
 
 // HELPERI
 const ES7Helper   = require('../models/model-helpers/es7-helper');
 const schema      = require('../models/resursa-red-es7');
 // let content2html = require('./controllers/editorJs2HTML');
 let editorJs2TXT  = require('./controllers/editorJs2TXT');
+
+// INDECȘII ES7
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+getStructure().then((val) => {
+    USR_IDX_ALS = val.USR_IDX_ALS;
+    USR_IDX_ES7 = val.USR_IDX_ES7;
+    RES_IDX_ALS = val.RES_IDX_ALS;
+    RES_IDX_ES7 = val.RES_IDX_ES7;
+}).catch((error) => {
+    console.log(`[administrator.js::getStructure] nu a adus datele`, error);
+    logger.error(error);
+});
 
 // LOGO
 let LOGO_IMG = "img/" + process.env.LOGO;
@@ -323,7 +336,8 @@ router.get('/reds/:id', (req, res, next) => {
                             contorDescarcare: obi.contorDescarcare,
                             etichete:         obi.etichete,
                             utilMie:          obi.utilMie,
-                            expertCheck:      obi.expertCheck
+                            expertCheck:      obi.expertCheck,
+                            rating:           obi.rating
                         };
     
                         ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);

@@ -6,6 +6,7 @@ const moment  = require('moment');
 const logger  = require('../util/logger');
 const Resursa = require('../models/resursa-red'); // Adu modelul resursei
 const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
+let {getStructure} = require('../util/es7');
 
 var content2html = require('./controllers/editorJs2HTML');
 const redisClient = require('../redis.config');
@@ -14,14 +15,18 @@ const redisClient = require('../redis.config');
 let LOGO_IMG = "img/" + process.env.LOGO;
 
 // INDECȘII ES7
-const RES_IDX_ES7 = redisClient.get("RES_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    return reply;
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+getStructure().then((val) => {
+    // console.log(`Am obținut `, val);
+    USR_IDX_ALS = val.USR_IDX_ALS;
+    USR_IDX_ES7 = val.USR_IDX_ES7;
+    RES_IDX_ALS = val.RES_IDX_ALS;
+    RES_IDX_ES7 = val.RES_IDX_ES7;
+}).catch((error) => {
+    console.log(`[resurse.ctrl.js::getStructure] nu a adus datele`, error);
+    logger.error(error);
 });
-const RES_IDX_ALS = redisClient.get("RES_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    return reply;
-});
+
 // Indexul de căutare
 let idxRes = RES_IDX_ALS;
 
@@ -83,6 +88,9 @@ router.get('/', (req, res, next) => {
 
 // === RESURSĂ PUBLICĂ INDIVIDUALĂ ===
 async function clbkResPublicaID (req, res, next) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};    
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
     let query = Resursa.findById(req.params.id).populate({path: 'competenteS'});
     query.then(resursa => {
         let scripts = [      

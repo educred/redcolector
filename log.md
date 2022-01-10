@@ -1,3 +1,10 @@
+TypeError: Cannot read properties of undefined (reading 'url')
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/editorJs2HTML.js:97:54
+    at Array.map (<anonymous>)
+    at content2html (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/editorJs2HTML.js:7:24)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/public.js:109:30
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+
 Aplicația a crăpat cu următoarele detalii:  Error: [resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix
     at Object.loadRootResources (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/resurse.ctrl.js:67:19)
     at processTicksAndRejections (node:internal/process/task_queues:96:5)
