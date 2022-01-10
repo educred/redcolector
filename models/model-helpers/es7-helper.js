@@ -445,17 +445,9 @@ exports.reidxincr = function reidxincr (data, socket) {
  * @param {Object} socket 
  */
 exports.mgdb2es7 = function mgdb2es7 (es7, socket) {
-    /** 
-     * {
-     *  idx: "nume_index",
-     *  alsr: "nume_alias",
-     *  vs: ?0
-     * }
-    */
 
-    // Verifică mai întâi dacă ai mapping pentru colecția respectivă. Dacă cu ai mapping, trimite înapoi mesaj că acesta nu există și nu se va face indexarea
+    // Verifică mai întâi dacă ai mapping pentru colecția respectivă. Dacă nu ai mapping, trimite înapoi mesaj că acesta nu există și nu se va face indexarea
     if (es7.alsr in col2idx) {
-
         // console.log("[es7-helper::mgdbes7] Mappingul pentru viitorul index este: ", col2idx[es7.alsr].mapping);
 
         if (col2idx[es7.alsr].mapping) {
@@ -536,6 +528,7 @@ function createIdxAls (data) {
  */
 function indexMongoColInES7 (col, idx) {
     console.log("[es-helper::indexMongoColInES7] Am primit la `col`:", col, 'iar indexul este', idx);
+    let procesate = 0;
     try {
         // verifică mai întâi să ai colecția în registrul `col2idx`
         if (col in col2idx) {
@@ -545,7 +538,7 @@ function indexMongoColInES7 (col, idx) {
             switch (col) {
                 case 'resursedus':
                     const Resursa     = require('../resursa-red');
-                    // let cursorResedus = model.find({}).populate('competenteS').cursor();
+                    // let cursorResedus = model.find({}).populate('competenteS').cursor(); //produce circular dependency NOTE: DE CE? Debug cânt ai timp
                     let cursorResedus = Resursa.find({}).populate('competenteS').cursor();
 
                     cursorResedus.eachAsync(async (doc) => {

@@ -22,16 +22,17 @@ let {getStructure} = require('../../util/es7');
 
 // INDECȘII ES7
 let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
-
 getStructure().then((val) => {
+    // console.log(`Am obținut `, val);
     USR_IDX_ALS = val.USR_IDX_ALS;
     USR_IDX_ES7 = val.USR_IDX_ES7;
     RES_IDX_ALS = val.RES_IDX_ALS;
     RES_IDX_ES7 = val.RES_IDX_ES7;
 }).catch((error) => {
-    console.log(`resurse.ctrl.js`, error);
+    console.log(`[resurse.ctrl.js::getStructure] nu a adus datele`, error);
     logger.error(error);
 });
+
 
 // LOGO
 let LOGO_IMG = "img/" + process.env.LOGO;
@@ -62,7 +63,7 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
         // LOCALE
         {module: `${gensettings.template}/js/redincredall.mjs`}
     ];
-
+    // console.log(`Valorile dorite sunt `, RES_IDX_ES7, RES_IDX_ALS);
     if (!RES_IDX_ALS) {
         let err = new Error('[resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix');
         next(err);

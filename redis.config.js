@@ -1,6 +1,8 @@
 require('dotenv').config();
 const logger = require('./util/logger');
 const redis  = require('redis');
+// const { createClient } = require('redis');
+
 /* === REDIS - configurare === */
 // creează clientul conform https://github.com/tj/connect-redis/blob/HEAD/migration-to-v4.md
 
@@ -16,6 +18,7 @@ const CONFIG = {
 process.env.APP_RUNTIME === 'virtual' ? CONFIG.host = 'redis' : CONFIG.host = '127.0.0.1';
 
 let redisClient = redis.createClient(CONFIG);
+// let redisClient = createClient(CONFIG);
 
 function clbkRedReady () {
     console.log('Conectare la REDIS', redisClient.server_info.redis_version, 'OK!');

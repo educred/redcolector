@@ -33,7 +33,8 @@ getStructure().then((val) => {
     RES_IDX_ALS = val.RES_IDX_ALS;
     RES_IDX_ES7 = val.RES_IDX_ES7;
 }).catch((error) => {
-    console.log(`resurse.ctrl.js`, error);
+    console.log(`[sockets.js::getStructure] nu a adus datele`, error);
+    logger.error(error);
 });
 
 // funcțiile de căutare

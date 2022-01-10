@@ -1,3 +1,138 @@
+Aplicația a crăpat cu următoarele detalii:  Error: [resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix
+    at Object.loadRootResources (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/resurse.ctrl.js:67:19)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+[10-01-2022 08:16:38] [error] [undefined]:      [resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix
+[10-01-2022 08:16:38] [error] [undefined]:      [resurse.ctrl.js]::Verificarea existenței alias-ului a dat chix
+
+
+GET /users0/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+GET /users0/_mapping
+
+GET /users0/_search
+{
+  "query": {
+      "multi_match": {
+          "query": "video",
+          "type": "most_fields",
+          "fields": ["email", "googleProfile.name"]
+      }
+  }
+}
+
+GET /resursedus0/_search
+{
+  "size": 0,
+  "aggs": {
+    "clasa": {
+      "terms": {
+        "field": "level.raw"
+      }
+    }
+  }
+}
+
+GET /resursedus0/_search
+{
+  "size": 0,
+  "aggs": {
+    "arieCurriculara": {
+      "terms": {
+        "field": "arieCurriculara.raw"
+      },
+      "aggs": {
+        "discipline": {
+          "terms": {
+            "field": "discipline.raw",
+            "missing": "neprecizat",
+            "min_doc_count": 0,
+            "order": {
+              "_key": "asc"
+            }
+          }
+        },
+        "cadenta": {
+          "date_histogram": {
+            "field": "date",
+            "interval": "week"
+          }
+        }
+      }
+    }
+  }
+}
+
+GET /resursedus0/_search
+{
+  "size": 0,
+  "aggs": {
+    "arieCurriculara": {
+      "terms": {
+        "field": "arieCurriculara.raw"
+      },
+      "aggs": {
+        "discipline": {
+          "terms": {
+            "field": "discipline.raw",
+            "missing": "neprecizat",
+            "min_doc_count": 0,
+            "order": {
+              "_key": "asc"
+            }
+          },
+          "aggs": {
+            "aprecieri": {
+              "histogram": {
+                "field": "rating",
+                "interval": 1,
+                "order": {
+                  "_key": "desc"
+                }
+              }
+            }
+          }
+        },
+        "ultimii_ani": {
+          "date_histogram": {
+            "field": "date",
+            "calendar_interval": "1y",
+            "order": {
+              "_key": "desc"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+GET _cat/indices/?v
+
+GET _cat/indices/*,-.*?v
+
+GET /_cat/health?v=true
+
+DELETE /false
+
+GET /resedus*/_alias
+
+GET /users*/_alias
+
+GET /users/_alias
+
+GET /_cat/indices/exists
+
+GET _cat/count/resedus1/?v&pretty
+
+GET /resedus0/_search?size=0&filter_path=hits.total&pretty
+
+
 [es-helper::indexMongoColInES7] Eroare: TypeError: model.find is not a function
     at indexMongoColInES7 (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:547:47)
     at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:472:21
