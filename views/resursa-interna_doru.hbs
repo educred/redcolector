@@ -14,17 +14,17 @@
         class="resursa">
 
         <section class="border-bottom resource-single" id="d1">
-                <div class="row">
-                    {{!-- Dacă există copertă, afișeaz-o --}}
-                    {{#if resursa.coperta}}
-                        <img src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
-                        {{else}}
-                        <div style="position: relative;">
-                            <img src="/{{logoimg}}" alt="" width="100px" style="position: absolute; top: 5; left: 5">
-                            <img data-src="holder.js/100px100&textmode=exact?auto=yes&text=RED" class="coperta card-img-top" alt="{{resursa.title}}">
-                        </div>
-                    {{/if}}
-                </div>
+            <div class="row">
+                {{!-- Dacă există copertă, afișeaz-o --}}
+                {{#if resursa.coperta}}
+                    <img src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
+                    {{else}}
+                    <div style="position: relative;">
+                        <img src="/{{logoimg}}" alt="" width="100px" style="position: absolute; top: 5; left: 5">
+                        <img data-src="holder.js/100px100&textmode=exact?auto=yes&text=RED" class="coperta card-img-top" alt="{{resursa.title}}">
+                    </div>
+                {{/if}}
+            </div>
         </section>
 
         <section class="container redcontent px-5 my-5">
@@ -32,10 +32,8 @@
                 <article class="mb-5 mb-lg-0">
 
                     {{!-- Afișează titlul și descrierea --}}
-                    <header>
+                    <header class="d-grid gap-3">
                         <h1 class="display-4 fw-bolder" itemprop="name">{{resursa.title}}</h1>
-
-                        {{!-- Dacă există titluri alternative, afișează-le --}}
 
                         {{!-- Data elaborării resursei și cine a propus-o --}}
                         <div class="descrres">
@@ -51,16 +49,18 @@
                         </div>
 
                         {{!-- Dacă există titluri alternative, afișează-le --}}
-                        {{#if resursa.titleI18n}}
-                            <div class="titlaltres aired-medium">
-                                <h5>Titluri alternative</h5>
-                                {{#each resursa.titleI18n}}
-                                    {{#each this}}
-                                        <strong itemprop="alternativeHeadline" contenteditable="true">{{@key}}: {{.}}</strong>
+                        <div>
+                            {{#if resursa.titleI18n}}
+                                <div class="titlaltres aired-medium">
+                                    <h5>Titluri alternative</h5>
+                                    {{#each resursa.titleI18n}}
+                                        {{#each this}}
+                                            <strong itemprop="alternativeHeadline" contenteditable="true">{{@key}}: {{.}}</strong>
+                                        {{/each}}
                                     {{/each}}
-                                {{/each}}
-                            </div>
-                        {{/if}}
+                                </div>
+                            {{/if}}
+                        </div>
 
                         {{!-- ARIE CURRICULARĂ CLASĂ DISCIPLINĂ DESCRIERE și ETICHETE --}}
                         <div class="row border-bottom">

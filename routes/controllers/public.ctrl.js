@@ -25,7 +25,7 @@ async function renderPublic (req, res, next, gensettings, Model, modelOpts, resu
     let [scripts, modules, styles] = resurse;  // fii foarte atent la ordinea din array
 
     // creează obiectul `Query`
-    let findQuery = Model.find(modelOpts.projection);
+    let findQuery = Model.find(modelOpts.projection).lean();
 
     // Parametrizează obiectul Query. A înlocuit Model.find(modelOpts.projection).sort({"date": -1}).limit(8)
     for (let [opt, val] of Object.entries(modelOpts.queryOpts)) {
@@ -35,33 +35,39 @@ async function renderPublic (req, res, next, gensettings, Model, modelOpts, resu
     // console.log(findQuery instanceof mongoose.Query);
     // console.log(findQuery.getFilter());
 
-    // execută pentru a crea `Promise`
-    findQuery.exec().then((result) => {
+    function renderRED (resurse) {
         let newResultArr = [],
             user = req.user,
             csrfToken = req.csrfToken();
 
-        function clbkMapResult (obi) {
-            const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
-            // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
-            newObi.dataRo = moment(newObi.date).locale('ro').format('LLL');
+        newResultArr = resurse.map((obi) => {
+            // [ÎNREGISTRAREA ÎN ÎNTREGIME]
+            // adaug o nouă proprietate la rezultat cu o proprietate a sa serializată [injectare în client a întregii înregistrări serializate]
+            obi.editorContent = JSON.stringify(resurse);
             
-            if (newObi.coperta === undefined) {
+            // [DATA CALENDARISTICĂ]
+            obi.dataRo = moment(obi.date).locale('ro').format('LLL');   // formatarea datei pentru limba română. 
+
+            // [ACTIVITĂȚI]
+            obi.activitati = obi.activitati.map((elem) => {
+                let sablon = /^([aA-zZ])+\d/g;
+                let cssClass = elem[0].match(sablon);
+                let composed = '<span class="' + cssClass[0] + 'data-code="' + elem[0] + '">' + elem[1] + '</span>';
+                return composed;
+            });
+
+            // [COPERTA]
+            if (obi.coperta === undefined) {
                 // let {body} = await got(`https://api.unsplash.com/photos/random/?client_id=${process.env.UNSPLASH_KEY}&collections=education`);
-                // newObi.coperta = bodyobi.urls.regular;
-                newObi.coperta = `/${gensettings.template}/img/black-1072366_1920.jpg`;
-                // console.log(newObi);
-                // newResultArr.push(Object.assign(newObi))1;
+                // obi.coperta = bodyobi.urls.regular;
+                obi.coperta = `/${gensettings.template}/img/black-1072366_1920.jpg`;
+                // console.log(obi);
+                // newResultArr.push(Object.assign(obi))1;
             }
+            return obi;
+        });
 
-            return Object.assign(newObi);
-        };
-        
-        newResultArr = result.map((obi) => {return clbkMapResult(obi)});
-
-        // console.log(newResultArr);
-        
-        return res.render(`index_${gensettings.template}`, {
+        res.render(`index_${gensettings.template}`, {
             template:  `${gensettings.template}`,
             activeResLnk: true,
             title:     `${tabtitle}`,
@@ -79,10 +85,13 @@ async function renderPublic (req, res, next, gensettings, Model, modelOpts, resu
             publisher: gensettings.publisher,
             author: gensettings.contact
         });
-    }).catch((err) => {
+    };
+
+    findQuery.exec().then(renderRED).catch((err) => {
         if (err) {
             console.log(err);
             logger.error(err);
+            next(err);
         }
     });
 };

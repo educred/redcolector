@@ -42,7 +42,7 @@ router.get('/', (req, res, next) => {
         const resurse = [
             [
                 //JQUERY
-                {script: `${gensettings.template}/lib/npm/jquery.slim.min.js`},
+                {script: `${gensettings.template}/lib/npm/jquery.min.js`},
                 {script: `${gensettings.template}/lib/npm/jquery.waypoints.min.js`}, 
                 // MOMENT.JS
                 {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}, 
@@ -56,6 +56,20 @@ router.get('/', (req, res, next) => {
                 {script: `${gensettings.template}/js/resursepublice.js`}
             ],
             [
+                        // EDITOR.JS
+                {module: `${gensettings.template}/lib/editorjs/editor.js`},
+                {module: `${gensettings.template}/lib/editorjs/header.js`},
+                {module: `${gensettings.template}/lib/editorjs/paragraph.js`},
+                {module: `${gensettings.template}/lib/editorjs/checklist.js`},
+                {module: `${gensettings.template}/lib/editorjs/list.js`},
+                {module: `${gensettings.template}/lib/editorjs/image.js`},
+                {module: `${gensettings.template}/lib/editorjs/embed.js`},
+                {module: `${gensettings.template}/lib/editorjs/code.js`},
+                {module: `${gensettings.template}/lib/editorjs/quote.js`},
+                {module: `${gensettings.template}/lib/editorjs/inlinecode.js`},
+                {module: `${gensettings.template}/lib/editorjs/table.js`},
+                {module: `${gensettings.template}/lib/editorjs/attaches.js`},
+                {module: `${gensettings.template}/lib/editorjs/ajax.js`},
                 {module: `${gensettings.template}/lib/npm/popper.min.js`},
                 {module: `${gensettings.template}/js/main.mjs`}
             ],

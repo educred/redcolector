@@ -12,7 +12,8 @@ Acest efort este al echipei compuse din:
 
 - Nicolaie Constantinescu, developer (mailto:nicu.constantinescu@educred.ro);
 - Liviu Constandache, analist date și workflow (mailto:liviu.constandache@educred.ro);
-- George Boroș, specialist infrastructură, (mailto:george.boros@educred.ro).
+- George Boroș, specialist infrastructură, (mailto:george.boros@educred.ro);
+- Doru Ștefănescu, specialist (mailto:doru.stefanescu@educred.ro).
 
 O contribuție a echipei [Ascendia](https://www.ascendia.ro/) a fost integrată în versiunea 0.9.3.
 

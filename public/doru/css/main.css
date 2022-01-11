@@ -502,7 +502,7 @@ a[class$="8"], label[class$="8"] {
 .tag a {
     display: inline-block;
     text-decoration: none;
-    color: #f1bb3c !important;
+    color: #ffae00 !important;
     cursor: pointer;
     opacity: 0.8;
     margin: 0 0 0 0.3em;
@@ -510,7 +510,7 @@ a[class$="8"], label[class$="8"] {
 
 .tag a:hover {
     opacity: 1.0;
-    color: rgb(243, 160, 7) !important;
+    color: rgb(255, 137, 1) !important;
 }
 
 .tag .remove {
