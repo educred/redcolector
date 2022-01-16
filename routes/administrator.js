@@ -228,23 +228,30 @@ router.get('/reds/:id', (req, res, next) => {
         let scripts = [
             // MOMENT.JS
             {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
-            // EDITOR.JS
-            {script: `${gensettings.template}/lib/editorjs/editor.js`},
-            {script: `${gensettings.template}/lib/editorjs/header.js`},
-            {script: `${gensettings.template}/lib/editorjs/paragraph.js`},
-            {script: `${gensettings.template}/lib/editorjs/list.js`},
-            {script: `${gensettings.template}/lib/editorjs/image.js`},
-            {script: `${gensettings.template}/lib/editorjs/table.js`},
-            {script: `${gensettings.template}/lib/editorjs/attaches.js`},
-            {script: `${gensettings.template}/lib/editorjs/embed.js`},
-            {script: `${gensettings.template}/lib/editorjs/code.js`},
-            {script: `${gensettings.template}/lib/editorjs/quote.js`},
-            {script: `${gensettings.template}/lib/editorjs/inlinecode.js`},
             // {script: '/js/res-shown.js'},
-            // LOCALE
-            {script: `${gensettings.template}/js/redincredadmin.js`},
             // HELPER DETECT URLS or PATHS
             {script: `${gensettings.template}/js/check4url.js`},
+        ];
+
+        let modules = [
+            // EDITOR.JS
+            {module: `${gensettings.template}/lib/editorjs/editor.js`},
+            {module: `${gensettings.template}/lib/editorjs/header.js`},
+            {module: `${gensettings.template}/lib/editorjs/paragraph.js`},
+            {module: `${gensettings.template}/lib/editorjs/checklist.js`},
+            {module: `${gensettings.template}/lib/editorjs/list.js`},
+            {module: `${gensettings.template}/lib/editorjs/image.js`},
+            {module: `${gensettings.template}/lib/editorjs/embed.js`},
+            {module: `${gensettings.template}/lib/editorjs/code.js`},
+            {module: `${gensettings.template}/lib/editorjs/quote.js`},
+            {module: `${gensettings.template}/lib/editorjs/inlinecode.js`},
+            {module: `${gensettings.template}/lib/editorjs/table.js`},
+            {module: `${gensettings.template}/lib/editorjs/attaches.js`},
+            {module: `${gensettings.template}/lib/editorjs/ajax.js`},
+            // MAIN
+            {module: `${gensettings.template}/js/main.mjs`},
+            // LOCALE
+            {module: `${gensettings.template}/js/redincredadmin.mjs`}
         ];
     
         let styles = [
@@ -256,15 +263,13 @@ router.get('/reds/:id', (req, res, next) => {
             {style: `${gensettings.template}/lib/npm/bootstrap.min.css`}
         ];
     
-        let roles = ["admin"];
+        let roles = ["admin", "validator"];
         let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
         
         // adu înregistrarea din MongoDB după ce a fost încărcată o nouă resursă
-        Resursa.findById(req.params.id).populate({
-            path: 'competenteS'
-        }).exec().then(resursa => {
+        Resursa.findById(req.params.id).populate({path: 'competenteS'}).exec().then(resursa => {
             /* === Resursa încă există în MongoDB === */
-            if (resursa.id) {
+            if (resursa.id !== null) {
                 // transformă obiectul document de Mongoose într-un obiect normal.
                 const obi = Object.assign({}, resursa._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
     
@@ -277,81 +282,77 @@ router.get('/reds/:id', (req, res, next) => {
                 obi.editorContent = JSON.stringify(resursa);
     
                 // resursa._doc.content = editorJs2html(resursa.content);
-                let localizat = moment(obi.date).locale('ro').format('LLL');
-                // resursa._doc.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
-                obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.
+                obi.dataRo = moment(obi.date).locale('ro').format('LLL'); // formatarea datei pentru limba română.
                 
                 // Array-ul activităților modificat
-                let activitatiRehashed = obi.activitati.map((elem) => {
+                obi.activitati = obi.activitati.map((elem) => {
                     let sablon = /^([aA-zZ])+\d/g;
                     let cssClass = elem[0].match(sablon);
                     let composed = '<span class="' + cssClass[0] + 'data-code="' + elem[0] + '">' + elem[1] + '</span>';
                     return composed;
                 });
-                
-                obi.activitati = activitatiRehashed;
     
                 // Dacă nu este indexată în Elasticsearch deja, indexează aici!
-                esClient.exists({
-                    index: RES_IDX_ES7,
-                    id: req.params.id
-                }).then(resFromIdx => {
-                    /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
-                    if(resFromIdx.body == false && resFromIdx.statusCode === 404){
-                        // verifică dacă există conținut
-                        var content2txt = '';
-                        if ('content' in obi) {
-                            content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
-                        }
-                        // indexează documentul
-                        const data = {
-                            id:               obi._id,
-                            date:             obi.date,
-                            idContributor:    obi.idContributor,
-                            emailContrib:     obi.emailContrib,
-                            uuid:             obi.uuid,
-                            autori:           obi.autori,
-                            langRED:          obi.langRED,
-                            title:            obi.title,
-                            titleI18n:        obi.titleI18n,
-                            arieCurriculara:  obi.arieCurriculara,
-                            level:            obi.level,
-                            discipline:       obi.discipline,
-                            disciplinePropuse:obi.disciplinePropuse,
-                            competenteGen:    obi.competenteGen,
-                            rol:              obi.rol,
-                            abilitati:        obi.abilitati,
-                            materiale:        obi.materiale,
-                            grupuri:          obi.grupuri,
-                            domeniu:          obi.demersuri,
-                            spatii:           obi.spatii,
-                            invatarea:        obi.invatarea,
-                            description:      obi.description,
-                            dependinte:       obi.dependinte,
-                            coperta:          obi.coperta,
-                            content:          content2txt,
-                            bibliografie:     obi.bibliografie,
-                            contorAcces:      obi.contorAcces,
-                            generalPublic:    obi.generalPublic,
-                            contorDescarcare: obi.contorDescarcare,
-                            etichete:         obi.etichete,
-                            utilMie:          obi.utilMie,
-                            expertCheck:      obi.expertCheck,
-                            rating:           obi.rating
-                        };
+                // esClient.exists({
+                //     index: RES_IDX_ES7,
+                //     id: req.params.id
+                // }).then(resFromIdx => {
+                //     /* DACĂ RESURSA NU ESTE INDEXATĂ, introdu-o în indexul Elasticsearch */
+                //     if(resFromIdx.body == false && resFromIdx.statusCode === 404){
+                //         // verifică dacă există conținut
+                //         var content2txt = '';
+                //         if ('content' in obi) {
+                //             content2txt = editorJs2TXT(obi.content.blocks); // transformă obiectul în text
+                //         }
+                //         // indexează documentul
+                //         const data = {
+                //             id:               obi._id,
+                //             date:             obi.date,
+                //             idContributor:    obi.idContributor,
+                //             emailContrib:     obi.emailContrib,
+                //             uuid:             obi.uuid,
+                //             autori:           obi.autori,
+                //             langRED:          obi.langRED,
+                //             title:            obi.title,
+                //             titleI18n:        obi.titleI18n,
+                //             arieCurriculara:  obi.arieCurriculara,
+                //             level:            obi.level,
+                //             discipline:       obi.discipline,
+                //             disciplinePropuse:obi.disciplinePropuse,
+                //             competenteGen:    obi.competenteGen,
+                //             rol:              obi.rol,
+                //             abilitati:        obi.abilitati,
+                //             materiale:        obi.materiale,
+                //             grupuri:          obi.grupuri,
+                //             domeniu:          obi.demersuri,
+                //             spatii:           obi.spatii,
+                //             invatarea:        obi.invatarea,
+                //             description:      obi.description,
+                //             dependinte:       obi.dependinte,
+                //             coperta:          obi.coperta,
+                //             content:          content2txt,
+                //             bibliografie:     obi.bibliografie,
+                //             contorAcces:      obi.contorAcces,
+                //             generalPublic:    obi.generalPublic,
+                //             contorDescarcare: obi.contorDescarcare,
+                //             etichete:         obi.etichete,
+                //             utilMie:          obi.utilMie,
+                //             expertCheck:      obi.expertCheck,
+                //             rating:           obi.rating
+                //         };
     
-                        ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
-                    }
-                    return resFromIdx;
-                }).catch((err) => {
-                    console.error(err);
-                    logger.error(err);
-                });
+                //         ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS);
+                //     }
+                //     return resFromIdx;
+                // }).catch((err) => {
+                //     console.error(err);
+                //     logger.error(err);
+                // });
                 return obi;
             }
         }).then(resursa => {
             /* === ADMIN === */
-            if(req.session.passport.user.roles.admin){
+            if(resursa !== null && req.session.passport.user.roles.admin){
     
                 // Adaugă mecanismul de validare al resursei
                 if (resursa.expertCheck) {
@@ -359,33 +360,41 @@ router.get('/reds/:id', (req, res, next) => {
                 } else {
                     resursa.validate = `<input type="checkbox" id="valid" class="expertCheck">`;
                 }
-                
-                // Adaugă mecanismul de prezentare la public
+                // Adaugă checkbox pentru zona publică
                 if (resursa.generalPublic) {
                     resursa.genPub = `<input type="checkbox" id="public" class="generalPublic" checked>`;
                 } else {
                     resursa.genPub = `<input type="checkbox" id="public" class="generalPublic">`;
                 }
-    
+                // Setul de date va fi disponibil în `data-content` ca string JSON. Este trimis cu helperul `hbs.registerHelper('json', cb)` definit în app.js
+                // Acest lucru este necesar pentru a reedita resursa în client.    
                 res.render(`resursa-admin_${gensettings.template}`, {
                     template: `${gensettings.template}`,                    
-                    title:     "Examinare",
+                    title:     "Admin",
                     user:      req.user,
                     logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                     csrfToken: req.csrfToken(),
                     resursa,
                     scripts,
+                    modules,
                     styles
                 });
-            } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
-                res.render(`resursa_${gensettings.template}`, {
+            } else if (confirmedRoles.includes('validator')) {
+                // Adaugă doar checkbox de validare
+                if (resursa.expertCheck) {
+                    resursa.validate = `<input type="checkbox" id="valid" class="expertCheck" checked>`;
+                } else {
+                    resursa.validate = `<input type="checkbox" id="valid" class="expertCheck">`;
+                }
+                res.render(`resursa-validator_${gensettings.template}`, {
                     template: `${gensettings.template}`,                    
-                    title:     "Resursa",
+                    title:     "Validator",
                     user:      req.user,
                     logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                     csrfToken: req.csrfToken(),
                     resursa,
                     scripts,
+                    modules,
                     styles
                 });
             } else {

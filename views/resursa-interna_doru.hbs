@@ -13,6 +13,7 @@
         id="{{resursa._id}}" 
         class="resursa">
 
+        {{!-- COPERTA --}}
         <section class="border-bottom resource-single" id="d1">
             <div class="row">
                 {{!-- Dacă există copertă, afișeaz-o --}}
@@ -28,15 +29,41 @@
         </section>
 
         <section class="container redcontent px-5 my-5">
+
+            {{!-- Informațiile suplimentare privind structura pe disc a resursei și despre repo-ul de git --}}
+            <aside>
+                {{!-- Informațiile despre resursă afișate offcanvas --}}
+                <div class="offcanvas offcanvas-start" tabindex="-1" id="info" aria-labelledby="info">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="offcanvasExampleLabel">Informații tehnice</h5>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body">
+                        <div>
+                            Some text as placeholder. In real life you can have the elements you have chosen. Like, text, images, lists, etc.
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
             <div class="row justify-content-center">
                 <article class="mb-5 mb-lg-0">
 
                     {{!-- Afișează titlul și descrierea --}}
                     <header class="d-grid gap-3">
-                        <h1 class="display-4 fw-bolder" itemprop="name">{{resursa.title}}</h1>
+                        <h1 class="display-4 fw-bolder" itemprop="name" contenteditable="true">{{resursa.title}}</h1>
 
                         {{!-- Data elaborării resursei și cine a propus-o --}}
                         <div class="descrres">
+
+                            <p id="redactions" class="p-1">
+                                <a class="btn btn-primary" data-bs-toggle="offcanvas" href="#info" role="button" aria-controls="info">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                                <a class="btn btn-primary" href="#" role="button"><i class="fas fa-file-download"></i></a>
+                                <a class="btn btn-primary" href="#" role="button"><i class="fas fa-save"></i></a>
+                            </p>
+
                             <p data-toggle="tooltip" data-placement="bottom" title="Data introducerii resursei">
                                 <meta itemprop="datePublished" content="{{resursa.dataRo}}">
                                 {{resursa.dataRo}}
@@ -44,18 +71,18 @@
                             <p itemprop="creator">
                                 <a href="/user/{{resursa.idContributor}}" itemprop="accountablePerson" data-toggle="tooltip" data-placement="top" title="Este cel care a introdus resursa.">
                                     <i class="fas fa-user-circle"></i>
-                                </a> {{resursa.autori}}
+                                </a> <span contenteditable="true">{{resursa.autori}}</span>
                             </p>
                         </div>
 
                         {{!-- Dacă există titluri alternative, afișează-le --}}
-                        <div>
+                        <div class="altitle">
                             {{#if resursa.titleI18n}}
                                 <div class="titlaltres aired-medium">
                                     <h5>Titluri alternative</h5>
                                     {{#each resursa.titleI18n}}
                                         {{#each this}}
-                                            <strong itemprop="alternativeHeadline" contenteditable="true">{{@key}}: {{.}}</strong>
+                                            <p itemprop="alternativeHeadline"><strong>{{@key}}</strong>: <em contenteditable="true">{{.}}</em></p>
                                         {{/each}}
                                     {{/each}}
                                 </div>
@@ -98,7 +125,7 @@
                             </div>
 
                             {{!-- DESCRIERE și ETICHETE --}}
-                            <div class="col-9">
+                            <div class="col-9 p-2">
                                 <h5>Descriere</h5>
                                 <p itemprop="description" class="lead">{{resursa.description}}</p>
                                 

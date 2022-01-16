@@ -61,13 +61,13 @@
                         </div>
 
                         {{!-- Dacă există titluri alternative, afișează-le --}}
-                        <div>
+                        <div class="altitle">
                             {{#if resursa.titleI18n}}
                                 <div class="titlaltres aired-medium">
                                     <h5>Titluri alternative</h5>
                                     {{#each resursa.titleI18n}}
                                         {{#each this}}
-                                            <strong itemprop="alternativeHeadline" contenteditable="true">{{@key}}: {{.}}</strong>
+                                            <p itemprop="alternativeHeadline" contenteditable="true"><strong>{{@key}}</strong>: <em>{{.}}</em></p>
                                         {{/each}}
                                     {{/each}}
                                 </div>
@@ -79,8 +79,8 @@
                             {{!-- ARIE CURRICULARĂ CLASĂ DISCIPLINĂ --}}
                             <div class="col-3 d-flex align-items-end justify-content-left flex-column align-self-stretch border-end">
                                 {{!-- Afișarea ariei curriculare --}}
-                                <div class="comprespub">
-                                    <h5>Arie curriculară</h5>
+                                <div class="comprespub float-end">
+                                    <h5 class="">Arie curriculară</h5>
                                     {{#each resursa.arieCurriculara}}
                                         <button type="button" class="btn btn-outline-secondary" data-toggle="tooltip" data-placement="top" title="Arie curriculară">
                                             {{this}}
@@ -89,7 +89,7 @@
                                 </div>
 
                                 {{!-- Afișarea clasei(lor) pentru care a fost elaborată resursa --}}
-                                <div class="comprespub">
+                                <div class="comprespub float-end">
                                     <h5 itemprop="alignmentType">Clasa</h5>
                                     {{#each resursa.level}}
                                         <a class="btn btn-outline-secondary" href="#" role="button">{{this}}</a>
@@ -98,7 +98,7 @@
 
                                 {{!-- Disciplinele pentru care a fost elaborată resursa --}}
                                 {{#if resursa.discipline}}
-                                    <div class="comprespub discsrespub">
+                                    <div class="comprespub discsrespub float-end">
                                         <h5>Discipline</h5>
                                         {{#each resursa.discipline}}
                                             <button type="button" class="btn btn-primary btn-sm">
@@ -110,7 +110,7 @@
                             </div>
 
                             {{!-- DESCRIERE și ETICHETE --}}
-                            <div class="col-9">
+                            <div class="col-9 p-2">
                                 <h5>Descriere</h5>
                                 <p itemprop="description" class="lead">{{resursa.description}}</p>
                                 

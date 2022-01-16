@@ -21,6 +21,7 @@ const editorJs2HTML= require('../routes/controllers/editorJs2HTML');
 // necesare pentru constituirea și gestionarea repo-ului de git
 const globby      = require('globby');
 const git         = require('isomorphic-git');
+const { gitToJs } = require('git-parse');
 const logger      = require('../util/logger');
 const objectsOps  = require('../util/objectsOps');
 let {getStructure} = require('../util/es7');
@@ -46,6 +47,8 @@ const {deleteIndex, reidxincr, mgdb2es7} = require('../models/model-helpers/es7-
 const { get, set } = require('../redis.config');
 const { error } = require('../util/logger');
 const management = require('../models/MANAGEMENT/general');
+const { update } = require('../models/resursa-red');
+const { hostname } = require('os');
 // funcții de raportare date statistice în MongoDB
 // const {statsmgdb} = require('../models/model-helpers/mgdb4-helper');
 
@@ -527,6 +530,108 @@ module.exports = function sockets (io) {
                     });
                 }
             });
+        });
+
+        function updategit() {
+
+        }
+
+        function updateBAG() {
+
+        }
+
+        // === RED UPDATE :: Actualizarea unei înregistrări existente
+        socket.on('updatered', function clbkUpdateRED (obi) {
+            if (obi.contribuitor && obi.uuid) {
+                console.log(`[socket.js::updatered] Din client am primit `, obi);
+
+                // Modifică conținutul subdirectorului data conform datelor care vin din `obi`
+                // Constituie un nou BAG.
+
+
+                // în cazul în care actualizarea repo-ului de git s-a făcut cu succes
+                if(updategit()){
+
+                }
+            }
+        });
+
+        // === PACK RED :: constituie un zip cu versiunea HTML a resursei dacă aceasta nu există deha și oferă clientului link-ul 
+        socket.on('packred', function clbkPackRED () {
+
+        });
+
+        /**
+         * Funcția are rolul de a crea primul commit atunci când este apelată
+         * @param path {String} Calea relativă a subdirectorului în care sunt datele de introdus în repo
+         * @param name {String} Numele utilizatorului `name`
+         * @param email {String} Emailul userului `email`
+         */
+        async function createFirstCommit (path, name, email) {
+            try {
+                let dir = `${__basedir}/repo/${path}`;
+                // console.log(`Directorul de lucru este `, dir);
+    
+                // Creează primul commit!!!
+                // const paths = await globby(['./**', './**/.*', '!node_modules'], { gitignore: true }); // https://github.com/isomorphic-git/isomorphic-git/issues/187
+                // const paths = await globby([`./repo/${path}/data/**`]); // https://github.com/isomorphic-git/isomorphic-git/issues/187
+                const paths = await globby([`${__basedir}/repo/${path}/**`], { gitignore: true }); // https://github.com/isomorphic-git/isomorphic-git/issues/187
+    
+                console.log(`Căile pe care le-am descoperit sunt `, paths);
+    
+                // ./** = match all regular files
+                // ./**/.* = match all "hidden" dot files, like .babelrc or .travis.yml
+                // !node_modules = exclude the node_modules folder
+                // { gitignore: true} = also respect the patterns in .gitignore files
+
+                for (const filepath of paths) {
+                    await git.add({ fs, dir, filepath, author: {name: name, email: email } });
+                }
+                //_ FIXME: Verifică dacă fișierele au fost adăugate înainte de a se face commit-ul!!!!
+
+                await git.setConfig({ fs, dir, path: 'user.name', value: name });
+                await git.setConfig({ fs, dir, path: 'user.email', value: email });
+                await git.commit({ fs, dir, message: `Start-${Date.now()}` });
+
+            } catch (error) {
+                console.log(error);
+                logger.error(error);
+            }
+        };
+
+        // === GIT status of a repo
+        socket.on('gitstat', async function clbkGITstat (data) {
+            let targetrepopath = __basedir + '/repo/' + data.path; // Este fără '/.git'
+            console.log(`Am primit: `, data);
+
+            // let branches = await git.listBranches({ fs, dir: `${targetrepopath}`, gitdir: '.git' });
+            // console.log(branches);
+
+            // let status = await git.status({fs, dir: `${targetrepopath}`, filepath: 'data'});
+            // console.log(status);
+            
+            const commits = await git.log({ fs, dir: targetrepopath, depth: 5, ref: 'main'}).catch((error) => {
+                // console.log(JSON.stringify(error, 2, null));
+                if (error.code === 'NotFoundError') {
+                    try {
+                        createFirstCommit(data.path, data.name, data.email); // fii atent că este o promisiune
+                    } catch (error) {
+                        console.log(`socket.js::gitstat A apărut o eroare la procesarea lui createFirstCommit()`, error);
+                        logger.error(error);
+                    }
+                }
+            });
+
+            if (commits) {
+                socket.emit('gitstat', 'First commit');
+            }
+
+            // git ls-tree -r master --name-only
+            // git ls-tree -r HEAD --name-only
+            // https://stackoverflow.com/questions/572549/difference-between-git-add-a-and-git-add
+
+            const commitsPromise = gitToJs(targetrepopath);            
+            commitsPromise.then(commits => console.log(JSON.stringify(commits, null, 2))).catch(e=>e);
         });
 
         /*  === CLOSEBAG === 

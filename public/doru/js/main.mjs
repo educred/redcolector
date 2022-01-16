@@ -476,4 +476,14 @@ class EventedElementsMgmt {
     })
  */
 
-export {socket, pubComm, EventedElementsMgmt, setWithExpiry, getWithExpiry, check4url, createElement, decodeCharEntities, datasetToObject, frm2obj, cleanEmptyPropsInObj};
+export {socket, 
+    pubComm, 
+    EventedElementsMgmt, 
+    setWithExpiry, 
+    getWithExpiry, 
+    check4url, 
+    createElement, 
+    decodeCharEntities, 
+    datasetToObject, 
+    frm2obj, 
+    cleanEmptyPropsInObj};

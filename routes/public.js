@@ -30,7 +30,7 @@ getStructure().then((val) => {
 // Indexul de căutare
 let idxRes = RES_IDX_ALS;
 
-// === RESURSE PUBLICE ===
+// === RESURSE PUBLICE :: /resursepublice ===
 let renderPublicREDs = require('./controllers/public.ctrl');
 router.get('/', (req, res, next) => {
 
@@ -100,7 +100,7 @@ router.get('/', (req, res, next) => {
     });
 });
 
-// === RESURSĂ PUBLICĂ INDIVIDUALĂ ===
+// === RESURSĂ PUBLICĂ INDIVIDUALĂ :: /resursepublice/:id ===
 async function clbkResPublicaID (req, res, next) {
     // Setări în funcție de template
     let filterMgmt = {focus: 'general'};    
@@ -150,7 +150,7 @@ async function clbkResPublicaID (req, res, next) {
 router.get('/:id', (req, res, next) => {
     clbkResPublicaID(req, res, next).catch((error) => {
         console.log(error);
-        logger(error);
+        logger.error(error);
         next(error);  
     })
 });

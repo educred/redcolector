@@ -151,9 +151,7 @@ async function clbkProfResID (req, res, next) {
     // const editorJs2html = require('./controllers/editorJs2HTML');
     let scripts = [
         // MOMENT.JS
-        {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
-        // HELPER DETECT URLS or PATHS
-        {script: `${gensettings.template}/js/check4url.js`}
+        {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}
     ];
 
     let modules = [
@@ -175,6 +173,8 @@ async function clbkProfResID (req, res, next) {
         {module: `${gensettings.template}/js/main.mjs`},
         // REEDIT RES
         {module: `${gensettings.template}/js/personal-res.mjs`},
+        // GITGRAPH
+        {module: `${gensettings.template}/lib/gitgraph.umd.js`}
     ];
 
     let styles = [
@@ -186,7 +186,7 @@ async function clbkProfResID (req, res, next) {
         {style: `${gensettings.template}/lib/npm/bootstrap.min.css`}
     ];
 
-    let roles = ["user", "cred", "validator"];
+    let roles = ["user", "cred", "validator"];// userul poate fi unul din roluri
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
 
     // caută resursa în bază
@@ -206,18 +206,15 @@ async function clbkProfResID (req, res, next) {
             obi.editorContent = JSON.stringify(resursa);
 
             // resursa._doc.content = editorJs2html(resursa.content);
-            let localizat = moment(obi.date).locale('ro').format('LLL');
-            obi.dataRo  = `${localizat}`; // formatarea datei pentru limba română.            
+            obi.dataRo = moment(obi.date).locale('ro').format('LLL');   // formatarea datei pentru limba română.            
 
             // Array-ul activităților modificat
-            let activitatiRehashed = obi.activitati.map((elem) => {
+            obi.activitati = obi.activitati.map((elem) => {
                 let sablon = /^([aA-zZ])+\d/g;
                 let cssClass = elem[0].match(sablon);
                 let composed = '<span class="' + cssClass[0] + 'data-code="' + elem[0] + '">' + elem[1] + '</span>';
                 return composed;
             });
-            
-            obi.activitati = activitatiRehashed;
 
             // Dacă nu este indexată în Elasticsearch deja, indexează aici!
             // esClient.exists({
@@ -301,7 +298,8 @@ async function clbkProfResID (req, res, next) {
     }).then((resursa) => {
         /* === ADMIN === */
         if(resursa !== null && req.session.passport.user.roles.admin) {
-            // Adaugă checkbox de validare
+            
+            // Adaugă mecanismul de validare al resursei
             if (resursa.expertCheck) {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck" checked>`;
             } else {
@@ -317,7 +315,7 @@ async function clbkProfResID (req, res, next) {
             // Acest lucru este necesar pentru a reedita resursa în client.
             res.render(`resursa-admin_${gensettings.template}`, {
                 template: `${gensettings.template}`,
-                title:     "Resursa",
+                title:     "Admin",
                 user:      req.user,                
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
@@ -350,7 +348,7 @@ async function clbkProfResID (req, res, next) {
             // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
             res.render(`resursa_${gensettings.template}`, { 
                 template:  `${gensettings.template}`,                
-                title:     "Resursa",
+                title:     "User",
                 user:      req.user,
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),

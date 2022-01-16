@@ -1,4 +1,4 @@
-import {createElement, pubComm, decodeCharEntities, datasetToObject} from './main.mjs';
+import {createElement, pubComm, check4url, decodeCharEntities, datasetToObject} from './main.mjs';
 import {AttachesToolPlus} from './uploader.mjs';
 
 var csrfToken = '';
@@ -18,15 +18,19 @@ if(document.getElementsByName('_csrf')[0].value) {
 function clbkDOMContentLoaded () {
 
     /* === OBIECTUL RESURSA din `data-content` === */
-    let data = document.querySelector('.resursa').dataset;
+    let data    = document.querySelector('.resursa').dataset;
     let dataRes = JSON.parse(JSON.stringify(data)) || null;
-    let content = JSON.parse(dataRes.content) || null;    
+    let content = JSON.parse(dataRes.content) || null;
+    let imagini = new Set(); // un `Set` cu toate imaginile care au fost introduse în document.
+    let fisiere = new Set(); // un `Set` cu toate fișierele care au fost introduse în document la un moment dat (înainte de `onchange`).
+
+    // console.log(data);
 
     /* === RED === */
     var resObi = {
-        id: dataRes.id, 
+        id:           dataRes.id, 
         contribuitor: dataRes.contribuitor,
-        uuid: content.uuid,
+        uuid:         content.uuid,
         content
     };
 
@@ -41,18 +45,15 @@ function clbkDOMContentLoaded () {
         }
     }
 
-    /* === RED.nameUser === */
+    /* === resObi.nameUser === */
     resObi.nameUser = author;
     // console.log("[personal-res::profile/:id] Obiectul resursă arată astfel: ", dataRes);
 
-    /* === RED.versioned === */
+    /* === resObi.versioned === */
     resObi.versioned = false;
 
-    let imagini = new Set(); // un `Set` cu toate imaginile care au fost introduse în document.
-    let fisiere = new Set(); // un `Set` cu toate fișierele care au fost introduse în document la un moment dat (înainte de `onchange`).
-
     /**
-     * Funcția are rolul de a afișa un buton „Actualizează” în cazul în care datele din RED au suferit modificări
+     * Funcția are rolul de a afișa un buton *Actualizează* în cazul în care datele din RED au suferit modificări
      */
     function changed () {
         // console.log("E ceva modificat în editor");
@@ -64,15 +65,15 @@ function clbkDOMContentLoaded () {
     // TODO: Implementează un mecanism de vizualizare a commit-urilor.
     // TEST: gitgraph.js | https://gitgraphjs.com/#0 https://github.com/nicoespeon/gitgraph.js/tree/master/packages/gitgraph-js
 
-    // TODO: Utilizatorul poate să aducă orice modificare resursei, dar dacă nu apasă pe „Actualizează”, 
+    // TODO: Utilizatorul poate să aducă orice modificare resursei, dar dacă nu apasă pe *Actualizează*, 
     // TODO: detectează când pagina pierde focus-ul și fă un branch cu starea modificată așa cum a lăsat-o! (doar autor și administrator)
     // TODO: la revenire pe resursă i se prezintă posibilitatea de a lucra cu starea în care a lăsat resursa ultima dată
-    // TODO: dacă nu revine la versiunea din master și continuă cu branch-ul, la „Actualizează”, fă merge pe master (doar autor și administrator)
+    // TODO: dacă nu revine la versiunea din master și continuă cu branch-ul, la *Actualizează*, fă `merge` pe master (doar autor și administrator)
 
     /* === Integrarea lui EditorJS === https://editorjs.io */
     const editorX = new EditorJS({
         placeholder: '',
-        logLevel: 'VERBOSE', 
+        // logLevel: 'VERBOSE', 
         data: resObi.content.content,
         onReady: () => {
             console.log('Editor.js e gata de treabă!');
@@ -93,7 +94,7 @@ function clbkDOMContentLoaded () {
             
             // pickCover(); // Încarcă imaginile din resursă în previzualizatorul galeriei.
         },
-        holder: 'edi',    
+        holder: 'edi',   
         /* Obiectul tuturor instrumentelor pe care le oferă editorul */ 
         tools: { 
             header: {
@@ -397,11 +398,11 @@ function clbkDOMContentLoaded () {
             }
         },    
         onChange: () => {
-            // TODO: Dacă s-a modificat, apare un buton „Actualizează”
+            // TODO: Dacă s-a modificat, apare un buton *Actualizează*
             if (resObi.versioned === false) {
                 resObi.versioned = true;
                 // console.log('Era false, acum este ', RED.versioned);
-                changed(); // adaugă butonul „Actualizează”
+                changed(); // adaugă butonul *Actualizează*
             }
 
             editorX.save().then((content) => {
@@ -505,7 +506,6 @@ function clbkDOMContentLoaded () {
     });
 
     /**
-     * Funcția este apelată doar de `resursa-admin`, adică doar conturile de administratori pot șterge resursa
      * Funcția șterge înregistrările din MongoDB și din Elasticsearch, precum și de pe discul serverului
      */
     function deleteRes () {
@@ -567,7 +567,7 @@ function clbkDOMContentLoaded () {
                 console.log('Schimb culoarea background-ului din verde pal în galben');
             }
         });
-    }
+    };
 
     /**
      * Funcția are rolul de a seta o resursă ca fiind disponibilă publicului
@@ -591,8 +591,79 @@ function clbkDOMContentLoaded () {
                 console.log('Resursa a fost retrasă din zona publică');
             }
         });
-    }
+    };
 
+
+    // TRATAREA EVENIMENTELOR
+    // var honeypot = document.getElementById(`${dataRes.id}`);
+    // honeypot.addEventListener('click', (evt) => {
+    //     switch (evt.target.id) {
+    //         case 'infoload':
+    //             console.log(`[personal-res.mjs] Am să aduc informație despre repo`);
+    //             break;
+        
+    //         case 'zipdownload':
+    //             evt.preventDefault();
+    //             console.log(`[personal-res.mjs] Am să aduc informație despre repo`);
+    //             break;
+
+    //         case 'saveversion':
+    //             // evt.preventDefault();
+    //             console.log(`[personal-res.mjs] Am să aduc informație despre repo`);
+    //             break;
+    //     }
+    // });
+
+    let infobtn = document.getElementById('infoload');
+    infobtn.addEventListener('click', (evt) => {
+        // console.log(`[personal-res.mjs] Am să aduc informație despre repo`, resObi.contribuitor, content.emailContrib);
+        let obi = {path: `${resObi.contribuitor}/${resObi.uuid}`, name: content.autori, email: content.emailContrib};
+        pubComm.emit('gitstat', obi);
+    });
+
+    let zipdownloadbtn = document.getElementById('zipdownload');
+    zipdownloadbtn.addEventListener('click', (evt) => {
+        console.log(`[personal-res.mjs] Mă duc să pregătesc zip-ul`);
+    });
+
+    let saveversionbtn = document.getElementById('saveversion');
+    saveversionbtn.addEventListener('click', (evt) => {
+        console.log(`[personal-res.mjs] Voi salva această versiune`);
+    });
+
+    // Procesarea răspunsului privind starea repo-ului de git
+    pubComm.on('gitstat', (data) => {
+        console.log(`Repo-ul de git are următoarele date `, data);
+    });
+
+    /*
+        GITGRAPH
+    */
+    // Get the graph container HTML element.
+    const graphContainer = document.getElementById("graph-container");
+
+    if (GitgraphJS !== null) {
+        // Instantiate the graph.
+        const gitgraph = GitgraphJS.createGitgraph(graphContainer);
+
+        // Simulate git commands with Gitgraph API.
+        const master = gitgraph.branch("master");
+        master.commit("Initial commit");
+
+        const develop = master.branch("develop");
+        develop.commit("Add TypeScript");
+
+        const aFeature = develop.branch("a-feature");
+        aFeature
+        .commit("Make it work")
+        .commit("Make it right")
+        .commit("Make it fast");
+
+        develop.merge(aFeature);
+        develop.commit("Prepare v1");
+
+        master.merge(develop).tag("v1.0.0");
+    }
     /**
      * Funcția are rolul de a face vizibil selectorul de arii
      */
@@ -605,7 +676,7 @@ function clbkDOMContentLoaded () {
         }
         // Verifică care arii există deja si pune-le atributul selected în multi selectul care va apărea.
         //# 1 constituie un array al ariilor deja existente
-    }
+    };
 
     function showCompDig() {
         let compdig = document.querySelector('#compdig');
@@ -614,11 +685,11 @@ function clbkDOMContentLoaded () {
         } else {
             compdig.hidden = true;
         }
-    }
+    };
 
     function adaugArie() {
         // Verifică mai întâi dacă nu cumva aria deja există între elementele grafice.
-    }
+    };
 
     // Afișează selectorul de imagini - https://codepen.io/kskhr/pen/pRwKjg
     /**
@@ -662,7 +733,7 @@ function clbkDOMContentLoaded () {
             this.querySelector('svg').classList.remove('d-none');
             this.querySelector('svg').classList.toggle('d-block');
         }
-    }
+    };
 
     var insertGal = document.getElementById('imgSelector');
     /**
@@ -689,8 +760,7 @@ function clbkDOMContentLoaded () {
             insertGal.appendChild(container);
         }
         return insertGal;
-    }
-
+    };
 }
 
 document.addEventListener("DOMContentLoaded", clbkDOMContentLoaded);

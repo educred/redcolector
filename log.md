@@ -1,3 +1,66 @@
+nicolaie@nicolaie-G750JX:~/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/repo/5e9832fcf052494338584d92/b0626e62-d73b-4019-9aae-a837d357f492$ git branch
+* master
+nicolaie@nicolaie-G750JX:~/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/repo/5e9832fcf052494338584d92/b0626e62-d73b-4019-9aae-a837d357f492$ git log
+commit f963b5e135e4c945943393f0787b68f5e262f55f (HEAD -> master)
+Author: Nicu Constantinescu <nicu.constantinescu@educred.ro>
+Date:   Sun Jan 16 23:37:56 2022 +0200
+
+    Start-1642369076830
+
+
+A creat branch-ul main, dar nu a adăugat fișierele
+
+nicolaie@nicolaie-G750JX:~/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/repo/5e9832fcf052494338584d92/b0626e62-d73b-4019-9aae-a837d357f492$ git status
+On branch master
+
+No commits yet
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	6d9930e83bbb43bba93e22eda2871b55.svg
+	bag-info.txt
+	bagit.txt
+	data/
+	manifest-sha256.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+nicolaie@nicolaie-G750JX:~/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/repo/5e9832fcf052494338584d92/b0626e62-d73b-4019-9aae-a837d357f492$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	6d9930e83bbb43bba93e22eda2871b55.svg
+	bag-info.txt
+	bagit.txt
+	data/
+	manifest-sha256.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+
+
+Vezi ca vrea să populeze repo-ul cu toate fișierele și directoarele aplicației. Vezi modifică setările lui globby pentru a lua doar resursele din subdirectorul local.
+
+
+[app.js] O promisiune a fost respinsă fără a fi tratată respingerea Promise {
+  <rejected> NotFoundError: Could not find Dockerfile.
+      at addToIndex (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/isomorphic-git/index.cjs:4473:21)
+      at async /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/isomorphic-git/index.cjs:4455:7
+      at async /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/isomorphic-git/index.cjs:882:16 {
+    caller: 'git.add',
+    code: 'NotFoundError',
+    data: { what: 'Dockerfile' }
+  }
+}  având motivul NotFoundError: Could not find Dockerfile.
+[16-01-2022 17:56:24] [error] [undefined]:      [object Promise] NotFoundError: Could not find Dockerfile.
+[16-01-2022 17:56:24] [error] [undefined]:      [object Promise] NotFoundError: Could not find Dockerfile.
+Procesul a fost încheiat având codul:  1
+
+
+
+gource -s .03 --auto-skip-seconds .1 --multi-sampling -f -1280x720 --camera-mode track --realtime --stop-at-end --highlight-users --logo ./public/doru/img/repologo.png --title "Colector RED" --output-ppm-stream - --output-framerate 30 | ffmpeg -y -r 30 -f image2pipe -vcodec ppm -i - -b 65536K movie.mp4
+
+
+
 TypeError: Cannot read properties of undefined (reading 'url')
     at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/editorJs2HTML.js:97:54
     at Array.map (<anonymous>)

@@ -1,5 +1,6 @@
 require('dotenv').config();
 global.CronJob = require('./util/cron'); // CRON -> programarea side ops-urilor
+global.__basedir = __dirname;
 
 const os             = require('os');
 const path           = require('path');
