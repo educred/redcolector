@@ -614,10 +614,11 @@ function clbkDOMContentLoaded () {
     //     }
     // });
 
+    // Obține informație despre repo-ul git.
     let infobtn = document.getElementById('infoload');
     infobtn.addEventListener('click', (evt) => {
         // console.log(`[personal-res.mjs] Am să aduc informație despre repo`, resObi.contribuitor, content.emailContrib);
-        let obi = {path: `${resObi.contribuitor}/${resObi.uuid}`, name: content.autori, email: content.emailContrib};
+        let obi = {path: `${resObi.contribuitor}/${resObi.uuid}`, name: content.autori, email: content.emailContrib, message: ''};
         pubComm.emit('gitstat', obi);
     });
 
@@ -634,36 +635,56 @@ function clbkDOMContentLoaded () {
     // Procesarea răspunsului privind starea repo-ului de git
     pubComm.on('gitstat', (data) => {
         console.log(`Repo-ul de git are următoarele date `, data);
+
+        /*
+            GITGRAPH
+        */
+        // Get the graph container HTML element.
+
+        const graphContainer = document.getElementById("graph-container");
+
+        if (GitgraphJS !== null) {
+            graphContainer.innerHTML = '';
+
+            // Instantiate the graph.
+            const gitgraph = GitgraphJS.createGitgraph(graphContainer, {
+                orientation: 'vertical-reverse',
+                template: GitgraphJS.templateExtend('metro', {
+                    colors: ['red', 'blue', 'orange']
+                })
+            }); // https://www.nicoespeon.com/gitgraph.js/#14
+            // https://www.nicoespeon.com/gitgraph.js/stories/?path=//story/gitgraph-js-1-basic-usage--default
+            
+            const master = gitgraph.branch("master", {
+                style: {
+                    label: {
+                        color: 'green',
+                        font: 'italic 10pt serif'
+                    }
+                }
+            });
+            let commitpiece;
+            for (commitpiece of data) {
+                master.commit({
+                    subject: commitpiece.message,
+                    author: commitpiece.authorName,
+                    dotText: '🙀',
+                    style: {
+                        message: {
+                            displayAuthor: true,
+                            displayBranch: true,
+                            displayHash:   false,
+                            font: "normal 10pt Arial",
+                            color: 'green'
+                        }
+                    },
+                    // onClick: alert('Bau')
+                });
+            }
+            // https://www.nicoespeon.com/gitgraph.js/stories/?path=/story/gitgraph-js-3-events--on-commit-dot-click
+        }
     });
 
-    /*
-        GITGRAPH
-    */
-    // Get the graph container HTML element.
-    const graphContainer = document.getElementById("graph-container");
-
-    if (GitgraphJS !== null) {
-        // Instantiate the graph.
-        const gitgraph = GitgraphJS.createGitgraph(graphContainer);
-
-        // Simulate git commands with Gitgraph API.
-        const master = gitgraph.branch("master");
-        master.commit("Initial commit");
-
-        const develop = master.branch("develop");
-        develop.commit("Add TypeScript");
-
-        const aFeature = develop.branch("a-feature");
-        aFeature
-        .commit("Make it work")
-        .commit("Make it right")
-        .commit("Make it fast");
-
-        develop.merge(aFeature);
-        develop.commit("Prepare v1");
-
-        master.merge(develop).tag("v1.0.0");
-    }
     /**
      * Funcția are rolul de a face vizibil selectorul de arii
      */

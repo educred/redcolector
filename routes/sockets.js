@@ -567,32 +567,52 @@ module.exports = function sockets (io) {
          * @param name {String} Numele utilizatorului `name`
          * @param email {String} Emailul userului `email`
          */
-        async function createFirstCommit (path, name, email) {
+        async function addAllAndCommit (path, name, email, message) {
             try {
-                let dir = `${__basedir}/repo/${path}`;
-                // console.log(`Directorul de lucru este `, dir);
+                let apath2res = `${__basedir}/repo/${path}`; // este calea absolută de la rădăcina sistemului până la directorul resursei
+                let path2res = `repo/${path}`; // este calea absolută de la rădăcina aplicației până la directorul resursei
     
                 // Creează primul commit!!!
-                // const paths = await globby(['./**', './**/.*', '!node_modules'], { gitignore: true }); // https://github.com/isomorphic-git/isomorphic-git/issues/187
-                // const paths = await globby([`./repo/${path}/data/**`]); // https://github.com/isomorphic-git/isomorphic-git/issues/187
-                const paths = await globby([`${__basedir}/repo/${path}/**`], { gitignore: true }); // https://github.com/isomorphic-git/isomorphic-git/issues/187
-    
-                console.log(`Căile pe care le-am descoperit sunt `, paths);
-    
-                // ./** = match all regular files
-                // ./**/.* = match all "hidden" dot files, like .babelrc or .travis.yml
-                // !node_modules = exclude the node_modules folder
-                // { gitignore: true} = also respect the patterns in .gitignore files
+                let paths = await globby([`./**`, '!node_modules'], {cwd: `${apath2res}/`}); // https://github.com/isomorphic-git/isomorphic-git/issues/187 https://github.com/sindresorhus/globby/issues/87
+                // console.log(`Căile sunt `, paths);
 
-                for (const filepath of paths) {
-                    await git.add({ fs, dir, filepath, author: {name: name, email: email } });
-                }
-                //_ FIXME: Verifică dacă fișierele au fost adăugate înainte de a se face commit-ul!!!!
+                // SETEAZĂ CINE FACE PRIMUL COMMIT
+                await git.setConfig({ fs, dir: path2res, path: 'user.name', value: name });
+                await git.setConfig({ fs, dir: path2res, path: 'user.email', value: email }); 
 
-                await git.setConfig({ fs, dir, path: 'user.name', value: name });
-                await git.setConfig({ fs, dir, path: 'user.email', value: email });
-                await git.commit({ fs, dir, message: `Start-${Date.now()}` });
+                // TRATEAZĂ CAZUL ÎN CARE sunt fișire modificate direct pe hard, dar nu stagged. CONȚINUTUL ESTE DEJA STAGGED, dar nu commited
+                const FILE = 0, WORKDIR = 2, STAGE = 3;
+                const statusPaths = await git.statusMatrix({fs, dir: path2res});
+                const unstagedChanges = statusPaths.filter(row => row[WORKDIR] !== row[STAGE]).map(row => row[FILE]);
+                // console.log(`[socket.js::createFirstCommit] fișierele modificate dar care nu sunt stagged `, unstagedChanges);
 
+                if (unstagedChanges.length > 0) {
+                    let filepath = '';
+                    for (filepath of paths) {
+                        // fs (implementarea de fs), dir: calea către directorul de lucru al repo-ului, filepath: calea către fișierul care trebuie adăugat
+                        await git.add({ fs, dir: `${path2res}`, filepath: `${filepath}`});
+                    }
+                    //_ NOTE: Fă commit-ul doar dacă toate fișierele și directoarele au trecut în stagged
+                    await git.commit({ fs, dir: path2res, message: message || `Mark-${Date.now()}` });
+                    //_ NOTE: Trimite în client starea pentru afișare
+                    const commitsPromise = gitToJs(apath2res);            
+                    commitsPromise.then((commits) => {
+                        console.log(`[createFirstCommit::fișiere în stagged] Asta trimit în client: `, JSON.stringify(commits, null, 2));
+                    }).catch((error)=> {
+                        console.log(error);
+                        logger.error(error);
+                    });
+                } else {
+                    //_ NOTE: Trimite în client starea pentru afișare
+                    const commitsPromise = gitToJs(apath2res);            
+                    commitsPromise.then((commits) => {
+                        socket.emit('gitstat', commits);
+                        // console.log(`[createFirstCommit::fișiere în stagged] Asta trimit în client: `, JSON.stringify(commits, null, 2));
+                    }).catch((error)=> {
+                        console.log(error);
+                        logger.error(error);
+                    });
+                }      
             } catch (error) {
                 console.log(error);
                 logger.error(error);
@@ -601,37 +621,35 @@ module.exports = function sockets (io) {
 
         // === GIT status of a repo
         socket.on('gitstat', async function clbkGITstat (data) {
-            let targetrepopath = __basedir + '/repo/' + data.path; // Este fără '/.git'
-            console.log(`Am primit: `, data);
-
-            // let branches = await git.listBranches({ fs, dir: `${targetrepopath}`, gitdir: '.git' });
-            // console.log(branches);
-
-            // let status = await git.status({fs, dir: `${targetrepopath}`, filepath: 'data'});
-            // console.log(status);
-            
-            const commits = await git.log({ fs, dir: targetrepopath, depth: 5, ref: 'main'}).catch((error) => {
-                // console.log(JSON.stringify(error, 2, null));
-                if (error.code === 'NotFoundError') {
-                    try {
-                        createFirstCommit(data.path, data.name, data.email); // fii atent că este o promisiune
-                    } catch (error) {
-                        console.log(`socket.js::gitstat A apărut o eroare la procesarea lui createFirstCommit()`, error);
-                        logger.error(error);
+            try {
+                let targetrepopath = __basedir + '/repo/' + data.path; // Este fără '/.git'
+                // console.log(`Am primit: `, data);
+                
+                const commits = await git.log({ fs, dir: targetrepopath, depth: 5, ref: 'main'}).catch((error) => {
+                    if (error.code === 'NotFoundError') {
+                        return addAllAndCommit(data.path, data.name, data.email, data.message).catch((error) => {
+                            console.log(`socket.js::gitstat A apărut o eroare la procesarea lui createFirstCommit()`, error);
+                            logger.error(error);
+                        }); // fii atent că este o promisiune
                     }
-                }
-            });
-
-            if (commits) {
-                socket.emit('gitstat', 'First commit');
+                });
+    
+                if (commits) {
+                    const commitsPromise = gitToJs(targetrepopath);            
+                    commitsPromise.then((commits) => {
+                        console.log(`[socket.on('gitstat) clbkGITstat()] Datele care pleacă în client: `, JSON.stringify(commits, null, 2));
+                    }).catch((error)=> {
+                        console.log(error);
+                        logger.error(error);
+                    });
+                }      
+            } catch (error) {
+                console.log(`socket.js::gitstat A apărut o eroare în trimiterea datelor despre repo`, error);
+                logger.error(error);                
             }
-
             // git ls-tree -r master --name-only
             // git ls-tree -r HEAD --name-only
             // https://stackoverflow.com/questions/572549/difference-between-git-add-a-and-git-add
-
-            const commitsPromise = gitToJs(targetrepopath);            
-            commitsPromise.then(commits => console.log(JSON.stringify(commits, null, 2))).catch(e=>e);
         });
 
         /*  === CLOSEBAG === 

@@ -1,4 +1,14 @@
-nicolaie@nicolaie-G750JX:~/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/repo/5e9832fcf052494338584d92/b0626e62-d73b-4019-9aae-a837d357f492$ git branch
+Isomorphic git -> index.cjs
+
+function join(...parts) {
+  let nrp = normalizePath(parts.map(normalizePath).join('/'))
+  console.log(`Normalizarea căilor are următorul efect: `, nrp);
+  // return normalizePath(parts.map(normalizePath).join('/'))
+  return nrp
+}
+
+
+icolaie@nicolaie-G750JX:~/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/repo/5e9832fcf052494338584d92/b0626e62-d73b-4019-9aae-a837d357f492$ git branch
 * master
 nicolaie@nicolaie-G750JX:~/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/repo/5e9832fcf052494338584d92/b0626e62-d73b-4019-9aae-a837d357f492$ git log
 commit f963b5e135e4c945943393f0787b68f5e262f55f (HEAD -> master)
