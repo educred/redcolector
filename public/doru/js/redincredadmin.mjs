@@ -28,12 +28,14 @@ function clbkDOMContentLoaded () {
     let data = document.querySelector('.resursa').dataset;
     let dataRes = JSON.parse(JSON.stringify(data)) || null;
     let content = JSON.parse(dataRes.content) || null;
+    let imagini = new Set(); // un `Set` cu toate imaginile care au fost introduse în document.
+    let fisiere = new Set(); // un `Set` cu toate fișierele care au fost introduse în document la un moment dat (înainte de `onchange`).
 
     // constituie obiectul de lucru
     var resObi = {
-        id: dataRes.id, 
-        contribuitor: dataRes.contributor,
-        uuid: content.uuid,
+        id:           dataRes.id, 
+        contribuitor: dataRes.contribuitor,
+        uuid:         content.uuid,
         content
     };
 
@@ -55,15 +57,11 @@ function clbkDOMContentLoaded () {
     /* === RED.versioned === */
     resObi.versioned = false;
 
-    let imagini = new Set(); // un `Set` cu toate imaginile care au fost introduse în document.
-    let fisiere = new Set(); // un `Set` cu toate fișierele care au fost introduse în document la un moment dat (înainte de `onchange`).
-
     /**
      * Funcția are rolul de a afișa un buton *Actualizează* în cazul în care datele din RED au suferit modificări
      */
     function changed () {
         // console.log("E ceva modificat în editor");
-        
         var saveBtn = new createElement('button', 'saveBtn', ['btn-sm'], {onclick: "createVersion(this)"}).creeazaElem('Actualizează');
         document.querySelector('.resursa').appendChild(saveBtn);
     }
@@ -436,9 +434,9 @@ function clbkDOMContentLoaded () {
     }
 
     // #3
-    var resursa = document.getElementById(resObi.id);
+    var resursa          = document.getElementById(resObi.id);
     var validateCheckbox = document.getElementById('valid');
-    var publicCheckbox = document.getElementById('public');
+    var publicCheckbox   = document.getElementById('public');
     validateCheckbox.addEventListener('click', validateResource);
     publicCheckbox.addEventListener('click', setGeneralPublic);
 
@@ -505,6 +503,77 @@ function clbkDOMContentLoaded () {
             }
         });
     };
+
+    // Obține informație despre repo-ul git.
+    let infobtn = document.getElementById('infoload');
+    infobtn.addEventListener('click', (evt) => {
+        console.log(`[personal-res.mjs] Am să aduc informație despre repo`, resObi.contribuitor, content.emailContrib);
+        let obi = {path: `${resObi.contribuitor}/${resObi.uuid}`, name: content.autori, email: content.emailContrib, message: ''};
+        pubComm.emit('gitstat', obi);
+    });
+
+    let zipdownloadbtn = document.getElementById('zipdownload');
+    zipdownloadbtn.addEventListener('click', (evt) => {
+        console.log(`[personal-res.mjs] Mă duc să pregătesc zip-ul`);
+    });
+
+    let saveversionbtn = document.getElementById('saveversion');
+    saveversionbtn.addEventListener('click', (evt) => {
+        console.log(`[personal-res.mjs] Voi salva această versiune`);
+    });
+
+    // Procesarea răspunsului privind starea repo-ului de git
+    pubComm.on('gitstat', (data) => {
+        console.log(`Repo-ul de git are următoarele date `, data);
+
+        /*
+            GITGRAPH
+        */
+        // Get the graph container HTML element.
+
+        const graphContainer = document.getElementById("graph-container");
+
+        if (GitgraphJS !== null) {
+            graphContainer.innerHTML = '';
+
+            // Instantiate the graph.
+            const gitgraph = GitgraphJS.createGitgraph(graphContainer, {
+                orientation: 'vertical-reverse',
+                template: GitgraphJS.templateExtend('metro', {
+                    colors: ['red', 'blue', 'orange']
+                })
+            }); // https://www.nicoespeon.com/gitgraph.js/#14
+            // https://www.nicoespeon.com/gitgraph.js/stories/?path=//story/gitgraph-js-1-basic-usage--default
+            
+            const master = gitgraph.branch("master", {
+                style: {
+                    label: {
+                        color: 'green',
+                        font: 'italic 10pt serif'
+                    }
+                }
+            });
+            let commitpiece;
+            for (commitpiece of data) {
+                master.commit({
+                    subject: commitpiece.message,
+                    author: commitpiece.authorName,
+                    dotText: '🙀',
+                    style: {
+                        message: {
+                            displayAuthor: true,
+                            displayBranch: true,
+                            displayHash:   false,
+                            font: "normal 10pt Arial",
+                            color: 'green'
+                        }
+                    },
+                    // onClick: alert('Bau')
+                });
+            }
+            // https://www.nicoespeon.com/gitgraph.js/stories/?path=/story/gitgraph-js-3-events--on-commit-dot-click
+        }
+    });
 };
 
 document.addEventListener("DOMContentLoaded", clbkDOMContentLoaded);

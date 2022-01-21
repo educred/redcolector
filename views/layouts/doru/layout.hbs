@@ -60,6 +60,11 @@
             <link rel="stylesheet" href="/{{style}}" charset="utf-8">
         {{/each}}
 
+        {{!-- Încărcarea scripturilor --}}
+        {{#each scripts}}
+            <script type="application/javascript" src="/{{script}}"></script>
+        {{/each}}
+
         {{!-- Preîncărcarea modulelor --}}
         {{#each modules}}
             <script rel="modulepreload" href="/{{module}}"></script>

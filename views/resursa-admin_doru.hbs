@@ -3,7 +3,7 @@
 {{!-- {{> messages}} --}}
 <input type="hidden" name="_csrf" value="{{this.csrfToken}}">
 
-<main itemscope itemtype="http://schema.org/CreativeWork">
+<main itemscope itemtype="https://schema.org/LearningResource">
 
     {{!-- RESURSA --}}
     <div data-id="{{resursa._id}}" 
@@ -113,8 +113,9 @@
                             {{!-- ARIE CURRICULARĂ CLASĂ DISCIPLINĂ --}}
                             <div class="col-3 d-flex align-items-end justify-content-end flex-column align-self-stretch">
                                 {{!-- Afișarea ariei curriculare --}}
-                                <div class="comprespub">
-                                    <h5>Arie curriculară</h5>
+                                <div class="comprespub" itemprop="educationalAlignment" itemscope itemtype="https://schema.org/AlignmentObject">
+                                    <meta itemprop="alignmentType" content="educationalSubject" />
+                                    <h5><span itemprop="educationalFramework">Arie curriculară<span></h5>
                             
                                     {{!-- Buton de adăugare a unei arii curriculare suplimentare --}}
                                     <button id="titluLangAdd" class="btn btn-outline-secondary m-2" type="button" onclick="showArii()">
@@ -122,7 +123,7 @@
                                     </button>
                                     {{#each resursa.arieCurriculara}}
                                         <button type="button" class="btn btn-secondary" data-toggle="tooltip" data-placement="top" title="{{this}}">
-                                            {{this}}
+                                            <span itemprop="targetName">{{this}}</span>
                                         </button>
                                     {{/each}}
                                     <div id="ariiNoi">
@@ -138,18 +139,13 @@
                                             <option data-currsc  ="currsc"   value="Curriculum la decizia școlii">Curriculum la decizia școlii</option>
                                         </select>
                                     </div>
-                                    {{!-- {{#each resursa.arieCurriculara}}
-                                        <button type="button" class="btn btn-outline-secondary" data-toggle="tooltip" data-placement="top" title="Arie curriculară">
-                                            {{this}}
-                                        </button>
-                                    {{/each}} --}}
                                 </div>
 
                                 {{!-- Afișarea clasei(lor) pentru care a fost elaborată resursa --}}
                                 <div class="comprespub">
-                                    <h5 itemprop="alignmentType">Clasa</h5>
+                                    <h5>Clasa</h5>
                                     {{#each resursa.level}}
-                                        <a class="btn btn-outline-secondary" href="#" role="button">{{this}}</a>
+                                        <a class="btn btn-outline-secondary" href="#" role="button" itemprop="educationalLevel"><span itemprop="name">{{this}}</span></a>
                                     {{/each}}
                                 </div>
 
@@ -159,7 +155,7 @@
                                         <h5>Discipline</h5>
                                         {{#each resursa.discipline}}
                                             <button type="button" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-book-open"></i> {{this}}
+                                                <i class="fas fa-book-open"></i> <span itemprop="teaches">{{this}}</span>
                                             </button>
                                         {{/each}}
                                     </div>
@@ -202,7 +198,9 @@
                                 <div class="comprespub">
                                     <h5>Competențe generale</h5>
                                     {{#each resursa.competenteGen}}
-                                        <em>{{this}}</em>
+                                        <em>
+                                            <span itemprop="teaches">{{this}}</span>
+                                        </em>
                                     {{/each}}
                                 </div>
                             {{/if}}
@@ -213,13 +211,13 @@
                                     <h5>Competențe specifice</h5>
                                     {{#each resursa.competenteS}}
                                         <a class="btn btn-primary border" href="/competentas/{{this._id}}" role="button" data-toggle="tooltip" data-placement="top" title="Face parte din competența generală: {{this.parteA}}">
-                                            {{this.nume}} <span class="badge badge-light">{{this.nivel}}</span>
+                                            {{this.nume}} <span class="badge badge-light" itemprop="teaches">{{this.nivel}}</span>
                                         </a>
                                     {{/each}}
                                 </div>
                             {{/if}}
 
-                            {{!-- Afișarea activităților selectare pentru fiecare competență specifică --}}
+                            {{!-- Afișarea activităților selectate pentru fiecare competență specifică --}}
                             {{#if resursa.activitati}}
                                 <div class="activsrespub">
                                     <h5>Activități</h5>
@@ -233,7 +231,7 @@
                                 </div>
                             {{/if}}
 
-                            {{!-- NIVELURI --}}
+                            {{!-- NIVELURI competențe digitale necesare--}}
                             <div id="compdig" class="form-group" hidden>
                                 <h4>Competențe digitale necesare</h4>
                                 <label for="valid-level">RED-ul necesită competențe digitale de nivelul:</label>
@@ -243,162 +241,149 @@
                                     <option value="avansat">avansat</option>
                                 </select>
                             </div>
-                            {{!-- NIVELURI END--}}
-
-                            {{!-- AICI AM RAMAS!!!!!!! --}}
-
-                            {{!-- Menționarea nivelului competențelor digitale necesare --}}
                             {{#if resursa.abilitati}}
                                 <div class="abildigrespub">
-                                    <h6>RED-ul necesită competențe digitale de nivelul</h5>
-                                        <button id="titluLangAdd" class="btn btn-outline-secondary m-2" type="button" onclick="showCompDig()">
-                                            <i class="fas fa-plus-circle"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Competențe digitale">
-                                            {{resursa.abilitati}}
-                                        </button>
+                                    <h5>RED-ul necesită competențe digitale de nivelul</h5>
+                                    <button id="titluLangAdd" class="btn btn-outline-secondary m-2" type="button" onclick="showCompDig()">
+                                        <i class="fas fa-plus-circle"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="Competențe digitale">
+                                        {{resursa.abilitati}}
+                                    </button>
                                 </div>
                             {{/if}}
 
                             {{!-- Competențe digitale necesare ca nivel --}}
                             {{#if resursa.grupuri}}
                                 <div class="compsdigrespub">
-                                    <h6> RED-ul se adresează în mod direct</h5>
-                                        <ul itemprop="audience" itemscope itemtype="http://schema.org/EducationalAudience">
-                                            {{#each resursa.grupuri}}
-                                                <li itemprop="educationalRole">
-                                                    {{this}}
-                                                </li>
-                                            {{/each}}
-                                        </ul>
+                                    <h5> RED-ul se adresează în mod direct</h5>
+                                    <ul itemprop="audience" itemscope itemtype="http://schema.org/EducationalAudience">
+                                        {{#each resursa.grupuri}}
+                                            <li itemprop="educationalRole">
+                                                {{this}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
                                 </div>
                             {{/if}}
 
                             {{!-- Activități de învățare susținute --}}
                             {{#if resursa.rol}}
                                 <div class="rolrespub">
-                                    <h6>Activități de învățare susținute</h5>
-                                        <p>{{resursa.rol}}</p>
+                                    <h5>Activități de învățare susținute</h5>
+                                    <p>{{resursa.rol}}</p>
                                 </div>
                             {{/if}}
 
-                            {{!-- Resursele necesare pentru utilizarea RED-ului [NEW] --}}
+                            {{!-- Resursele necesare pentru utilizarea RED-ului --}}
                             {{#if resursa.materiale}}
                                 <div class="domeniuadrrespub">
-                                    <h6>Domeniul căruia i se adresează resursa</h5>
-                                        <ul>
-                                            {{#each resursa.materiale}}
-                                                <li>
-                                                    {{this}}
-                                                </li>
-                                            {{/each}}
-                                        </ul>
+                                    <h5>Materiale necesare redării/interpretării</h5>
+                                    <ul>
+                                        {{#each resursa.materiale}}
+                                            <li>
+                                                {{this}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
                                 </div>
                             {{/if}}
 
-                            {{!-- Demeniul căreia i se adresează resursa [LEGACY] --}}
+                            {{!-- Domeniul căreia i se adresează resursa --}}
                             {{#if resursa.domeniu}}
                                 <div class="domeniuadrrespub">
-                                    <h6>Domeniul căruia i se adresează resursa</h5>
-                                        <ul>
-                                            {{#each resursa.domeniu}}
-                                                <li>
-                                                    {{this}}
-                                                </li>
-                                            {{/each}}
-                                        </ul>
+                                    <h5>Domeniul căruia i se adresează resursa</h5>
+                                    <ul>
+                                        {{#each resursa.domeniu}}
+                                            <li>
+                                                {{this}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
                                 </div>
                             {{/if}}
 
                             {{!-- Care sunt funcțiile pe care resursa le vizează --}}
                             {{#if resursa.functii}}
                                 <div class="funcsrespub">
-                                    <h6>Resursa vizează:</h5>
-                                        <ul>
-                                            {{#each resursa.functii}}
-                                                <li itemprop="learningResourceType">
-                                                    {{this}}
-                                                </li>
-                                            {{/each}}
-                                        </ul>
+                                    <h5>Resursa vizează:</h5>
+                                    <ul>
+                                        {{#each resursa.functii}}
+                                            <li itemprop="learningResourceType">
+                                                {{this}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
                                 </div>
                             {{/if}}
 
-                            {{!-- Afișează tipurile de demersuri / raționamente utilizate în realizarea funcției [LEGACY] --}}
+                            {{!-- Afișează tipurile de demersuri / raționamente utilizate în realizarea funcției --}}
                             {{#if resursa.demersuri}}
                                 <div class="demersrespub">
-                                    <h6>Tipul de demers / raționament utilizat în realizarea resursei</h5>
-                                        <ul>
-                                            {{#each resursa.demersuri}}
-                                                <li>
-                                                    {{this}}
-                                                </li>
-                                            {{/each}}
-                                        </ul>
+                                    <h5>Tipul de demers / raționament utilizat în realizarea resursei</h5>
+                                    <ul>
+                                        {{#each resursa.demersuri}}
+                                            <li>
+                                                {{this}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
                                 </div>
                             {{/if}}
 
-                            {{!-- Cum se desfășoară activitatea [LEGACY] --}}
+                            {{!-- Cum se desfășoară activitatea --}}
                             {{#if resursa.spatii}}
                                 <div class="atsdesrespub">
-                                    <h6>Activitatea se desfășoară:</h5>
-                                        <ul>
-                                            {{#each resursa.spatii}}
-                                                <li itemprop="educationalUse">
-                                                    {{this}}
-                                                </li>
-                                            {{/each}}
-                                        </ul>
+                                    <h5>Activitatea se desfășoară:</h5>
+                                    <ul>
+                                        {{#each resursa.spatii}}
+                                            <li itemprop="educationalUse">
+                                                {{this}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
                                 </div>
                             {{/if}}
 
-                            {{!-- Afișează cum se produce învățarea [LEGACY] --}}
+                            {{!-- Afișează cum se produce învățarea --}}
                             {{#if resursa.invatarea}}
                                 <div class="mijsrespub">
-                                    <h6>Modul în care se produce învățarea se face prin</h5>
-                                        <ul>
-                                            {{#each resursa.invatarea}}
-                                                <li>
-                                                    {{this}}
-                                                </li>
-                                            {{/each}}
-                                        </ul>
+                                    <h5>Modul în care se produce învățarea se face prin</h5>
+                                    <ul>
+                                        {{#each resursa.invatarea}}
+                                            <li>
+                                                {{this}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
                                 </div>
                             {{/if}}
 
-                            {{!-- Afișează Mijloace / materiale didactice necesare [LEGACY] --}}
-                            {{#if resursa.invatarea}}
+                            {{!-- Afișează mijloace / materiale didactice necesare --}}
+                            {{#if resursa.dependinte}}
                                 <div class="depssrespub">
-                                    <h6>Mijloace / materiale didactice necesare</h5>
-                                        <p>{{resursa.dependinte}}</p>
+                                    <h5>Mijloace / materiale didactice necesare</h5>
+                                    <p>{{resursa.dependinte}}</p>
                                 </div>
                             {{/if}}
 
                             {{!-- Afișarea licenței sub care stă opera --}}
                             <div class="licrespub">
-                                <h6>Licența</h5>
-                                    <p itemprop="license">{{resursa.licenta}}</p>
+                                <h5>Licența</h5>
+                                <p itemprop="license">{{resursa.licenta}}</p>
                             </div>
 
-                            {{!-- Dependințe --}}
-                            {{#if resursa.dependinte}}
-                                <div class="depsrespub">
-                                    <h6>Alte resurse necesare:</h5>
-                                        <p>{{resursa.dependinte}}</p>
-                                </div>
-                            {{/if}}
-
-                            {{!-- Intrumente folosite în elaborarea RED-ului [NEW] --}}
+                            {{!-- Intrumente folosite în elaborarea RED-ului --}}
                             {{#if resursa.relatedTo}}
                                 <div class="mijsrespub">
-                                    <h6>Instrumente folosite în elaborarea RED-ului</h5>
-                                        <ul>
-                                            {{#each resursa.relatedTo}}
-                                                <li>
-                                                    {{this}}
-                                                </li>
-                                            {{/each}}
-                                        </ul>
+                                    <h5>Instrumente folosite în elaborarea RED-ului</h5>
+                                    <ul>
+                                        {{#each resursa.relatedTo}}
+                                            <li>
+                                                {{this}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
                                 </div>
                             {{/if}}
                         </aside>                        
@@ -409,7 +394,7 @@
                         {{!-- Afișarea bibliografiei --}}
                         {{#if resursa.bibliografie}}
                             <div class="bibsrespub">
-                                <h6>Bibliografie</h5>
+                                <h5>Bibliografie</h5>
                                 <p>{{resursa.bibliografie}}</p>
                             </div>
                         {{/if}}
@@ -424,9 +409,6 @@
         </section>
     </div>
 </main>
-
-
-
 
 {{!-- Modal --}}
 <div class="modal" id="delModal" tabindex="-1" role="dialog" aria-labelledby="delModalLabel" aria-hidden="true">

@@ -251,7 +251,9 @@ router.get('/reds/:id', (req, res, next) => {
             // MAIN
             {module: `${gensettings.template}/js/main.mjs`},
             // LOCALE
-            {module: `${gensettings.template}/js/redincredadmin.mjs`}
+            {module: `${gensettings.template}/js/redincredadmin.mjs`},
+            // GITGRAPH
+            {module: `${gensettings.template}/lib/gitgraph.umd.js`}
         ];
     
         let styles = [

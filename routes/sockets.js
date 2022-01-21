@@ -556,7 +556,7 @@ module.exports = function sockets (io) {
             }
         });
 
-        // === PACK RED :: constituie un zip cu versiunea HTML a resursei dacă aceasta nu există deha și oferă clientului link-ul 
+        // === PACK RED :: constituie un zip cu versiunea HTML a resursei dacă aceasta nu există deja și oferă clientului link-ul 
         socket.on('packred', function clbkPackRED () {
 
         });
@@ -623,7 +623,6 @@ module.exports = function sockets (io) {
         socket.on('gitstat', async function clbkGITstat (data) {
             try {
                 let targetrepopath = __basedir + '/repo/' + data.path; // Este fără '/.git'
-                // console.log(`Am primit: `, data);
                 
                 const commits = await git.log({ fs, dir: targetrepopath, depth: 5, ref: 'main'}).catch((error) => {
                     if (error.code === 'NotFoundError') {
@@ -821,7 +820,7 @@ module.exports = function sockets (io) {
                             }
                         }).catch((err) => {
                             console.log("[sockets.js::'delresid'] În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea: ", err);
-                            logger.error(`[sockets.js::'delresid'] În timpul verificării existentei subdirectorului resursei șterse, a apărut eroarea ${err}`);
+                            logger.error(err);
                             // throw error;
                         });
 

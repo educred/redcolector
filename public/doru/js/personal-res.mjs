@@ -593,27 +593,6 @@ function clbkDOMContentLoaded () {
         });
     };
 
-
-    // TRATAREA EVENIMENTELOR
-    // var honeypot = document.getElementById(`${dataRes.id}`);
-    // honeypot.addEventListener('click', (evt) => {
-    //     switch (evt.target.id) {
-    //         case 'infoload':
-    //             console.log(`[personal-res.mjs] Am să aduc informație despre repo`);
-    //             break;
-        
-    //         case 'zipdownload':
-    //             evt.preventDefault();
-    //             console.log(`[personal-res.mjs] Am să aduc informație despre repo`);
-    //             break;
-
-    //         case 'saveversion':
-    //             // evt.preventDefault();
-    //             console.log(`[personal-res.mjs] Am să aduc informație despre repo`);
-    //             break;
-    //     }
-    // });
-
     // Obține informație despre repo-ul git.
     let infobtn = document.getElementById('infoload');
     infobtn.addEventListener('click', (evt) => {
@@ -624,6 +603,22 @@ function clbkDOMContentLoaded () {
 
     let zipdownloadbtn = document.getElementById('zipdownload');
     zipdownloadbtn.addEventListener('click', (evt) => {
+        
+        fetch(`${document.location.origin}${document.location.pathname}/zip?` + new URLSearchParams({
+            path: `${resObi.contribuitor}/${resObi.uuid}`,
+            uuid: `${resObi.uuid}`
+        }).toString()).then((response) => {
+            if (response.status != 200) { 
+                throw new Error("Bad Server Response"); 
+            } else {
+                return response.blob();
+            }
+          }).then((blob) => {
+            download(blob);
+          }).catch((error) => {
+            console.log(error);
+        });
+        
         console.log(`[personal-res.mjs] Mă duc să pregătesc zip-ul`);
     });
 
