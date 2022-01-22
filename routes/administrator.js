@@ -13,6 +13,7 @@ const ES7Helper   = require('../models/model-helpers/es7-helper');
 const schema      = require('../models/resursa-red-es7');
 // let content2html = require('./controllers/editorJs2HTML');
 let editorJs2TXT  = require('./controllers/editorJs2TXT');
+let archiveRED   = require('./controllers/archiveRED');
 
 // INDECȘII ES7
 let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
@@ -231,6 +232,8 @@ router.get('/reds/:id', (req, res, next) => {
             // {script: '/js/res-shown.js'},
             // HELPER DETECT URLS or PATHS
             {script: `${gensettings.template}/js/check4url.js`},
+            // DOWNLOADFILE
+            {script: `${gensettings.template}/lib/downloadFile.js`}
         ];
 
         let modules = [
@@ -417,6 +420,11 @@ router.get('/reds/:id', (req, res, next) => {
         logger(error);
         next(error);
     });
+});
+
+/* === DESCĂRCARE ZIP === */
+router.get('/reds/:id/zip', (req, res, next) => {
+    archiveRED(req, res, next);
 });
 
 /* === /administrator/users === */

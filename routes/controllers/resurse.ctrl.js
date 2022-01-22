@@ -148,7 +148,9 @@ exports.loadOneResource = async function loadOneResource (req, res, next) {
         // HOLDER.JS
         // {script: `${gensettings.template}/lib/npm/holder.min.js`},
         // HELPER DETECT URLS or PATHS
-        {script: `${gensettings.template}/js/check4url.js`}
+        {script: `${gensettings.template}/js/check4url.js`},
+        // DOWNLOADFILE
+        {script: `${gensettings.template}/lib/downloadFile.js`}
     ];
 
     let modules = [

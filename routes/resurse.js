@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const router  = express.Router();
 const logger  = require('../util/logger');
+let archiveRED   = require('./controllers/archiveRED');
 
 // Pentru a prelucra cererile pe rute, este necesară încărcarea controlerului
 const resurseCtrl = require('./controllers/resurse.ctrl');
@@ -54,6 +55,11 @@ router.get('/:id', (req, res, next) => {
         logger(error);
         next(error);
     })
+});
+
+/* === DESCĂRCARE ZIP === */
+router.get('/:id/zip', (req, res, next) => {
+    archiveRED(req, res, next);
 });
 
 module.exports = router;

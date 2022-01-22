@@ -511,10 +511,22 @@ function clbkDOMContentLoaded () {
         let obi = {path: `${resObi.contribuitor}/${resObi.uuid}`, name: content.autori, email: content.emailContrib, message: ''};
         pubComm.emit('gitstat', obi);
     });
-
+    
+    // descarcă resursa ca zip
     let zipdownloadbtn = document.getElementById('zipdownload');
     zipdownloadbtn.addEventListener('click', (evt) => {
-        console.log(`[personal-res.mjs] Mă duc să pregătesc zip-ul`);
+        fetch(`${document.location.origin}${document.location.pathname}/zip?` + new URLSearchParams({
+            path: `${resObi.contribuitor}/${resObi.uuid}`,
+            uuid: `${resObi.uuid}`
+        }).toString()).then((response) => {
+            if (response.status != 200) {
+                throw new Error("Bad Server Response"); 
+            } else {
+                downloadFile(response);
+            }
+          }).catch((error) => {
+            console.log(error);
+        });
     });
 
     let saveversionbtn = document.getElementById('saveversion');

@@ -616,8 +616,6 @@ function clbkDOMContentLoaded () {
           }).catch((error) => {
             console.log(error);
         });
-        
-        console.log(`[personal-res.mjs] Mă duc să pregătesc zip-ul`);
     });
 
     let saveversionbtn = document.getElementById('saveversion');

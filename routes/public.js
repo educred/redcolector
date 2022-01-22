@@ -10,6 +10,7 @@ let {getStructure} = require('../util/es7');
 
 var content2html = require('./controllers/editorJs2HTML');
 const redisClient = require('../redis.config');
+let archiveRED   = require('./controllers/archiveRED');
 
 // LOGO
 let LOGO_IMG = "img/" + process.env.LOGO;
@@ -32,8 +33,8 @@ let idxRes = RES_IDX_ALS;
 
 // === RESURSE PUBLICE :: /resursepublice ===
 let renderPublicREDs = require('./controllers/public.ctrl');
-router.get('/', (req, res, next) => {
 
+router.get('/', (req, res, next) => {
     async function clbkResPublice (req, res, next) {
         // Setări în funcție de template
         let filterMgmt = {focus: 'general'};
@@ -56,7 +57,7 @@ router.get('/', (req, res, next) => {
                 {script: `${gensettings.template}/js/resursepublice.js`}
             ],
             [
-                        // EDITOR.JS
+                // EDITOR.JS
                 {module: `${gensettings.template}/lib/editorjs/editor.js`},
                 {module: `${gensettings.template}/lib/editorjs/header.js`},
                 {module: `${gensettings.template}/lib/editorjs/paragraph.js`},
@@ -110,8 +111,12 @@ async function clbkResPublicaID (req, res, next) {
         let scripts = [      
             // MOMENT.JS
             {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},  
+            // DOWNLOADFILE
+            {script: `${gensettings.template}/lib/downloadFile.js`} 
+        ];
+        let modules = [
             // LOCALE
-            {script: `${gensettings.template}/js/redincredadmin.js`}    
+            {module: `${gensettings.template}/js/public-red.js`}
         ];
         
         if (resursa !== null) {
@@ -136,7 +141,8 @@ async function clbkResPublicaID (req, res, next) {
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
                 resursa:   newObi,
-                scripts
+                scripts,
+                modules
             });
         } else {
             console.log(`Nu a putut fi adusă resursa!`);
@@ -154,5 +160,11 @@ router.get('/:id', (req, res, next) => {
         next(error);  
     })
 });
+
+/* === DESCĂRCARE ZIP === */
+router.get('/:id/zip', (req, res, next) => {
+    archiveRED(req, res, next);
+});
+
 
 module.exports = router;

@@ -107,10 +107,11 @@ function content2htmlstatic (resursa, coperta) {
                                     src="${embYtbLink}" 
                                     frameborder="0" 
                                     allow="accelerometer; 
-                                    autoplay; 
-                                    encrypted-media; 
-                                    gyroscope; 
-                                    picture-in-picture" 
+                                           autoplay; 
+                                           clipboard-write; 
+                                           encrypted-media; 
+                                           gyroscope; 
+                                           picture-in-picture" 
                                     allowfullscreen>
                             </iframe>
                             </br>

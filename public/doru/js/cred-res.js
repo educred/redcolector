@@ -1,5 +1,4 @@
 import {pubComm, createElement, decodeCharEntities, datasetToObject} from './main.mjs';
-import {AttachesToolPlus} from './uploader.mjs';
 
 var csrfToken = '';
 
@@ -27,10 +26,10 @@ RED.nameUser = author;
 
 // OBIECTUL RESURSEI
 var resObi = {
-    id: dataRes.id, 
-    contribuitor: dataRes.contributor,
-    content: RED.content,
-    uuid: dataRes.uuid
+    id:           dataRes.id, 
+    contribuitor: dataRes.contribuitor,
+    content:      RED.content,
+    uuid:         dataRes.uuid
 };
 
 let imagini = new Set(); // un `Set` cu toate imaginile care au fost introduse în document.
@@ -192,4 +191,21 @@ const editorX = new EditorJS({
             }      
         }
     }
+});
+
+// descarcă resursa ca zip
+let zipdownloadbtn = document.getElementById('zipdownload');
+zipdownloadbtn.addEventListener('click', (evt) => {
+    fetch(`${document.location.origin}${document.location.pathname}/zip?` + new URLSearchParams({
+        path: `${resObi.contribuitor}/${resObi.uuid}`,
+        uuid: `${resObi.uuid}`
+    }).toString()).then((response) => {
+        if (response.status != 200) {
+            throw new Error("Bad Server Response"); 
+        } else {
+            downloadFile(response);
+        }
+        }).catch((error) => {
+        console.log(error);
+    });
 });
