@@ -1551,6 +1551,16 @@ module.exports = function sockets (io) {
             });
         });
 
+        // ==== ALLUNCLAIMEDREDS === :: Toate redurile care au fost încărcate dar nu au fost revendicate
+        socket.on('allUnclaimedReds', () => {
+            Resursa.find({claimed: false}, '_id emailContrib uuid title claimed generalPublic').exec()
+            .then((allUnclaimed) => {
+                socket.emit('allUnclaimedReds', allUnclaimed);
+            }).catch((err) => {
+                logger.error(`[sockets.js::'allComps'] Eroare la aducerea tuturor competențelor specifice: ${err}`);
+            });
+        });
+
         // === ACTUALIZEAZĂ O COMPETENȚĂ ===
         async function clbkUpdComp (record) {
             try {

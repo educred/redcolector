@@ -2,7 +2,8 @@ require('dotenv').config();
 const redisClient = require('../redis.config');
 const esClient    = require('../elasticsearch.config');
 const moment      = require('moment');
-const router      = require('express').Router();
+const express     = require('express');
+const router      = express.Router({mergeParams: true});
 const Resursa     = require('../models/resursa-red');
 const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
 const Competente  = require('../models/competenta-specifica');
@@ -494,7 +495,6 @@ router.get('/users', (req, res, next) => {
 });
 
 /* === /administrator/users/:id === */
-
 router.get('/users/:id', (req, res, next) => {
     async function clbkAdmRoot (req, res) {
         // Setări în funcție de template
@@ -610,7 +610,6 @@ router.get('/compets', (req, res, next) => {
             let scripts = [       
                 // MOMENT.JS
                 {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
-                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
                 // ZIP
                 {script: `${gensettings.template}/lib/jszip.min.js`},
                 // PDF
@@ -637,10 +636,7 @@ router.get('/compets', (req, res, next) => {
             let styles = [
                 // DATATABLES    
                 {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
-                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
-                // TIMELINE
-                {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
-                {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`}
             ];
     
             res.render(`comps-data-visuals_${gensettings.template}`, {
@@ -666,7 +662,6 @@ router.get('/compets', (req, res, next) => {
 });
 
 /* === /administrator/compets/new === */
-
 router.get('/compets/new', (req, res, next) => {
     async function clbkAdmCompetsID (req, res) {
         // Setări în funcție de template
@@ -724,7 +719,6 @@ router.get('/compets/new', (req, res, next) => {
 });
 
 /* === /administrator/compets/:id === */
-
 router.get('/compets/:id', (req, res, next) => {
     async function clbkAdmCompetsID (req, res) {
         // Setări în funcție de template
@@ -825,5 +819,111 @@ router.get('/compets/:id', (req, res, next) => {
         next(error);
     });
 });
+
+router.get('/import', (req, res, next) => {
+    async function importpage (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+        // DOAR ADMINISTRATORII VAD TOATE COMPETENȚELE SPECIFICE ODATĂ
+        if(req.session.passport.user.roles.admin){
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}
+            ];
+    
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`}
+            ];
+    
+            let styles = [
+
+            ];
+    
+            res.render(`administrator-import_${gensettings.template}`, {
+                template: `${gensettings.template}`,
+                title:     "Import",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+        } else {
+            res.redirect('/401');
+        }
+    };
+    importpage(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
+
+})
+
+router.get('/import/red', (req, res, next) => {
+    async function importredpage (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+
+        if(req.session.passport.user.roles.admin){
+            let scripts = [       
+                // MOMENT.JS
+                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`}
+            ];
+    
+            let modules = [
+                // MAIN
+                {module: `${gensettings.template}/js/main.mjs`},
+                // DATATABLES
+                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // LOCALE
+                {module: `${gensettings.template}/js/import-red.mjs`}
+            ];
+    
+            let styles = [
+                // DATATABLES    
+                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
+                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`}
+            ];
+
+            res.render(`administrator-import-red_${gensettings.template}`, {
+                template: `${gensettings.template}`,
+                title:     "Import RED",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+        } else {
+            res.redirect('/401');
+        }
+    };
+    importredpage(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error);
+    });
+});
+
 
 module.exports = router;

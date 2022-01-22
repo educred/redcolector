@@ -108,6 +108,7 @@ var ResursaSchema = Schema({
 
     // #7. METRICI
     generalPublic:    Boolean, // o valoare 'true' semnifică faptul că prezenta resursă intră în zona publică
+    claimed:          Boolean, // indică dacă o resursă a fost recunoscută și însușită de un utilizator care are cont. Dacă e `true` înseamnă ca a fost o resursă încărcată de admin. Dacă `false` emailul n-are user.
     contorAcces:      Number,  // de câte ori a fost accesată individual resursa
     contorRating:     Number,  // de câte ori a fost apreciată resursa
     contorDescarcare: Number,  // de câte ori a fost descărcată resursa
