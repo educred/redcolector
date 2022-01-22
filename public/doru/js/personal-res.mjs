@@ -601,20 +601,18 @@ function clbkDOMContentLoaded () {
         pubComm.emit('gitstat', obi);
     });
 
+    // descarcă resursa ca zip
     let zipdownloadbtn = document.getElementById('zipdownload');
     zipdownloadbtn.addEventListener('click', (evt) => {
-        
         fetch(`${document.location.origin}${document.location.pathname}/zip?` + new URLSearchParams({
             path: `${resObi.contribuitor}/${resObi.uuid}`,
             uuid: `${resObi.uuid}`
         }).toString()).then((response) => {
-            if (response.status != 200) { 
+            if (response.status != 200) {
                 throw new Error("Bad Server Response"); 
             } else {
-                return response.blob();
+                downloadFile(response);
             }
-          }).then((blob) => {
-            download(blob);
           }).catch((error) => {
             console.log(error);
         });

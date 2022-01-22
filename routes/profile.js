@@ -158,8 +158,8 @@ async function clbkProfResID (req, res, next) {
     let scripts = [
         // MOMENT.JS
         {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
-        // DOWNLOADJS
-        {script: `${gensettings.template}/lib/download.js`}
+        // DOWNLOADFILE
+        {script: `${gensettings.template}/lib/downloadFile.js`}
     ];
 
     let modules = [
@@ -652,12 +652,27 @@ router.get('/:idres/zip', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) =>
                 console.log(error);
             }
 
-            let originpath = path.join(`./repo/`, `${req.query.path}/data/`);
-            let output  = fs.createWriteStream(originpath + `${req.query.uuid.slice(0, 4)}-${resursa.title.slice(0, 9)}-${localizat}.zip`),
-                archive = archiver('zip', { zlib: { level: 9 } });
-        
-            // generează arhiva din subdirectorul resursei în subdirectorul țintă din deleted
-            // archive.directory(dirPath, path2deres);
+            // creează informația necesară răspunsului
+            let dazipname= `${req.query.uuid.slice(0, 4)}-${resursa.title.slice(0, 9)}-${localizat}.zip`;
+            res.set('Content-Type','application/octet-stream');
+            res.set('Content-Disposition',`attachment; filename=${dazipname}`);
+
+            let originpath = path.join(`./repo/`, `${req.query.path}/data/`),
+                path2file  = `${originpath}${req.query.uuid.slice(0, 4)}-${resursa.title.slice(0, 9)}-${localizat}.zip`,
+                output     = fs.createWriteStream(path2file),
+                archive    = archiver('zip', { zlib: { level: 9 } });
+
+            // https://github.com/archiverjs/node-archiver/issues/402 [archiver.directory doesn't follow symbolic link #402]            
+            let paths = await walk(originpath);
+            // let gpaths = await globby([`${originpath}**`, '!node_modules']);//ceva nu e în regulă! Nu se împacă cu archiver
+
+            paths.forEach((entry) => {
+                archive.file(entry, {name: path.basename(entry)});
+            }); 
+
+            // Pipe în Writable și constituie arhiva!                   
+            // archive.pipe(output);
+            archive.pipe(res);
 
             // WARNINGS
             archive.on('warning', function archiveMakingWarning (warning) {
@@ -669,32 +684,10 @@ router.get('/:idres/zip', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) =>
                 logger.error(`[sockets.js::'delresid'] În timpul arhivării după ștergere a apărut eroarea ${err.message}`);
             });
 
-            let daziploc = `./repo/${req.query.path}/data/` + `${req.query.uuid.slice(0, 4)}-${resursa.title.slice(0, 9)}-${localizat}.zip`;
-            let dazipname= `${req.query.uuid.slice(0, 4)}-${resursa.title.slice(0, 9)}-${localizat}.zip`;
-
-            archive.on('close', () => {
-                console.log(`am terminat arhivarea`);
-            })
-
-            // https://github.com/archiverjs/node-archiver/issues/402 [archiver.directory doesn't follow symbolic link #402]
-            
-            let paths = await walk(originpath);
-
-            // let gpaths = await globby([`${originpath}**`, '!node_modules']);
-            // console.log(paths);
-
-            paths.forEach((entry) => {
-                archive.file(entry, {name: path.basename(entry)});
-            }); 
-
-            // constituie arhiva!                   
-            // archive.pipe(output);
-            archive.pipe(res);
-
-            res.set('Content-Type','application/octet-stream');
-            res.set('Content-Disposition',`attachment; filename=${dazipname}`);
-            // res.set('Content-Length',data.length);
-            // res.attachment(daziploc);
+            output.on('close', function() {
+                res.set('Content-Length', archive.pointer());
+                console.log(archive.pointer() + ' total bytes'); // archiver has been finalized and the output file descriptor has closed.
+            });
 
             output.on('end', function() {
                 console.log('Data has been drained');
@@ -702,16 +695,26 @@ router.get('/:idres/zip', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) =>
 
             /* === FINALIZEAZĂ ARHIVAREA === */
             archive.finalize();
+
+            // Șterge resursele necesare arhivei cu scopul de a nu polua status-ul git-ului
+            res.on('finish', () => {
+                // console.log(`S-a trimis arhiva!!!!`, archive.pointer());
+                
+                // sterge fișierele
+                let exces = [
+                    path2file,
+                    `${originpath}index.html`
+                ], felem;
+                for (felem of exces) {
+                    fs.unlink(felem, (error) => {
+                        if (error) {
+                            console.log(error);
+                            logger.error(error);
+                        }
+                    });
+                }
+            });
         });
-
-
-
-
-        //_ WORKING: 1.2. Scrie pagina pe hard
-        // 1.3. Verifică dacă pagina există pe hard în /data
-        // 1.4. Creează arhiva
-        // 1.5. Trimite clientului arhiva
-        // 1.6. Șterge pagina web din /data
     }).catch((err) => {
         if (err) {
             console.error(err);
