@@ -3225,7 +3225,7 @@ import {AttachesToolPlus} from './uploader.mjs';
     $('#next-3').click(function () {
         // testează dacă a fost selectată vreo opțiune din selectul ariilor curriculare
         pas2(); // colectează datele de la pasul 2 al formularului.
-        // console.log(RED);
+        console.log(`[form01adres.mjs::line 3228] Obiectul populat la acest moment `, RED);
         // ascunde divul cu id-ul `doi și arată-l pe cel cu id-ul `trei`
         $('#doi').hide();
         $('#trei').show();

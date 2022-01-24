@@ -1,3 +1,133 @@
+[]
+[24-01-2022 12:43:30] [error] [undefined]: 
+[24-01-2022 12:43:30] [error] [undefined]: 
+Am pornit
+la prelucrarea setului au apărut erorile  TypeError [ERR_INVALID_URL]: Invalid URL
+    at new NodeError (node:internal/errors:371:5)
+    at onParseError (node:internal/url:552:9)
+    at new URL (node:internal/url:632:5)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:1777:40
+    at Array.forEach (<anonymous>)
+    at createREDRecords (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:1753:17)
+    at Object.complete (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/sockets.js:2000:25)
+    at ReadableStreamStreamer.ChunkStreamer.parseChunk (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/papaparse/papaparse.js:556:18)
+    at ReadableStreamStreamer.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/papaparse/papaparse.js:870:11)
+    at ReadableStreamStreamer._streamData (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/papaparse/papaparse.js:1866:25)
+    at ReadableStreamStreamer.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/papaparse/papaparse.js:889:9)
+    at Readable.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/papaparse/papaparse.js:1866:25)
+    at Readable.emit (node:events:390:28)
+    at endReadableNT (node:internal/streams/readable:1343:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  input: 'NULL',
+  code: 'ERR_INVALID_URL'
+}
+
+
+
+
+
+{
+    "expertCheck": false,
+    "uuid": "6d3629d8-83cc-4d44-a625-ee9d5dad0c4c",
+    "emailContrib": "nicu.constantinescu@educred.ro",
+    "langRED": "rum",
+    "title": "Vânatoarea de coduri",
+    "titleI18n": [],
+    "idContributor": "5e9832fcf052494338584d92",
+    "description": "Finds a single document by its _id field. findById(id) is almost* equivalent to findOne({ _id: id }). If you want to query by a document's _id, use findById() instead of findOne().",
+    "licenta": "CC BY",
+    "arieCurriculara": [
+        "Limbă și comunicare"
+    ],
+    "level": [
+        "Clasa a II-a"
+    ],
+    "discipline": [
+        "Comunicare în limba română"
+    ],
+    "competenteGen": [
+        "Receptarea de mesaje orale în contexte de comunicare cunoscute"
+    ],
+    "competenteS": [
+        "5e8eebafa303ea2541454d28",
+        "5e8eebafa303ea2541454d2a"
+    ],
+    "activitati": [
+        [
+            "lbcomRom2-1.1",
+            "selectarea/ formularea unor titluri potrivite textelor scurte audiate"
+        ],
+        [
+            "lbcomRom2-1.1",
+            "povestirea orală, cu întrebări de sprijin, a unui fragment audiat"
+        ],
+        [
+            "lbcomRom2-1.3",
+            "formarea unor cuvinte prin derivare cu prefixe sau sufixe (fără terminologie)"
+        ],
+        [
+            "lbcomRom2-1.3",
+            "jocuri de tip „Fazan” „Cuvinte alintate”"
+        ]
+    ],
+    "relatedTo": [],
+    "etichete": [
+        "lbcomRom2",
+        "Comunicare în limba română"
+    ],
+    "nameUser": "Nicu Constantinescu",
+    "rol": "resursa susține o activitate de învățare indicată în programa școlară"
+}  
+  
+  
+  id = _.generateBlockId(),
+
+
+  https://github.com/codex-team/editor.js/blob/e3db19df84d0fe4fb75a9556cc51a09cc6b172c2/src/components/utils.ts#L676
+
+
+/**
+ * Class Util
+ */
+
+
+/**
+ * Create a block id
+ *
+ * @returns {string}
+ */
+ export function generateBlockId() {
+    return nanoid(10);
+  }
+
+
+  //https://github.com/ai/nanoid
+
+
+ import { nanoid } from 'nanoid';
+
+  /**
+ * Returns random generated identifier
+ *
+ * @param {string} prefix - identifier prefix
+ *
+ * @returns {string}
+ */
+export function generateId(prefix = '') {
+  return `${prefix}${(Math.floor(Math.random() * 1e8)).toString(16)}`; // genereaza șapte Prefix ar trebui să fie trei
+}
+
+
+
+
+
+
+
+
+Problema de upgrade la globby are un răspuns aici: https://github.com/FormidableLabs/trace-pkg/compare/experiment/esm-pkgs-support
+Vezi și recitește informația de la https://formidable.com/blog/2021/node-esm-and-exports/ 
+
+
 https://github.com/rndme/download
 The download() function is used to trigger a file download from JavaScript.
 

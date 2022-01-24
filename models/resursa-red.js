@@ -47,7 +47,8 @@ var ResursaSchema = Schema({
     // #1. INIȚIALIZARE ÎNREGISTRARE
     date:          Date,  // este data la care resursa intră în sistem. Data este introdusă automat la momentul în care este trimisă către baza de date.
     idContributor: {type: String},// este id-ul celui care a introdus resursa.
-    emailContrib:  String,
+    angel:         {type: String},// este id-ul celui care a făcut ingestul înregistrării în sistem înainte să existe contul unui user care mai apoi poate face claiming.
+    emailContrib:  String,  // este emailul celui care a făcut contribuția. În cazul unui claiming, aici va sta emailul creatorului. În baza acestuia se va putea face claim.
     autori:        {type: String},// Dacă sunt mai mulți autori, vor fi adăugați cu virgule între ei.
     langRED:       String,  // Este limba primară a resursei. Modelul ar fi 'ro', care indică limba pentru care s-a optat la deschiderea formularului pentru depunederea resursei. Valoarea va fi conform ISO 639-1 (https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).
     uuid:          String,  // Este numele subdirectorului în care sunt depozitate resursele

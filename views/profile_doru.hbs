@@ -10,6 +10,7 @@
         <div id="profile-landing" class="container">
             <h1>{{user.googleProfile.name}}</h1>
             {{!-- <img src="{{user.googleProfile.picture}}" alt="Imaginea contului cu care utilizatorul s-a logat" width="50"> --}}
+            <p>ID: {{user._id}}</p>
             <p>Email: {{user.email}}</p>
             <p>Administrator: {{#if user.roles.admin}}confirmat{{else}}încă nu!{{/if}}</p>
             <p>Roluri: {{#each user.roles.rolInCRED}}<span class="badge badge-info"> {{this}}</span> {{/each}}</p>

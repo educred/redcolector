@@ -1,4 +1,6 @@
 require('dotenv').config();
+const process = require('process');
+
 global.CronJob = require('./util/cron'); // CRON -> programarea side ops-urilor
 global.__basedir = __dirname;
 
@@ -432,6 +434,10 @@ process.on('SIGTERM', function onSiginit () {
     console.info('Am prins un SIGTERM (stop). Închid procesul! Data: ', new Date().toISOString());
     shutdownserver();
 });
+
+process.on('beforeExit', (code) => {
+    console.log('Process beforeExit event with code: ', code);
+ });
 
 process.on('exit', code => {
     console.log(`Procesul a fost încheiat având codul: `, code);

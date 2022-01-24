@@ -86,10 +86,6 @@ pubComm.on('allUnclaimedReds', (unclaimed) => {
                 data: 'title'
             },
             {
-                title: 'Cod',
-                data: 'cod',
-            },
-            {
                 title: 'claimed',
                 data: 'claimed'
             },
@@ -125,24 +121,52 @@ resVisuals.appendChild(redClaimTbl); // injectează tabelul resurselor tabelare
  *
  */
 function fileSender (file) {
-    pubComm.emit('loadCompSet', file);
+    pubComm.emit('loadRedSet', file);
 }
-pubComm.on('loadCompSet', (r) => {
+pubComm.on('loadRedSet', (r) => {
     if (r == false) {
         alert("Nu am încărcat setul. Are erori!");
     }
     alert(`Am încărcat ${r} competențe specifice cu activitățile lor`);
-    location.reload();
+    // location.reload();
 });
+function sendRedCsv () {
+    let files = document.getElementById('fileloadercs').files;
+    Array.from(files).forEach(fileSender);
+}
+
+globalThis.sendRedCsv = sendRedCsv;
+
+// let importredsbtn = document.getElementById('importreds');
+// importredsbtn.addEventListener('click', sendRedCsv);
+
+
+// function tryme(){
+//     let data = {
+//         title: 'Tehnica presării frunzelor și florilor',
+//         description: 'Resursa prezintă procesul tehnologic de realizare a unui colaj bidimensional_mărul confecționat prin tehnici de lucru combinate: desenare, decupare, înnodare, lipire, pliere din hârtii',
+//         autori: 'Florentina Vartosu, Nicolaie Constantinescu',
+//         emailContrib: 'florentina.vartosu@educred.ro',
+//         re_luna: 'Decembrie 2021',
+//         re_competentapropusa: 'Manifestarea curiozității față de explorarea de mesaje artistice simple, exprimate vizual',
+//         re_linkonline: 'https://www.youtube.com/embed/vG1Sty0jH4I',
+//         re_incarcarematerial: 'https://drive.google.com/open?id=1BMn-WLzEZ7lG-XSAYZQ2kyOCvZvlUMmO',
+//         re_adresadescriptor: 'https://drive.google.com/open?id=13d8qt4dT3Su1Cd-vctK4T3WIBTFeXGUr',
+//         discipline: 'Arte vizuale și abilități practice',
+//         level: 'Clasa pregătitoare',
+//         re_competentaspecifica: 'Manifestarea curiozității față de explorarea de mesaje artistice simple, exprimate vizual',
+//         re_competentaspecificacod: 'artViz0-1.3',
+//         competenteGen: 'Realizarea de creații funcționale și/sau estetice folosind materiale și tehnici elementare diverse',
+//         angel: '5e9832fcf052494338584d92'
+//     }
+//     pubComm.emit('tryme', data);
+// };
+// document.getElementById('tryme').addEventListener('click', (evt) => {
+//     tryme();
+// });
 
 /* === TRIMITE CSV LA SERVER === */
 /**
  * Funcția joacă rol de listener pentru butonul de trimitere a fișierului către server
  * Apelează `fileSender()` pentru fiecare file din `FileList`
  */
-function sendRedCsv () {
-    let files = document.getElementById('fileloadercs').files;
-    Array.from(files).forEach(fileSender);
-}
-
-globalThis.sendCsv = sendCsv;

@@ -1,10 +1,12 @@
-require('dotenv').config();
+const process     = require('process');
 const fs          = require('fs-extra');
 const archiver    = require('archiver');
 const path        = require('path');
+const validUrl    = require('valid-url');
 // const querystring = require('querystring');
 const BagIt       = require('bagit-fs');
 const crypto      = require('crypto');
+const {nanoid}    = require('nanoid'); // necesar creării id-urilor blocurilor Editor.js 
 // const Readable    = require('stream').Readable;
 const Papa        = require('papaparse');
 const {Readable, Writable, pipeline} = require('stream');
@@ -115,8 +117,7 @@ async function commitAll (calea, autori, email, message) {
 }
 
 // EXPORTĂ TOATE SOCKET-urile în app.js
-module.exports = function sockets (io) {
-
+function sockets (io) {
     // io.on('connect', socket => {
         // console.log("Id-ul conectat este: ", socket.id);
         // console.log(socket.handshake);
@@ -175,9 +176,7 @@ module.exports = function sockets (io) {
     let desiredMode = 0o2775;
     let options = { mode: 0o2775 };
 
-    /* === SOCKETURI!!! === */
-    pubComm.on('connect', (socket) => {
-
+    function clbkOnConnect (socket) {
         // === ERORI === ::Ascultă erorile din server
         socket.on('error', (reason) => {
             console.log("[sockets.js::error] Acesta este motivul de eroare: ", reason);
@@ -224,116 +223,123 @@ module.exports = function sockets (io) {
                     type: file.type,         // type: "image/jpeg"
                     size: file.size
                 };
-            */    
-            
-            // creez calea către subdirectorul corespunzător userului
-            let calea = `${process.env.REPO_REL_PATH}${resourceFile.user}/`;
-
-            // asigură-te că poți scrie în directorul userului
-            fs.access(calea, function clbkfsAccess (error) {
-                if (error) {
-                    // console.log("[sockets.js::resursa] La verificarea posibilității de a scrie în directorul userului am dat de eroare: ", error);
-                    logger.error(error);
-                } else {
-                    // console.log("[sockets.js::resursa] Directorul există și poți scrie liniștit în el!!!");
-                }
-            });
-
-            // Transformarea Buffer-ului primit într-un stream `Readable` gata de a fi scris pe disc
-            var sourceStream = new Readable();      // Creează stream-ul Readable
-            sourceStream.push(resourceFile.resF);   // Injectează Buffer-ul care este fișierul, de fapt
-            sourceStream.push(null);                // Trimite null în stream pentru a semnala faptul că injectarea fișierului s-a încheiat.
-            
-            // construiește obiectul de răspuns necesar clientului (Editor.js)
-            const responseObj4AddedFile = {
-                success: 0,
-                file: '',
-                size: resourceFile.size
-            };
-
-            /*
-            * === ÎNCĂRCAREA FIȘIERULUI ===
-            * valoarea `uuid` este setată la momentul trimiterii template-ului, deci vine de la client!!!
-            * dacă nu ai `uuid`, înseamnă că ai o intrare de blog
             */
-            if (resourceFile.uuid) {
-                // setează calea către directorul deja existent al resursei
-                let existPath = calea + `${resourceFile.uuid}`;
+            
+            try {
+                // creez calea către subdirectorul corespunzător userului
+                let calea = `${process.env.REPO_REL_PATH}${resourceFile.user}/`;
 
-                // Calea către fișier [ce pleacă în client]
-                let file   = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/${resourceFile.uuid}/data/${resourceFile.numR}`;
-                let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/${resourceFile.uuid}/data/${resourceFile.numR}`; // calea către fișierul local din server
-
-                responseObj4AddedFile.file = file;
-
-                /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
-                fs.ensureDir(existPath, desiredMode, (error) => {
-                    if(error === null){
-                        // console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
+                // asigură-te că poți scrie în directorul userului
+                fs.access(calea, function clbkfsAccess (error) {
+                    if (error) {
+                        // console.log("[sockets.js::resursa] La verificarea posibilității de a scrie în directorul userului am dat de eroare: ", error);
+                        logger.error(error);
                     } else {
-                        // console.log("[sockets.js::'resursa'::cu uuid] Eroare la verificare/crearea subdirectorului cu următoarele detalii: ", error);
-                        logger.error(error);
+                        // console.log("[sockets.js::resursa] Directorul există și poți scrie liniștit în el!!!");
                     }
-
-                    // reactualizează referința către Bag. Verifică dacă cu cumva funcționează fără.
-                    lastBag = BagIt(existPath, 'sha256', {'Contact-Name': `${resourceFile.name}`});
-
-                    // creează stream-ul destinație
-                    var destinationStream = lastBag.createWriteStream(`${resourceFile.numR}`);
-
-                    // adăugarea fișierului primit în Bag
-                    pipeline(sourceStream, destinationStream, (error, val) => {
-                        if (error) {
-                            // console.error("[sockets.js::'resursa'::cu uuid] Nu s-a reușit scrierea fișierului în Bag", error);
-                            logger.error(err);
-                        }
-                        
-                        /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
-                        fs.access(localF, fs.F_OK, (error) => {
-                            if (error) {
-                                // console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ", error);
-                                logger.error(error);
-                                socket.emit('resursa', responseObj4AddedFile); // trimite obiectul de răspuns în client cu stare de eroare
-                            }                            
-                            responseObj4AddedFile.success = 1;              // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload                            
-                            socket.emit('resursa', responseObj4AddedFile);  // trimite înapoi obiectul necesar confirmării operațiunii lui Editor.js
-                        });  
-                    });
                 });
-            } else {
-                //_ WORKING: ne vom folosi de acest caz și pentru a crea o imagine pe disc pentru o intrare de blog
-                let timestamp = Date.now();                
-                let existPath = calea + 'log/' + timestamp; // calea către directorul deja existent al resursei                
-                let file   = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/log/${timestamp}/${resourceFile.numR}`;  // calea către fișier [ce pleacă înapoi în client]                
-                let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/log/${timestamp}/${resourceFile.numR}`;                              // calea către fișierul local din server
 
-                responseObj4AddedFile.file = file; // atribuie fișierului proprietății `file` a obiectului răspuns
+                // Transformarea Buffer-ului primit într-un stream `Readable` gata de a fi scris pe disc
+                var sourceStream = new Readable();      // Creează stream-ul Readable
+                sourceStream.push(resourceFile.resF);   // Injectează Buffer-ul care este fișierul, de fapt
+                sourceStream.push(null);                // Trimite null în stream pentru a semnala faptul că injectarea fișierului s-a încheiat.
+                
+                // construiește obiectul de răspuns necesar clientului (Editor.js)
+                const responseObj4AddedFile = {
+                    success: 0,
+                    file: '',
+                    size: resourceFile.size
+                };
 
-                /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
-                fs.ensureDir(existPath, desiredMode, (error) => {
-                    if(error){
-                        // console.log("[sockets.js::'resursa'] Eroare la verificare/crearea subdirectorului cu următoarele detalii: ", error);
-                        logger.error(error);
-                    }
+                /*
+                * === ÎNCĂRCAREA FIȘIERULUI ===
+                * valoarea `uuid` este setată la momentul trimiterii template-ului, deci vine de la client!!!
+                * dacă nu ai `uuid`, înseamnă că ai o intrare de blog
+                */
+                if (resourceFile.uuid) {
+                    // setează calea către directorul deja existent al resursei
+                    let existPath = calea + `${resourceFile.uuid}`;
 
-                    var destinationStream = fs.createWriteStream(localF);
-                    pipeline(sourceStream, destinationStream, (error, val) => {
-                        if (error) {
-                            // console.error("[sockets.js::'resursa'] Nu s-a reușit scrierea fișierului", error);
+                    // Calea către fișier [ce pleacă în client]
+                    let file   = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/${resourceFile.uuid}/data/${resourceFile.numR}`;
+                    let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/${resourceFile.uuid}/data/${resourceFile.numR}`; // calea către fișierul local din server
+
+                    responseObj4AddedFile.file = file;
+
+                    /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
+                    fs.ensureDir(existPath, desiredMode, (error) => {
+                        if(error === null){
+                            // console.log("[sockets.js::'resursa'::cu uuid] Încă nu am directorul în care să scriu fișierul. Urmează!!!");                        
+                        } else {
+                            // console.log("[sockets.js::'resursa'::cu uuid] Eroare la verificare/crearea subdirectorului cu următoarele detalii: ", error);
                             logger.error(error);
                         }
-                        /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
-                        fs.access(localF, fs.F_OK, (error) => {
+
+                        // reactualizează referința către Bag. Verifică dacă cu cumva funcționează fără.
+                        lastBag = BagIt(existPath, 'sha256', {'Contact-Name': `${resourceFile.name}`});
+
+                        // creează stream-ul destinație
+                        var destinationStream = lastBag.createWriteStream(`${resourceFile.numR}`);
+
+                        // adăugarea fișierului primit în Bag
+                        pipeline(sourceStream, destinationStream, (error, val) => {
                             if (error) {
-                                // console.log("[sockets.js::'resursa'] Nu am găsit fișierul tocmai scris: ", error);
-                                logger.error(error);
-                                socket.emit('resursa', responseObj4AddedFile);
-                            }                            
-                            responseObj4AddedFile.success = 1;              // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
-                            socket.emit('resursa', responseObj4AddedFile);  // trimite înapoi obiectul necesar confirmării operațiunii lui Editor.js
-                        });   
+                                // console.error("[sockets.js::'resursa'::cu uuid] Nu s-a reușit scrierea fișierului în Bag", error);
+                                logger.error(err);
+                            }
+                            
+                            /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
+                            fs.access(localF, fs.F_OK, (error) => {
+                                if (error) {
+                                    // console.log("[sockets.js::'resursa'::cu uuid] Nu am găsit fișierul tocmai scris: ", error);
+                                    logger.error(error);
+                                    socket.emit('resursa', responseObj4AddedFile); // trimite obiectul de răspuns în client cu stare de eroare
+                                }                            
+                                responseObj4AddedFile.success = 1;              // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload                            
+                                socket.emit('resursa', responseObj4AddedFile);  // trimite înapoi obiectul necesar confirmării operațiunii lui Editor.js
+                            });  
+                        });
                     });
-                });            
+                } else {
+                    //_ WORKING: ne vom folosi de acest caz și pentru a crea o imagine pe disc pentru o intrare de blog
+                    let timestamp = Date.now();                
+                    let existPath = calea + 'log/' + timestamp; // calea către directorul deja existent al resursei                
+                    let file   = `${process.env.BASE_URL}/${process.env.NAME_OF_REPO_DIR}/${resourceFile.user}/log/${timestamp}/${resourceFile.numR}`;  // calea către fișier [ce pleacă înapoi în client]                
+                    let localF = `${process.env.REPO_REL_PATH}${resourceFile.user}/log/${timestamp}/${resourceFile.numR}`;                              // calea către fișierul local din server
+
+                    responseObj4AddedFile.file = file; // atribuie fișierului proprietății `file` a obiectului răspuns
+
+                    /* === ASIGURĂ-TE CĂ DIRECTORUL EXISTĂ === */
+                    fs.ensureDir(existPath, desiredMode, (error) => {
+                        if(error){
+                            // console.log("[sockets.js::'resursa'] Eroare la verificare/crearea subdirectorului cu următoarele detalii: ", error);
+                            logger.error(error);
+                        }
+
+                        var destinationStream = fs.createWriteStream(localF);
+                        pipeline(sourceStream, destinationStream, (error, val) => {
+                            if (error) {
+                                // console.error("[sockets.js::'resursa'] Nu s-a reușit scrierea fișierului", error);
+                                logger.error(error);
+                            }
+                            /* === VERIFICĂ DACĂ FIȘIERUL CHIAR A FOST SCRIS === */
+                            fs.access(localF, fs.F_OK, (error) => {
+                                if (error) {
+                                    // console.log("[sockets.js::'resursa'] Nu am găsit fișierul tocmai scris: ", error);
+                                    logger.error(error);
+                                    socket.emit('resursa', responseObj4AddedFile);
+                                }                            
+                                responseObj4AddedFile.success = 1;              // marchează succesul scrierii pe disc ca echivalent al succesului întregii operațiuni de upload
+                                socket.emit('resursa', responseObj4AddedFile);  // trimite înapoi obiectul necesar confirmării operațiunii lui Editor.js
+                            });   
+                        });
+                    });            
+                }                
+            } catch (error) {
+                if (error) {
+                    console.error(error);
+                    logger.error(error);
+                }
             }
         });
 
@@ -505,9 +511,6 @@ module.exports = function sockets (io) {
                         console.error("[sockets.js::'red'] Nu s-a reușit scrierea fișei JSON în Bag", error);
                         logger.error(error);
                     }
-                    // console.log("[sockets.js::'red'] Înainte de a încerca să fac commit-ul", res);
-                    commitAll(calea, res.autori, res.emailContrib, res.title);
-                    // console.error("[sockets.js::'red'] obiectul care ar trebui să ajungă în client are id: ", res._id);
                 });
                 
                 /* === SAVARE RESURSĂ ÎN MONGO === */
@@ -515,7 +518,7 @@ module.exports = function sockets (io) {
                 return res;
             }).then(res => {
                 socket.emit('confirm', res._id);    // se emite înregistrarea către frontend. Dacă frontendul primește înregistrare, va redirecta către resursă.
-            }).catch(err => {
+            }).catch((err) => {
                 if (err) {
                     logger.error(err);  // 
                     // Dacă e vreo eroare, distruge directorul de pe hard!
@@ -554,11 +557,6 @@ module.exports = function sockets (io) {
 
                 }
             }
-        });
-
-        // === PACK RED :: constituie un zip cu versiunea HTML a resursei dacă aceasta nu există deja și oferă clientului link-ul 
-        socket.on('packred', function clbkPackRED () {
-
         });
 
         /**
@@ -1637,7 +1635,6 @@ module.exports = function sockets (io) {
          * @param {Object} data Este un obiect de date
          */
         function foldOneField (data) {
-            const arr = JSON.stringify(data);
             const folded = data.reduce((arrAcc, elemArrOrig, idx, srcArr) => {
                 // Inițial, acumulatorul este un array fără niciun element. Este necesară introducerea primului:
                 if (arrAcc.length === 0) {
@@ -1746,6 +1743,244 @@ module.exports = function sockets (io) {
             });
         });
 
+        // Filtru MongoDB Compass: {date: {$gt: ISODate('2022-01-24T08:29:43.011+00:00')}}
+
+        // NOTE: Procedura mare
+        // #1. Caută în colecția `users` dacă există vreo înregistrare cu emailul înregistrării prelucrate.
+        // #2. Dacă există userul, introdu `_id`-ul la valoarea unui nou câmp `idContributor` în înregistrare (este claiming-ul automat)
+        // #2.0. Creează o funcție care generează programatic o înregistrare validă de editorjs. Obiectul rezultat va fi valoarea câmpului `content`.
+        // #2.1. Creează resursa pe hard în subdirectorul `repo/${idContributor}`
+        // #2.2. Creează înregistrarea resursei în colecția `resedus`.
+        // #3. Dacă nu există userul introdu un câmp `claimed` a cărui valoare să fie `false`.
+        // #3.0. Creează o funcție care generează programatic o înregistrare validă de editorjs. Obiectul rezultat va fi valoarea câmpului `content`.
+        // #3.1. Creează resursa pe hard în subdirectorul `repo/general/red/nume_email`.
+        // #3.2. Creează înregistrarea resursei în colecția `resedus`. Problemă: cum generezi o înregistrare validă de editorjs programatic.
+        const CSModel = require('../models/competenta-specifica');
+        /**
+         * Funcția are rolul de a procesa o înregistrare RED
+         * @param {Object} data este o înregistrare 
+         */
+        async function createREDRecord (data) {
+
+            // VIITORUL RED.content
+            let content = {
+                time: Date.now(),
+                blocks: [],
+                version: process.env.EDITORJS
+            };
+
+            // Completarea cu date a obiectului necesar afișării folosind Editor.js
+            // Introdu paragrafele de text (nu necesită procesare)
+            content.blocks.push({
+                "id": nanoid(10),
+                "type": "paragraph",
+                "data": {
+                    "text": `<p>${data.re_competentapropusa}</p>`
+                }
+            });
+
+            /* Tratarea a tot ce înseamnă link - https://stackoverflow.com/questions/30931079/validating-a-url-in-node-js/55585593 */
+            // Array cu stringurile care pretind că sunt linkuri care trimit spre diferitele componente ale resursei (vezi și https://github.com/ogt/valid-url)
+
+            let lfields = [data.re_linkonline, data.re_incarcarematerial, data.re_adresadescriptor];
+            let links4processing = lfields.filter((textstring) => validUrl.isUri(textstring)), lnk;
+
+            for (lnk of links4processing) {
+                let urlobject  = new URL(lnk); // https://www.kindacode.com/article/node-js-get-domain-hostname-and-protocol-from-a-url/
+                let hostName   = urlobject.hostname;
+                let domainName = hostName.replace(/^[^.]+\./g, '');
+
+                switch (domainName) {
+                    case "youtube.com":
+                        let startingIndexofId = lnk.search(/[^\/]\w+$/);
+                        let videoid = lnk.substring(startingIndexofId);
+                        content.blocks.push({
+                            "id": nanoid(10),
+                            "type": "embed",
+                            "data": {
+                                "service": "youtube",
+                                "source": `https://youtu.be/${videoid}`,
+                                "embed": `https://youtube.com/embed/${videoid}`,
+                                "width": 580,
+                                "height": 320,
+                                "caption": ""
+                            }
+                        });
+                        break;
+                    default:
+                        // creează un block de link
+                        content.blocks.push(
+                            {
+                                "id": nanoid(10),
+                                "type": "paragraph",
+                                "data": {
+                                    "text": `<a href="${lnk}">${lnk}</a>`
+                                }
+                            }
+                        );
+                        break;
+                }
+
+            }
+
+            // OBIECTUL COLECTOR MARE completat cu datele inițiale
+            let RED = {
+                title:         data.title,
+                description:   data.description,
+                emailContrib:  data.emailContrib,
+                autori:        data.autori,
+                level:         [data.level],
+                discipline:    [data.discipline],
+                competenteGen: [data.competenteGen],
+                competenteS:   [],
+                content:       content,
+                licenta:       'CC-BY',
+            }
+
+            let users = await User.find({email: data.emailContrib}).exec(); // adu array-ul userilor găsiți
+
+            // în cazul în care există userul
+            if (users.length > 0) {
+                RED.claimed = true; // resursa este claimed automat
+                if (users[0].id) {
+                    RED.idContributor = users[0].id;
+                    RED.angel = data.angel;
+                } else {
+                    console.error(`[createREDRecords] Identificatorul userului nu a fost găsit [User.find]`);
+                }
+            } else {
+                // userul nu există. Creează înregistrare având `claimed: false`
+                RED.claimed = false;
+                // _TODO: Metoda:
+                // în câmpul `idContributor` va fi id-ul adminului până în momentul în care se va face claimul de către persoana care și-a făcut și contul ceva mai târziu.
+                // la `emailContrib` va fi mailul persoanei, identificator în baza căruia se va putea face claim-ul.
+                // când persoana face claim-ul (încarcă resursa care prezintă un buton numit *claim*; îi apare într-un tabel separat de posibile claim-uri), va modica câmpul `idContrib` cu propriul id.
+                // Asta înseamnă că resursele se vor crea în subdirectorul de administrator. Când se face claimul, se vor muta în subdirectorul userului care a făcut claimul.
+                
+                if (data.angel) {
+                    RED.idContributor = data.angel;
+                    RED.angel = data.angel;
+                } else {
+                    console.error(`[createREDRecords] Identificatorul angel nu a fost găsit [User.find]`);
+                }
+            }
+
+            // Adu-mi array-ul competențelor
+            let competentele = await CSModel.aggregate([{$match: {
+                cod: {$in: [data.re_competentaspecificacod]}
+            }}]);
+
+            if (competentele) {
+                // Introdu obiectele id ale fiecărei competențe aduse
+                competentele.forEach((c) => RED['competenteS'].push(c._id));
+
+                // console.log(`[loadRedSet] Calea de depozitare este `, path2deposit);
+                let uuid = crypto.randomUUID({disableEntropyCache : true});
+                let path2deposit = `${process.env.REPO_REL_PATH}${RED.idContributor}/${uuid}`;
+                
+                // Încarcă modelul cu date!!!
+                var resursaEducationala = new Resursa({
+                    _id:             mongoose.Types.ObjectId(),
+                    date:            Date.now(),
+                    uuid:            uuid,
+                    title:           RED.title,
+                    description:     RED.description,
+                    idContributor:   RED.idContributor,
+                    emailContrib:    RED.emailContrib,
+                    autori:          RED.autori,
+                    rol:             'resursa susține o activitate de învățare indicată în programa școlară',
+                    level:           RED.level,
+                    discipline:      RED.discipline,
+                    competenteGen:   RED.competenteGen,
+                    competenteS:     RED.competenteS,
+                    content:         RED.content,
+                    licenta:         RED.licenta,
+                    expertCheck:     true,
+                    generalPublic:   true,
+                    angel:           RED.angel
+                });
+
+                /* ==== Salvează în baza de date ==== */
+                let res = await resursaEducationala.save();
+                
+                /* 
+                    ==== Salvează în repo ==== 
+                    # Salvează ca json întreaga înregistrare în `./data`;
+                    # Creează repo-ul git-ului
+                */
+                if (res === resursaEducationala) {
+                    /* === Scrie JSON-ul întregii înregistrării în `data` === */
+                    const newRes = Object.assign({}, res);          // fă o copie shallow a obiectului primit din client
+                    newRes._id   = res._id;                         // introdu în obiectul JSON id-ul înregistrării din MongoDB. Se va dovedi util în cazul reconstituirii bazei de date.
+                    let existBag = BagIt(path2deposit, 'sha256');   // ref pe Bag-ul existent
+
+                    /* === CREAREA REPO-ului `.git` === */
+                    await git.init({ fs, dir: path2deposit });      // Primul commit se va face la prima cerere de investigare informațiilor despre resursă.
+
+                    /* === SCRIE OBIECTUL JSON în BAG === */                
+                    const data = Buffer.from(JSON.stringify(newRes)); // transformă în `Buffer` obiectul `newRes`
+                    let strm = new Readable();
+                    strm._read = () => {}; // _read este necesar!!!
+                    strm.push(data);
+                    strm.push(null);
+
+                    // creează stream-ul destinație
+                    var destinationStream = existBag.createWriteStream(`${crypto.randomUUID({disableEntropyCache : true})}.json`); // uuid diferit pentru a avea timestampul uuid-ului v4 diferit de cel al subdirului
+
+                    // scrierea stream-ului pe hard (distruge streamul sursă și curăță) -> introdu un nou fișier în Bag-ul existent al resursei
+                    pipeline(strm, destinationStream, function clbkAfterREDWrittenStrm (error, val) {
+                        if (error) {
+                            console.error("[sockets.js::'loadRedSet'] Nu s-a reușit scrierea fișei JSON în Bag", error);
+                            logger.error(error);
+                        }
+
+                        /* === ÎNCHIDE BAG-ul!!! === */
+                        existBag.finalize(() => {                    
+                            return;
+                        });
+                    });
+                }
+            }
+            // fă un dry run și scrie datele pe disc...
+            // fs.writeFile(`${__dirname}/data/imported.json`, JSON.stringify(records), 'utf8', (err) => {
+            //     if (err) throw err;
+            // });  
+        };
+
+        // === ÎNCARCA SETUL RED-urilor ===
+        socket.on('loadRedSet', (file) => {
+            let fileBuffer = Buffer.from(file);
+            const readF = Readable.from(fileBuffer); // Creează stream Read din fișierul CSV sursă.
+
+            Papa.parse(readF, {
+                worker: true,
+                header: true,
+                encoding: 'utf8',
+                step: function (results, parser) {
+                    // console.log(`datele`, results.data);
+                     // apelează funcția de prelucrare a fiecărei înregistrări
+                    createREDRecord(results.data).catch((error) => {
+                        console.log(error);
+                        logger.error(error);
+                    }); // `results.data` este un singur rând // https://github.com/mholt/PapaParse/issues/613
+                },
+                complete: function (results, file) {
+                    // console.log(`Informație suplimentară `, results.meta, `Erori dacă sunt `, results.errors);
+                    
+                    // DRY-RUN: scrie datele pe disc...
+                    // fs.writeFile(`${__basedir}/data/imported.json`, JSON.stringify(results.data), 'utf8', (err) => {
+                    //     if (err) throw err;
+                    // });
+                },
+                error: function (err, file) {
+                    if (err) {
+                        console.log(`Papa are următoarele erori `, err);
+                        logger.error(err.message);
+                    }
+                }
+            });
+                
+        });
         /**
          * Folosește în funcția clbkMgmt drept callback evenimentului `mgmt`
          * Doc pentru upsert https://masteringjs.io/tutorials/mongoose/findoneandupdate
@@ -1800,7 +2035,12 @@ module.exports = function sockets (io) {
                 });
             }
         });
-    });
+    }
+
+    /* === SOCKETURI!!! === */
+    pubComm.on('connect', clbkOnConnect);
 
     return io;
 };
+
+module.exports = sockets;
