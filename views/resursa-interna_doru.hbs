@@ -12,6 +12,7 @@
         data-uuid="{{resursa.uuid}}" 
         id="{{resursa._id}}" 
         class="resursa">
+        {{!-- Datele sunt injectate prin helperul Handlebars --}}
 
         {{!-- COPERTA --}}
         <section class="border-bottom resource-single" id="d1">
@@ -19,10 +20,10 @@
                 {{!-- Dacă există copertă, afișeaz-o --}}
                 {{#if resursa.coperta}}
                     <img src="{{resursa.coperta}}" class="coperta card-img-top" alt="{{resursa.title}}">
-                    {{else}}
+                {{else}}
                     <div style="position: relative;">
-                        <img src="/{{logoimg}}" alt="" width="100px" style="position: absolute; top: 5; left: 5">
-                        <img data-src="holder.js/100px100&textmode=exact?auto=yes&text=RED" class="coperta card-img-top" alt="{{resursa.title}}">
+                        <img src="/{{template}}/img/SIGLA-CRED1.png" alt="logo educred" style="position: absolute; top: 2em; left: 3em">
+                        <img src="/{{template}}/img/black-1072366_1920.jpg" class="coperta card-img-top" alt="{{resursa.title}}" height="200px">
                     </div>
                 {{/if}}
             </div>
@@ -143,6 +144,7 @@
                                     {{/each}}
                                 </div>
                             </div>
+
                         </div>
                     </header>
 

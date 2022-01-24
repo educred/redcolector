@@ -140,7 +140,7 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
     })
 });
 
-/* === VALIDARE / PUBLICARE /ȘTERGERE /EDITARE :: /resurse/:idres === */
+/* === VALIDARE / PUBLICARE /ȘTERGERE /EDITARE :: /profile/:id === */
 async function clbkProfResID (req, res, next) {
     // Setări în funcție de template
     let filterMgmt = {focus: 'general'};
@@ -175,15 +175,6 @@ async function clbkProfResID (req, res, next) {
         {module: `${gensettings.template}/js/personal-res.mjs`},
         // GITGRAPH
         {module: `${gensettings.template}/lib/gitgraph.umd.js`}
-    ];
-
-    let styles = [
-        // FONTAWESOME
-        {style: `${gensettings.template}/lib/npm/all.min.css`},
-        // JQUERY TOAST
-        {style: `${gensettings.template}/lib/npm/jquery.toast.min.css`},
-        // BOOTSTRAP
-        {style: `${gensettings.template}/lib/npm/bootstrap.min.css`}
     ];
 
     let roles = ["user", "cred", "validator"];// userul poate fi unul din roluri
@@ -321,8 +312,7 @@ async function clbkProfResID (req, res, next) {
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
-                modules,
-                styles
+                modules
             });
         /* === VALIDATOR === */
         } else if (confirmedRoles.includes('validator')) {
@@ -354,8 +344,7 @@ async function clbkProfResID (req, res, next) {
                 csrfToken: req.csrfToken(),
                 resursa,
                 scripts,
-                modules,
-                styles
+                modules
             });
         /* === NU FACI PARTE DIN CRED === */
         } else {

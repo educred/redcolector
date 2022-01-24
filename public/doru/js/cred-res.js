@@ -87,14 +87,6 @@ const editorX = new EditorJS({
             class: Table,
             inlineToolbar: true
         },
-        attaches: {
-            class: AttachesToolPlus,            
-            config: {
-                endpoint: `${location.origin}/upload`,
-                buttonText: 'Încarcă un fișier',
-                errorMessage: 'Nu am putut încărca fișierul.'
-            }
-        },
         inlineCode: {
             class: InlineCode,
             shortcut: 'CMD+SHIFT+M',

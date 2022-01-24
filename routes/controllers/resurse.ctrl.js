@@ -136,7 +136,7 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
     // console.log(req.session.passport.user.roles); // { rolInCRED: [], unit: [], admin: true }
 };
 
-/* AFIȘAREA UNEI SINGURE RESURSE / ȘTERGERE / EDITARE */
+/* AFIȘAREA UNEI SINGURE RESURSE / ȘTERGERE / EDITARE :: /resurse/:id */
 exports.loadOneResource = async function loadOneResource (req, res, next) {
     // Setări în funcție de template
     let filterMgmt = {focus: 'general'};

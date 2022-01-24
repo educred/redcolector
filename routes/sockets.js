@@ -595,7 +595,7 @@ function sockets (io) {
                     //_ NOTE: Trimite în client starea pentru afișare
                     const commitsPromise = gitToJs(apath2res);            
                     commitsPromise.then((commits) => {
-                        console.log(`[createFirstCommit::fișiere în stagged] Asta trimit în client: `, JSON.stringify(commits, null, 2));
+                        // console.log(`[createFirstCommit::fișiere în stagged] Asta trimit în client: `, JSON.stringify(commits, null, 2));
                     }).catch((error)=> {
                         console.log(error);
                         logger.error(error);
@@ -1023,7 +1023,8 @@ function sockets (io) {
                         }
                     }
                 */
-                console.log(`sockets.js::pit Am primit data: `, data);
+                // console.log(`sockets.js::pit Am primit data: `, data);
+
                 // Verifică dacă nu cumva deja există un PIT deschis. Vezi în REDIS. Dacă este, trimite-l!!!
                 // console.log(`sockets.js::pit ID-ul creat în urma solicitării este: `, result.body.id);
 
@@ -1940,11 +1941,7 @@ function sockets (io) {
                         });
                     });
                 }
-            }
-            // fă un dry run și scrie datele pe disc...
-            // fs.writeFile(`${__dirname}/data/imported.json`, JSON.stringify(records), 'utf8', (err) => {
-            //     if (err) throw err;
-            // });  
+            } 
         };
 
         // === ÎNCARCA SETUL RED-urilor ===
