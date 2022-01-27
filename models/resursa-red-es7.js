@@ -117,8 +117,7 @@ const resursaRedES7 = {
             generalPublic:    {type: "boolean"},
             contorDescarcare: {type: "long"},
             etichete:         {type: "text", store: true},
-            expertCheck:      {type: "boolean"},
-            rating:           {type: "integer"}
+            expertCheck:      {type: "boolean"}
         }
     },
     aliases: {

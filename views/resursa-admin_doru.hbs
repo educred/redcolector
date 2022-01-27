@@ -50,7 +50,7 @@
 
                     {{!-- Afișează titlul și descrierea --}}
                     <header class="d-grid gap-3">
-                        <h1 class="display-4 fw-bolder" itemprop="name" contenteditable="true">{{resursa.title}}</h1>
+                        <h1 id="title" class="display-4 fw-bolder" itemprop="name" contenteditable="true">{{resursa.title}}</h1>
 
                         {{!-- Data elaborării resursei și cine a propus-o --}}
                         <div class="descrres">
@@ -117,7 +117,7 @@
                                     <h5><span itemprop="educationalFramework">Arie curriculară<span></h5>
                             
                                     {{!-- Buton de adăugare a unei arii curriculare suplimentare --}}
-                                    <button id="titluLangAdd" class="btn btn-outline-secondary m-2" type="button" onclick="showArii()">
+                                    {{!-- <button id="titluLangAdd" class="btn btn-outline-secondary m-2" type="button" onclick="showArii()">
                                         <i class="fas fa-plus-circle"></i>
                                     </button>
                                     {{#each resursa.arieCurriculara}}
@@ -126,7 +126,6 @@
                                         </button>
                                     {{/each}}
                                     <div id="ariiNoi">
-                                        {{!-- AICI APARE SELECTORUL DE ARII --}}
                                         <select id="arii-curr" class="form-control custom-select" size="8" multiple hidden>
                                             <option data-lbcom   ="lbcom"    value="Limbă și comunicare" onclick="adaugArie()">Limbă și comunicare</option>
                                             <option data-matstnat="matstnat" value="Matematică și științe ale naturii">Matematică și științe ale naturii</option>
@@ -137,7 +136,7 @@
                                             <option data-consor  ="consor"   value="Consiliere și orientare">Consiliere și orientare</option>
                                             <option data-currsc  ="currsc"   value="Curriculum la decizia școlii">Curriculum la decizia școlii</option>
                                         </select>
-                                    </div>
+                                    </div> --}}
                                 </div>
 
                                 {{!-- Afișarea clasei(lor) pentru care a fost elaborată resursa --}}
@@ -164,7 +163,7 @@
                             {{!-- DESCRIERE și ETICHETE --}}
                             <div class="col-9 p-2">
                                 <h5>Descriere</h5>
-                                <p itemprop="description" class="lead">{{resursa.description}}</p>
+                                <p id="description" itemprop="description" class="lead" contenteditable="true">{{resursa.description}}</p>
                                 
                                 {{!-- Afișarea etichetelor atașare resursei --}}
                                 <div class="tagsrespub p-2">
@@ -397,6 +396,15 @@
                             </div>
                         {{/if}}
                     </section>
+                    
+                    {{!-- Selector de imagine pentru coperta resursei --}}
+                    <fieldset>
+                    <div class="form-group row">
+                        <label for="imgSelector" class="col-sm-4 col-form-label">Selectează imaginea care va fi coperta resursei</label>
+                        <div id="imgSelector" class="col-sm-8"></div>
+                    </div>
+                    </fieldset>
+                    {{!-- Selector de imagine pentru coperta resursei END--}}
 
                     {{!-- BUTON ȘTERGE RESURSA --}}
                     <button type="button" class="btn btn-danger" onclick="deleteRes()">Șterge resursa</button>

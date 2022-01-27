@@ -7,7 +7,7 @@ const schema        = require('./resursa-red-es7'); // aceasta este schema de ma
 const editorJs2TXT  = require('../routes/controllers/editorJs2TXT'); 
 const ES7Helper     = require('./model-helpers/es7-helper');
 const logger        = require('../util/logger');
-let {getStructure} = require('../util/es7');
+let {getStructure}  = require('../util/es7');
 
 /* INDECȘII ES7 */
 let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
@@ -95,6 +95,7 @@ var ResursaSchema = Schema({
     materiale:     [],     // Sunt materialele necesare creări mediului de vizualizare, reproducere, interpretare, etc
     description:   {type: String},
     identifier:    [], // Sunt diferiții identificatori ai unei resurse. Poate fi orice string, fie text, nume fișier, fie url sau ISBN... Se generează automat la încărcare. Va apărea doar la momentul accesării! Nu este disponibil la momentul încărcării.
+    // la primele resurse create în 2020, uuid-ul era introdus drept prim identificator.
 
     // #6. CONȚINUT
     dependinte:    String, // În cazul în care resursa are nevoie de un context de execuție, acesta va fi menționat aici.
@@ -196,7 +197,6 @@ ResursaSchema.post('save', function clbkPostSave1 (doc, next) {
         rating:           obi.rating
     };
 
-    //- FIXME: Aici este funcția care generează indexul numit `false`
     // NOTE: Vezi ca acest helper răspunde cazului in care ai de-a face cu prima resursă, caz în care nu ai nici idx, nici alias-ul său în Elasticsearch
     if (RES_IDX_ES7) {
         ES7Helper.searchIdxAndCreateDoc(schema, data, RES_IDX_ES7, RES_IDX_ALS).catch((error) => {
@@ -280,7 +280,7 @@ function checkRecord (res) {
 
 /**
  * Funcția are rol de callback pentru hook-ul mongoose post definit prin regexp-ul `/^find/`
- * Când se face căutarea unei resurse folosindu-se metodele`find`, `findOne`, `findOneAndUpdate`, vezi dacă a fost indexat. 
+ * Când se face căutarea unei resurse folosindu-se metodele `find`, `findOne`, `findOneAndUpdate`, vezi dacă a fost indexat. 
  * Dacă nu, se indexează!
  * @param {Array | Object} doc înregistrarea(le)
  * @param {*} next 

@@ -3710,7 +3710,7 @@ import {AttachesToolPlus} from './uploader.mjs';
 
 // aștept răspunsul de la server și redirecționez utilizatorul către resursa tocmai creată.
 pubComm.on('confirm', (redID) => {
-    console.log("[form01adres::3599::pubcom.on('ingest')] Răspunsul de la server este: ", redID);
+    // console.log("[form01adres::3599::pubcom.on('ingest')] Răspunsul de la server este: ", redID);
     if (redID) {
         setTimeout(() => {
             window.location = '/profile/' + redID;

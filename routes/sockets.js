@@ -689,16 +689,26 @@ function sockets (io) {
 
         /* === DELFILE === */
         socket.on('delfile', (components) => {
+            console.log("[sockets::delfile] Componentele primite sunt: ", components);
+
             let cleanFileName = decodeURIComponent(components.fileName);
             let dirPath = path.join(`${process.env.REPO_REL_PATH}`, `${components.idContributor}/`, `${components.uuid}/`, `data/`, `${cleanFileName}`);
             // console.log("[sockets::delfile] Fișierul pe care trebuie să-l șterg este: ", dirPath);
+
+            // dacă ai o proprietate components.content are obiectul nou, actualizeaza și înregistrarea din Mongo
             
             /* === ȘTERGE FIȘIER === */
             fs.remove(dirPath, function clbkDirFolder (error) {
                 if (error) {
                     console.error(error);
                 }
-                socket.emit('delfile', `Am șters fișierul ${cleanFileName}`);
+
+                if (components.content) {
+                    // Actualizează înregistrarea din baza de date
+                    Resursa.findByIdAndUpdate(components.id, {content: components.content}, (doc) => {
+                        socket.emit('delfile', `Am șters fișierul ${cleanFileName}, iar content este ${doc}`);
+                    });
+                }
             });
         });
 
@@ -1757,12 +1767,13 @@ function sockets (io) {
         // #3.1. Creează resursa pe hard în subdirectorul `repo/general/red/nume_email`.
         // #3.2. Creează înregistrarea resursei în colecția `resedus`. Problemă: cum generezi o înregistrare validă de editorjs programatic.
         const CSModel = require('../models/competenta-specifica');
+
         /**
-         * Funcția are rolul de a procesa o înregistrare RED
-         * @param {Object} data este o înregistrare 
+         * Funcția are rolul de a prelua un rând - o înregistrare și în baza câmpurilor existente
+         * va crea o înregistrare nouă în baza de date, precum și directorul aferent
+         * @param {Object} resursa Este un rând din fișierul csv care este parcurs de Papaparse 
          */
         async function createREDRecord (data) {
-
             // VIITORUL RED.content
             let content = {
                 time: Date.now(),
@@ -1978,6 +1989,17 @@ function sockets (io) {
             });
                 
         });
+
+        socket.on('redfieldup', (data) => {
+            // console.log(`Pe redfielduo am primit`, data);
+            // _NOTE: Trebuie actualizată înregistrarea din MongoDB și cea din Elasticsearch
+            Resursa.findByIdAndUpdate(data.id, {[data.fieldname]: data.content}, (doc) => {
+                socket.emit('redfieldup', doc);
+            }); // https://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate
+        });
+
+        socket.on('contentup', () => {});
+
         /**
          * Folosește în funcția clbkMgmt drept callback evenimentului `mgmt`
          * Doc pentru upsert https://masteringjs.io/tutorials/mongoose/findoneandupdate
