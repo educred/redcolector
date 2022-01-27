@@ -336,7 +336,7 @@ async function clbkProfResID (req, res, next) {
         /* === ROLURI ÎN CRED === */
         } else if (confirmedRoles.length > 0) { 
             // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
-            res.render(`resursa_${gensettings.template}`, { 
+            res.render(`resursa-user_${gensettings.template}`, { 
                 template:  `${gensettings.template}`,                
                 title:     "User",
                 user:      req.user,

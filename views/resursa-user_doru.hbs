@@ -84,14 +84,6 @@
                                 </a> <span contenteditable="true">{{resursa.autori}}</span>
                             </p>                            
                         </div>
-                        
-                        {{!-- Setarea resursei în funcție de vizibilitate --}}
-                        <div class="descri-res aired-medium">
-                            <aside>
-                                <strong>Verificată: {{{resursa.validate}}}</strong>
-                                <strong>Publică: {{{resursa.genPub}}}</strong>
-                            </aside>
-                        </div>
 
                         {{!-- Dacă există titluri alternative, afișează-le --}}
                         <div class="altitle">
@@ -115,28 +107,6 @@
                                 <div class="comprespub" itemprop="educationalAlignment" itemscope itemtype="https://schema.org/AlignmentObject">
                                     <meta itemprop="alignmentType" content="educationalSubject" />
                                     <h5><span itemprop="educationalFramework">Arie curriculară<span></h5>
-                            
-                                    {{!-- Buton de adăugare a unei arii curriculare suplimentare --}}
-                                    {{!-- <button id="titluLangAdd" class="btn btn-outline-secondary m-2" type="button" onclick="showArii()">
-                                        <i class="fas fa-plus-circle"></i>
-                                    </button>
-                                    {{#each resursa.arieCurriculara}}
-                                        <button type="button" class="btn btn-secondary" data-toggle="tooltip" data-placement="top" title="{{this}}">
-                                            <span itemprop="targetName">{{this}}</span>
-                                        </button>
-                                    {{/each}}
-                                    <div id="ariiNoi">
-                                        <select id="arii-curr" class="form-control custom-select" size="8" multiple hidden>
-                                            <option data-lbcom   ="lbcom"    value="Limbă și comunicare" onclick="adaugArie()">Limbă și comunicare</option>
-                                            <option data-matstnat="matstnat" value="Matematică și științe ale naturii">Matematică și științe ale naturii</option>
-                                            <option data-omsoc   ="omsoc"    value="Om și societate">Om și societate</option>
-                                            <option data-edfizsp ="edfizsp"  value="Educație fizică și sport">Educație fizică și sport</option>
-                                            <option data-arte    ="arte"     value="Arte">Arte</option>
-                                            <option data-teh     ="teh"      value="Tehnologii">Tehnologii</option>
-                                            <option data-consor  ="consor"   value="Consiliere și orientare">Consiliere și orientare</option>
-                                            <option data-currsc  ="currsc"   value="Curriculum la decizia școlii">Curriculum la decizia școlii</option>
-                                        </select>
-                                    </div> --}}
                                 </div>
 
                                 {{!-- Afișarea clasei(lor) pentru care a fost elaborată resursa --}}
