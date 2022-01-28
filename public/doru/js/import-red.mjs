@@ -1,16 +1,5 @@
 import {pubComm} from './main.mjs';
 
-// var csrfToken = '';
-
-// if(document.getElementsByName('_csrf')[0].value) {
-//     csrfToken = document.getElementsByName('_csrf')[0].value;
-// }
-
-// var pubComm = io('/redcol', {
-//     query: {['_csrf']: csrfToken}
-// });
-
-
 // TESTAREA CONEXIUNII
 // setInterval(() => {
 //     console.log("Conectat: ", pubComm.connected, " cu id-ul: ", pubComm.id);
@@ -49,6 +38,8 @@ pubComm.on('allUnclaimedReds', (unclaimed) => {
         }
         newResultArr.push(obi);
     });
+
+    // console.log(`Datele obținute sunt`, newResultArr);
     // RANDEAZĂ TABELUL resurse
     // https://datatables.net/manual/data/orthogonal-data
     $('.redClaimTbl').DataTable({

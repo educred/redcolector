@@ -1,3 +1,8 @@
+        {{!-- ES6 SHIM --}}
+        {{!-- <script type="application/javascript" src="/{{template}}/lib/es6-shim/es6-shim.min.js"></script> --}}
+        {{!-- https://github.com/es-shims/es6-shim --}}
+
+
 []
 [24-01-2022 12:43:30] [error] [undefined]: 
 [24-01-2022 12:43:30] [error] [undefined]: 
