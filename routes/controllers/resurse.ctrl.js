@@ -75,6 +75,9 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
                 const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
                 // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
                 newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
+                // introdu template-ul ca proprietare (necesar stabilirii de linkuri corecte in fiecare element afișat în client)
+                newObi.template = `${gensettings.template}`;
+                newObi.logo = `${gensettings.template}/${LOGO_IMG}`;
                 // newResultArr.push(newObi);
                 return newObi;
             });
@@ -84,7 +87,7 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
 
             res.render(`resurse_${gensettings.template}`, {
                 template:     `${gensettings.template}`,
-                title:        "Administrativ",
+                title:        "interne",
                 user,
                 logoimg:      `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken,

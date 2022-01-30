@@ -21,7 +21,7 @@ function clbkDOMContentLoaded () {
     /* === OBIECTUL RESURSA din `data-content` === */
     let data    = document.querySelector('.resursa').dataset;
     let dataRes = JSON.parse(JSON.stringify(data)) || null;
-    let content = JSON.parse(data.content) || null;
+    let content = JSON.parse(data.content) || null; // este înregistrarea din Mongo
     let imagini = new Set(); // un `Set` cu toate imaginile încărcate.
     let fileRes = new Set(); // un `Set` care unifică fișierele, fie imagini, fie atașamente.
 
@@ -30,7 +30,8 @@ function clbkDOMContentLoaded () {
         id:           dataRes.id, 
         contribuitor: dataRes.contribuitor,
         uuid:         content.uuid,
-        content:      content.content
+        content:      content.content,
+        etichete:     content.etichete
     };
 
     // acoperă cazul resurselor care au fost create până la începutul anului 2021
@@ -504,7 +505,7 @@ function clbkDOMContentLoaded () {
         });
     };
 
-    // Wrapper pentru listenerele de pe contenteditable
+    // _FIXME: Wrapper pentru listenerele de pe contenteditable
     function setChangeListener (div, listener) {
         div.addEventListener("blur", listener);
         div.addEventListener("keyup", listener);
@@ -882,6 +883,88 @@ function clbkDOMContentLoaded () {
         }
         return insertGal;
     };
+
+    
+    /* === ETICHETE === */
+    let tagsUnq;
+
+    if (resObi.etichete === 'undefined') {
+        resObi.etichete = [];
+    } else if (resObi.etichete.length > 0) {
+        tagsUnq = new Set(resObi.etichete); // construiește un set cu care să gestionezi etichetele constituite din tot ce a colectat `resObi.etichete`
+    } else {
+        tagsUnq = new Set();
+    }
+
+    console.log(`Înainte de a porni am următoarele etichete: `, resObi.etichete, `iar setul are `, tagsUnq);
+
+
+    var newTags = document.getElementById('eticheteRed'); // ref la textarea de introducere a etichetelor
+    var tagsElems = document.getElementById('tags');
+
+    // _TODO: ciclează etichetele primite și generează elementele vizuale necesare
+
+    /**
+     * Funcția are rolul de a crea un element vizual de tip etichetă
+     * doar dacă elementul nu există deja în `tagsUnq`. În contexul funcției
+     * Setul are rol de element filtrant
+     */
+    function createTag (tag) {
+        // asigură-te mai întâi că ce a venit din bază este un array
+        if (Array.isArray(resObi.etichete)) {
+            resObi.etichete.push(tag);
+        }
+
+        // apoi creează un element tag pe care-l afișezi
+        var spanWrapper = new createElement('h5', `${tag}`, ['tag'], null).creeazaElem();
+        var tagIcon = new createElement('span', '', ['fa', 'fa-tag', 'text-warning', 'mr-2'], null).creeazaElem();
+        var spanText = new createElement('span', '', ['text-secondary'], null).creeazaElem(`${tag}`);
+        var aClose = new createElement('a', '', null, null).creeazaElem();
+        var aGlyph = new createElement('i', '', ['remove', 'fa', 'fa-times', 'ml-1'], null).creeazaElem();
+
+        aClose.appendChild(aGlyph);
+        spanWrapper.appendChild(tagIcon);
+        spanWrapper.appendChild(spanText);
+        spanWrapper.appendChild(aClose);
+        tagsElems.appendChild(spanWrapper);
+
+        aClose.addEventListener('click', removeTag);
+
+        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'etichete', content: resObi.etichete});
+    };
+
+    /* Rolul funcției este să permită ștergerea de etichete care nu sunt considerate utile sau care au fost introduse greșit */
+    function removeTag (evt) {
+        evt.preventDefault();
+        // console.log(`Obiectul eveniment`, evt, `target este`, evt.target, `iar current este`, evt.currentTarget);
+        let targetElem = document.getElementById(evt.currentTarget.parentNode.id);
+        // console.log(`Id-ul căutat este`, evt.currentTarget.parentNode.id);
+        tagsUnq.delete(evt.currentTarget.parentNode.id);
+        tagsElems.removeChild(targetElem);
+        // console.log(`După ștergere setul este `, tagsUnq);
+    };
+
+    // Adaugă event pentru a detecta Enter in inputul de introducere
+    newTags.addEventListener('keypress', (evt) => {
+        let charCodeNr = typeof evt.charCode == "number" ? evt.charCode : evt.keyCode;
+        let identifier = evt.key || evt.keyIdentifier; // compatibilitate cu Safari
+        if (identifier === "Enter" || charCodeNr === 13) {
+            let existingValues = newTags.value.split(','), i; // sparge stringul în elemente
+            if (existingValues.length > 0) {
+                for(i = 0; i < existingValues.length; i++) {
+                    let newtag = existingValues[i].trim();
+                    tagsUnq.add(newtag); // curăță elementul și introdu-l în Set.
+                    createTag(newtag);
+                }
+            }
+            newTags.value = '';
+        };
+        // console.log(`Setul acum este `, tagsUnq);
+    });
+
+
+
+
 }
 
 document.addEventListener("DOMContentLoaded", clbkDOMContentLoaded);

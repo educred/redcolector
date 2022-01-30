@@ -2970,7 +2970,7 @@ import {AttachesToolPlus} from './uploader.mjs';
         }
     };
 
-    globalThis.manageInputClick = manageInputClick; //_ WORKING: Caută o soluție mai elegantă!!!
+    globalThis.manageInputClick = manageInputClick;
 
     function addMeDeleteMe () {
         let rowData = XY.getData();

@@ -1,3 +1,58 @@
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <a href="/resurse/{{this._id}}">{{this.title}}</a>
+                        </h3>
+                        <div class="row mb-2 text-muted">
+                            <p class="card-subtitle col-sm-6 text-muted">{{this.autori}}</p>
+                            <p class="card-subtitle col-sm-6 text-muted">{{this.dataRo}}</p>
+                        </div>
+                    </div>
+                    {{!-- <img class="card-img-top" src="{{this.coperta}}" alt="{{this.title}}"> --}}
+                    <div class="card-body">
+                        <aside style="float: left;">
+                            {{!-- Dacă există copertă, afișeaz-o --}}
+                            {{#if this.coperta}}
+                                <img src="{{this.coperta}}" class="coperta card-img-top" alt="{{this.title}}">
+                            {{else}}
+                                <div style="position: relative;">
+                                    <img src="/{{template}}/img/SIGLA-CRED1.png" alt="logo educred" style="position: absolute; top: 0,5rem;">
+                                    <img src="/{{template}}/img/black-1072366_1920.jpg" class="coperta card-img-top" alt="{{this.title}}">
+                                </div>
+                            {{/if}}
+                        </aside>
+                        <main>
+                            <p class="card-text">{{this.description}}</p>   
+                        </main>  
+                    </div>
+                    <div class="card-footer">
+                        {{!-- {{this.date}} --}}
+                        {{#each this.etichete}}
+                            <a href="/tag/{{this}}">
+                                <span class="badge badge-info">{{this}}</span>
+                            </a>
+                        {{/each}}
+                        {{!-- {{this.dataRo}} --}}
+                    </div>
+                </div>
+
+
+
+
+
+Retine și codul de competență specifica
+
+
+
+clasa disciplina -> competente specifice
+
+
+
+Materialul este afișat public la adresa (notă în afișare)
+
+
+      
+      
         {{!-- ES6 SHIM --}}
         {{!-- <script type="application/javascript" src="/{{template}}/lib/es6-shim/es6-shim.min.js"></script> --}}
         {{!-- https://github.com/es-shims/es6-shim --}}

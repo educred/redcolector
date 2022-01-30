@@ -1,16 +1,17 @@
-import {createElement, setWithExpiry, getWithExpiry, decodeCharEntities, datasetToObject} from './main.mjs';
+import {pubComm, createElement, setWithExpiry, getWithExpiry, decodeCharEntities, datasetToObject} from './main.mjs';
 
-var csrfToken = '';
+// var csrfToken = '';
 
-if(document.getElementsByName('_csrf')[0].value) {
-    csrfToken = document.getElementsByName('_csrf')[0].value;
-}
+// if(document.getElementsByName('_csrf')[0].value) {
+//     csrfToken = document.getElementsByName('_csrf')[0].value;
+// }
 
-var pubComm = io('/redcol', {
-    query: {['_csrf']: csrfToken}
-});
+// var pubComm = io('/redcol', {
+//     query: {['_csrf']: csrfToken}
+// });
 
 var primare = document.getElementById('primare'); // zona în care se încarcă ultimele resurse contribuite
+
 const codSeturiDisc = {
     "art": {
         "0": "Arte",
@@ -277,7 +278,7 @@ var discipline            = document.querySelector('#discipline');          // t
 var discSelected          = document.querySelector('#disciplineselectate'); // zona de afișare a disciplinelor care au fost selectate
 var fragSearchDocs        = document.getElementById('fragSearchDocs');      // ref către input-ul căutării
 var divBtnCautareFatetata = document.getElementById('btnCautaFatetat');     // referință către div-ul gazdă al butonului de căutare fațetată
-var searchRes             = document.querySelector('#searchRes');           // referrință către div-ul în care ar trebui să am rezultatele( FIXME: tot în `primare` ajung)
+var searchRes             = document.querySelector('#searchRes');           // referință către div-ul în care ar trebui să am rezultatele( FIXME: tot în `primare` ajung)
 var butonCautareFatetata; // referință către butonul de căutare
 var disciplineSelectate   = new Set(); // SETUL DISCIPLINELOR CARE AU FOST SELECTATE
 
@@ -292,7 +293,7 @@ const DISCMAP = new Map(); // colector de structuri {nivel: "5", 5: {art5: [], b
 
 /**
  * Funcția este un helper pentru eliminarea tuturor
- * elementelor copil a unei rădăcini pasate drept parametru
+ * elementelor copil ale unei rădăcini pasate drept parametru
  * @param element 
  */
 function removeAllChildren(element) {
