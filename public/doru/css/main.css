@@ -131,6 +131,7 @@ footer.bg-light {
     padding: 2rem;
 }
 
+/* Containerul în care se afișează resursele interne */
 .resurse {
     position: relative;
     width: 100%;
@@ -145,9 +146,19 @@ footer.bg-light {
     z-index: 10;
 }
 
+.units {
+    display: flex;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+}
+
 /* === UNIT - modelare === */
 .unit {
-    display: inline-block;
+    /* display: inline-block; */
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
     vertical-align: top;
     width: 25rem;
     height: 25rem;
@@ -156,10 +167,12 @@ footer.bg-light {
     box-sizing: border-box;
     border-radius: .3rem;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 /* === UNIT - header === */
 .unit-header {
+    width: 100%;
 }
 
 .unit-title {
@@ -179,7 +192,7 @@ footer.bg-light {
 
 /* === UNIT - body === */
 .unit-body {
-    height: 50%;
+    height: 13.5rem;
     display: flexbox;
     padding: .2em;
     overflow: hidden;
@@ -204,10 +217,14 @@ footer.bg-light {
     height: 5rem;
 }
 
+/* este imaginea de sub logo */
 .unit-default-visual {
     position: relative;
+    background-position: center center;
+    background-size: cover;
 }
 
+/* logo-ul care este pozitionat deasupra primei imagini; la centru */
 .unit-default-visual-logo{
     position: absolute;
     width: 50%;
@@ -216,22 +233,62 @@ footer.bg-light {
     transform: translate(-50%, -50%);
 }
 
+.unit-grading {
+    text-align: center;
+    color: #FDCB0B;
+}
+
 .unit-description {
-    width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-height: 70%;
     overflow-wrap: break-word;
 }
 
 /* === UNIT footer === */
 .unit-footer {
-    height: 8rem;
-    background-color: red;
+    width: 100%;
+    max-height: 5rem;
+    border-radius: .3rem;
+    background-color: rgb(241, 242, 249);
+    overflow: hidden;
 }
 
 .unit-footer a:hover{
     color:#888;
+}
+
+/* Aprecierea unei resurse */
+
+#evalstars {
+
+}
+
+#evalstars::-webkit-slider-runnable-track { 
+    min-width: 0px;
+    align-self: center;
+    box-sizing: border-box;
+    display: block;
+    background: #FDCB0B;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    width: 100%;
+    height: 100%;
+}
+#evalstars::-moz-range-track {
+    background: #FDCB0B;
+    width: 100%;
+    height: 100%;
+}
+#evalstars::-ms-track {
+    background: #FDCB0B;
+    width: 100%;
+    height: 100%;
+}
+
+.apreciere {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
 }
 
 /* ==== BADGE ==== */

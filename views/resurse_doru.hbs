@@ -1036,7 +1036,7 @@
         <div id="btnCautaFatetat"></div>
 
         {{!-- Ultimele resurse afișate --}}
-        <div id="primare" class="container">
+        <div id="primare" class="units container">
 
             {{!-- Randează ultimele 8 resurse create --}}
             {{#each resurse}}
@@ -1062,19 +1062,19 @@
                                         <img class="unit-default-visual-logo" src="{{logo}}" alt="logo">
                                         <img src="/{{template}}/img/black-1072366_1920.jpg" class="" alt="{{this.title}}">
                                     </div>
+                                    <div class="unit-grading">{{{this.ratingrepresentation}}}</div>
+                                    {{!-- <div class="unit-grading"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i><i class="bi bi-star"></i></div> --}}
                                 {{/if}}
                             </aside>
                             <p>{{this.description}}</p>
                         </main>  
                     </div>
                     <div class="unit-footer">
-                        {{this.etichete}}
                         {{#each this.etichete}}
                             <a href="/tag/{{this}}">
                                 <span class="badge badge-info">{{this}}</span>
                             </a>
                         {{/each}}
-                        {{!-- {{this.dataRo}} --}}
                     </div>
                 </div>
             {{/each}}

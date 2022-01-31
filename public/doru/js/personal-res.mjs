@@ -898,11 +898,10 @@ function clbkDOMContentLoaded () {
 
     console.log(`Înainte de a porni am următoarele etichete: `, resObi.etichete, `iar setul are `, tagsUnq);
 
-
     var newTags = document.getElementById('eticheteRed'); // ref la textarea de introducere a etichetelor
     var tagsElems = document.getElementById('tags');
 
-    // _TODO: ciclează etichetele primite și generează elementele vizuale necesare
+    // _TODO: creează mecanismul de ștergere - afișare cu bifă de ștergere
 
     /**
      * Funcția are rolul de a crea un element vizual de tip etichetă
@@ -961,10 +960,6 @@ function clbkDOMContentLoaded () {
         };
         // console.log(`Setul acum este `, tagsUnq);
     });
-
-
-
-
 }
 
 document.addEventListener("DOMContentLoaded", clbkDOMContentLoaded);

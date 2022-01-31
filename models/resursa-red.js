@@ -123,6 +123,7 @@ var ResursaSchema = Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'badge'
     }],
+    ratingTotal: Number, // este numarul la care se adaugă valoarea pentru care a optat un utilizator
     rating: {
         type: Number,
         min: 0,

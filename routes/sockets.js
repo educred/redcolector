@@ -1995,6 +1995,7 @@ function sockets (io) {
                 
         });
 
+        // === UPDATE PE CÂMPURI UNICE ===
         socket.on('redfieldup', (data) => {
             // console.log(`Pe redfielduo am primit`, data);
             // _NOTE: Trebuie actualizată înregistrarea din MongoDB și cea din Elasticsearch
@@ -2003,7 +2004,10 @@ function sockets (io) {
             }); // https://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate
         });
 
-        socket.on('contentup', () => {});
+        // === UPDATE PE APRECIERE
+        socket.on('ratingred', (data) => {
+            
+        });
 
         /**
          * Folosește în funcția clbkMgmt drept callback evenimentului `mgmt`

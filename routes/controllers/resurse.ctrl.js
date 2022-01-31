@@ -50,14 +50,14 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
     // Adu-mi ultimele 8 resursele validate în ordinea ultimei intrări.
     let resursePublice = Resursa.find({'expertCheck': 'true'}).sort({"date": -1}).limit(8);
 
-    // ===> SCRIPTURI GENERAL APLICABILE
+    // ===> SCRIPTURI
     let scripts = [       
         // MOMENT.JS
         {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
         // HOLDER.JS
         {script: `${gensettings.template}/lib/npm/holder.min.js`}
     ];
-    // ===> MODULE GENERAL APLICABILE
+    // ===> MODULE
     let modules = [
         // LOCALE
         {module: `${gensettings.template}/js/redincredall.mjs`}
@@ -71,6 +71,11 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
     /* ===> VERIFICAREA CREDENȚIALELOR <=== */
     if(req.session.passport.user.roles.admin){
         resursePublice.then((result) => {
+
+            let fullstar = `<i class="bi bi-star-fill"></i>`,
+                emptystart = `<i class="bi bi-star"></i>`,
+                halfempty = `<i class="bi bi-star-half"></i>`;
+
             let newResultArr = result.map(function clbkMapResult (obi) {
                 const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
                 // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
@@ -78,6 +83,37 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
                 // introdu template-ul ca proprietare (necesar stabilirii de linkuri corecte in fiecare element afișat în client)
                 newObi.template = `${gensettings.template}`;
                 newObi.logo = `${gensettings.template}/${LOGO_IMG}`;
+
+                newObi.ratingrepresentation = '';
+                let kontor = newObi.contorRating ?? 0;
+                let lastRating = newObi.rating ?? 0;
+                let ratingTotal = newObi.ratingTotal ?? 0;
+                let presentRating = ratingTotal / kontor;
+
+                // 0 - 0.5 | 0.5 - 1 | 1 - 1.5 | 1.5 - 2 | 2 - 2.5 | 2.5 - 3 | 3 - 3.5 | 3.5 - 4 | 4 - 4.5 | 4.5 - 5
+                if (isNaN(presentRating)) {
+                    newObi.ratingrepresentation = `${emptystart}${emptystart}${emptystart}${emptystart}${emptystart}`;
+                } else if (presentRating > 0 && presentRating < 0.5) {
+                    newObi.ratingrepresentation = `${halfempty}${emptystart}${emptystart}${emptystart}${emptystart}`;
+                } else if (presentRating > 0.6 && presentRating <= 1) {
+                    newObi.ratingrepresentation = `${fullstar}${emptystart}${emptystart}${emptystart}${emptystart}`;
+                } else if (presentRating > 1 && presentRating <= 1.5) {
+                    newObi.ratingrepresentation = `${fullstar}${halfempty}${emptystart}${emptystart}${emptystart}`;
+                } else if (presentRating > 1.6 && presentRating <= 2) {
+                    newObi.ratingrepresentation = `${fullstar}${fullstar}${emptystart}${emptystart}${emptystart}`;
+                } else if (presentRating > 2 && presentRating <= 2.5) {
+                    newObi.ratingrepresentation = `${fullstar}${fullstar}${halfempty}${emptystart}${emptystart}`;
+                } else if (presentRating > 2.6 && presentRating <= 3) {
+                    newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${emptystart}${emptystart}`;
+                } else if (presentRating > 3 && presentRating <= 3.5) {
+                    newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${halfempty}${emptystart}`;
+                } else if (presentRating > 3.6 && presentRating <= 4) {
+                    newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${emptystart}`;
+                } else if (presentRating > 4 && presentRating <= 4.5) {
+                    newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${halfempty}`;
+                } else if (presentRating > 4.6 && presentRating <= 5) {
+                    newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${fullstar}`;
+                }
                 // newResultArr.push(newObi);
                 return newObi;
             });
@@ -208,6 +244,41 @@ exports.loadOneResource = async function loadOneResource (req, res, next) {
             });
             
             obi.activitati = activitatiRehashed;
+
+            let fullstar = `<i class="bi bi-star-fill"></i>`,
+                emptystart = `<i class="bi bi-star"></i>`,
+                halfempty = `<i class="bi bi-star-half"></i>`;
+
+            obi.ratingrepresentation = '';
+            let kontor = obi.contorRating ?? 0;
+            let lastRating = obi.rating ?? 0;
+            let ratingTotal = obi.ratingTotal ?? 0;
+            let presentRating = ratingTotal / kontor;
+
+            // 0 - 0.5 | 0.5 - 1 | 1 - 1.5 | 1.5 - 2 | 2 - 2.5 | 2.5 - 3 | 3 - 3.5 | 3.5 - 4 | 4 - 4.5 | 4.5 - 5
+            if (isNaN(presentRating)) {
+                obi.ratingrepresentation = `${emptystart}${emptystart}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 0 && presentRating < 0.5) {
+                obi.ratingrepresentation = `${halfempty}${emptystart}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 0.6 && presentRating <= 1) {
+                obi.ratingrepresentation = `${fullstar}${emptystart}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 1 && presentRating <= 1.5) {
+                obi.ratingrepresentation = `${fullstar}${halfempty}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 1.6 && presentRating <= 2) {
+                obi.ratingrepresentation = `${fullstar}${fullstar}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 2 && presentRating <= 2.5) {
+                obi.ratingrepresentation = `${fullstar}${fullstar}${halfempty}${emptystart}${emptystart}`;
+            } else if (presentRating > 2.6 && presentRating <= 3) {
+                obi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${emptystart}${emptystart}`;
+            } else if (presentRating > 3 && presentRating <= 3.5) {
+                obi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${halfempty}${emptystart}`;
+            } else if (presentRating > 3.6 && presentRating <= 4) {
+                obi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${emptystart}`;
+            } else if (presentRating > 4 && presentRating <= 4.5) {
+                obi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${halfempty}`;
+            } else if (presentRating > 4.6 && presentRating <= 5) {
+                obi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${fullstar}`;
+            }
 
             let data = {
                 uuid: obi.uuid,
