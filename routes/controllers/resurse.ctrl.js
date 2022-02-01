@@ -47,8 +47,8 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
     let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles); 
     // console.log("Am următoarele roluri (resurse.ctrl) din req.session.passport: ", req.session.passport.user.roles.rolInCRED);
 
-    // Adu-mi ultimele 8 resursele validate în ordinea ultimei intrări.
-    let resursePublice = Resursa.find({'expertCheck': 'true'}).sort({"date": -1}).limit(8);
+    // Adu-mi ultimele 9 resursele validate în ordinea ultimei intrări.
+    let resursePublice = Resursa.find({'expertCheck': 'true'}).sort({"date": -1}).limit(9);
 
     // ===> SCRIPTURI
     let scripts = [       

@@ -344,7 +344,7 @@ function generateUX4discs (dataset, nocls) {
 
         /* === CAZUL O DISCIPLINĂ, UN BUTON :: creezi câte un buton === */
         if (arrSet.length === 1) {
-            let butn = new createElement('a', arrSet[0].codsdisc, ['btn', 'btn-sm', 'btn-warning', 'facet', 'mansonry', arrSet[0].codsdisc], {href: "#", role: "button"}).creeazaElem(arrSet[0].nume);
+            let butn = new createElement('a', arrSet[0].codsdisc, ['btn', 'btn-sm', 'btn-light', 'facet', 'mansonry', arrSet[0].codsdisc], {href: "#", role: "button"}).creeazaElem(arrSet[0].nume);
             butn.addEventListener('click', clickPeDisciplina); // atașează listener pentru tratarea selecție pe click
             discipline.appendChild(butn);
         } else {
@@ -353,18 +353,26 @@ function generateUX4discs (dataset, nocls) {
             let origNumeSet = numeSet;
             numeSet = codSeturiDisc[numeSet][nocls]; // Adu numele setului de discipline și înlocuiește codul setului
             // Construiește elementele Bootstrap pentru seturi și discipline individuale
-            let btnDrpDwn = new createElement('button', '', ['btn', 'btn-sm', 'btn-warning', 'dropdown-toggle'], {'data-toggle': 'dropdown', 'aria-haspopup':'true', 'aria-expanded': 'false'}).creeazaElem(numeSet);
-            let menuDrpDwn = new createElement('div', '', ['dropdown-menu', 'drpdwnmenucontent'], {}).creeazaElem();
-            let disciplina;
-            // în cazul unui set, creează câte un drop down
+            // console.log(`Setul disciplinelor este`, arrSet);
+
+            // extrage numele generic al setului care va juca rolul de id lbcomRom0 => lbcom; muzmi0 => muzmi (la search returneaza `-1`, iar sliceul va tăia doar numarul)
+            let primo = arrSet[0]; // `arrSet[0].primo.codsdisc` este numele setului
+            let indxToCutTo = primo.codsdisc.search(/([A-Z])\w+/g);
+            let genericsetname = primo.codsdisc.slice(0, indxToCutTo);
+
+            let btnDrpDwn = new createElement('button', genericsetname, ['btn', 'btn-sm', 'btn-light', 'dropdown-toggle'], {'data-bs-toggle': 'dropdown', 'type': 'button', 'aria-expanded': 'false'}).creeazaElem(numeSet);
+            let menuDrpDwn = new createElement('ul', '', ['dropdown-menu', 'drpdwnmenucontent'], {'aria-labeledby': genericsetname}).creeazaElem();
+            
+            let disciplina; // în cazul unui set, creează câte un drop down
             for (disciplina of arrSet) {
                 let aelem = new createElement('a', disciplina.codsdisc, ['dropdown-item', 'facet', disciplina.codsdisc], {'href': '#'}).creeazaElem(disciplina.nume);
                 aelem.addEventListener('click', clickPeDisciplina); // atașează listener pentru tratarea selecție pe click
                 menuDrpDwn.appendChild(aelem);
             }
+            
             // asamblează construcția DOM și atașează la `discipline`
-            btnDrpDwn.appendChild(menuDrpDwn);
             drpDwn.appendChild(btnDrpDwn);
+            drpDwn.appendChild(menuDrpDwn);
             discipline.appendChild(drpDwn);
         }
     }

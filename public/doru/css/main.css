@@ -610,6 +610,11 @@ a[class$="8"], label[class$="8"] {
 
 /* === CĂUTARE FAȚETATĂ === */
 
+.selector {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .fatete, 
 .selectortxt {
     color: beige;
@@ -1088,7 +1093,7 @@ a[class$="8"], label[class$="8"] {
     padding-top: 1rem;
 }
 
-/* BUTOANE TAGURI CĂUTARE FAȚETATĂ */
+/* === CĂUTARE FAȚETATĂ - BUTOANE TAGURI === */
 @keyframes fadeInFromNone {
     0% {
         display: none;
@@ -1109,10 +1114,10 @@ a[class$="8"], label[class$="8"] {
 .disctag {
     position: relative;
     display: block;
-    min-width: 4rem;
     padding: .3rem;
     cursor: pointer;
     border-radius: 5px;
+    text-decoration: none;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.3);
 }
 
