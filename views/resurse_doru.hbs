@@ -5,10 +5,19 @@
 
     <template id="record">
         <div class="result">
-            <h3 class="title"></h3>
-            <h5 class="autori"></h5>
-            <p class="description"></p>
-            <p class="etichete"></p>
+            <div class="result-header">
+                <h5 class="result-title">
+                    <a class="restitlelnk title" role="button" title="" class=""></a>
+                </h5>
+                <i class="fas fa-user-circle"></i> <span class="autori"></span>                               
+            </div>
+            <div class="result-body">
+                <p id="cardtext" class="result-text description"></p>     
+            </div>
+            <div class="result-footer">
+                <p class="levels"></p>
+                <p class="etichete"></p>
+            </div>            
         </div>
     </template>
 
@@ -32,15 +41,16 @@
         </nav>
     </template>
 
+    {{!-- Cum arată fiecare rezultat adus de la Elasticsearch --}}
     <template id="searchresult">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title">
-                    <a id="restitlelnk" class="" role="button" title="Caută resurse (maxim 250 de caractere)" class=""></a>
+        <div class="result">
+            <div class="result-header">
+                <h5 class="result-title">
+                    <a class="restitlelnk" role="button" title="" class=""></a>
                 </h5>                                
             </div>
-            <div class="card-body">
-                <p id="cardtext" class="card-text"></p>     
+            <div class="result-body">
+                <p id="cardtext" class="result-text"></p>     
             </div>
         </div>
     </template>
@@ -1082,7 +1092,7 @@
         </div>
 
         {{!-- Afișarea rezultatelor de căutare --}}
-        <div id="searchRes" class="container" style="background-color: brown;"></div>
+        <div id="searchRes" class="container"></div>
     </div>
 
     {{!-- Încărcarea modulelor --}}

@@ -64,7 +64,7 @@ const resursaRedES7 = {
                 type: "text", 
                 analyzer: "autocomplete"
             },
-            titleI18n:        {type: "text"},
+            titleI18n:        [],
             arieCurriculara:  {
                 type: "text",
                 fields: {

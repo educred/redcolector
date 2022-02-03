@@ -1,3 +1,52 @@
+Când nu introduci nimic în editorul de text, dă o mare eroare
+
+
+[app.js] O promisiune a fost respinsă fără a fi tratată respingerea Promise {
+  <rejected> TypeError: Cannot read properties of undefined (reading 'blocks')
+      at model.clbkPostSave1 (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/resursa-red.js:162:48)
+      at callMiddlewareFunction (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:488:23)
+      at next (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:194:9)
+      at Kareem.execPost (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:218:3)
+      at _cb (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:313:15)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/model.js:426:5
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/model.js:302:7
+      at collectionOperationCallback (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/drivers/node-mongodb-native/collection.js:168:24)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/utils.js:508:9
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/operations/execute_operation.js:49:55
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/utils.js:508:9
+      at completeEndSession (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/sessions.js:147:17)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/sessions.js:157:13
+      at maybePromise (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/utils.js:494:5)
+      at ClientSession.endSession (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/sessions.js:133:41)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongodb/lib/operations/execute_operation.js:49:36
+}  având motivul TypeError: Cannot read properties of undefined (reading 'blocks')
+[03-02-2022 18:06:07] [error] [undefined]:      [object Promise] TypeError: Cannot read properties of undefined (reading 'blocks')
+[03-02-2022 18:06:07] [error] [undefined]:      [object Promise] TypeError: Cannot read properties of undefined (reading 'blocks')
+
+
+
+[es-helper::indexMongoColInES7] Colecția pentru care se cere îndexare, încă nu are suport în cod
+[app.js] O promisiune a fost respinsă fără a fi tratată respingerea Promise {
+  <rejected> ResponseError: mapper_parsing_exception: [mapper_parsing_exception] Reason: failed to parse field [titleI18n] of type [text] in document with id '61dc01b407aac47355193eec'. Preview of field's value: '{eng=Scientific Writing Vault - S.1: Scientific Publication Structure}'
+      at onBody (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:367:23)
+      at IncomingMessage.onEnd (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/@elastic/elasticsearch/lib/Transport.js:291:11)
+      at IncomingMessage.emit (node:events:402:35)
+      at endReadableNT (node:internal/streams/readable:1343:12)
+      at processTicksAndRejections (node:internal/process/task_queues:83:21) {
+    meta: {
+      body: [Object],
+      statusCode: 400,
+      headers: [Object],
+      meta: [Object]
+    }
+  }
+}  având motivul {"error":{"root_cause":[{"type":"mapper_parsing_exception","reason":"failed to parse field [titleI18n] of type [text] in document with id '61dc01b407aac47355193eec'. Preview of field's value: '{eng=Scientific Writing Vault - S.1: Scientific Publication Structure}'"}],"type":"mapper_parsing_exception","reason":"failed to parse field [titleI18n] of type [text] in document with id '61dc01b407aac47355193eec'. Preview of field's value: '{eng=Scientific Writing Vault - S.1: Scientific Publication Structure}'","caused_by":{"type":"illegal_state_exception","reason":"Can't get text on a START_OBJECT at 1:355"}},"status":400}
+[02-02-2022 12:22:59] [error] [undefined]:      [object Promise] {"error":{"root_cause":[{"type":"mapper_parsing_exception","reason":"failed to parse field [titleI18n] of type [text] in document with id '61dc01b407aac47355193eec'. Preview of field's value: '{eng=Scientific Writing Vault - S.1: Scientific Publication Structure}'"}],"type":"mapper_parsing_exception","reason":"failed to parse field [titleI18n] of type [text] in document with id '61dc01b407aac47355193eec'. Preview of field's value: '{eng=Scientific Writing Vault - S.1: Scientific Publication Structure}'","caused_by":{"type":"illegal_state_exception","reason":"Can't get text on a START_OBJECT at 1:355"}},"status":400}
+[02-02-2022 12:22:59] [error] [undefined]:      [object Promise] {"error":{"root_cause":[{"type":"mapper_parsing_exception","reason":"failed to parse field [titleI18n] of type [text] in document with id '61dc01b407aac47355193eec'. Preview of field's value: '{eng=Scientific Writing Vault - S.1: Scientific Publication Structure}'"}],"type":"mapper_parsing_exception","reason":"failed to parse field [titleI18n] of type [text] in document with id '61dc01b407aac47355193eec'. Preview of field's value: '{eng=Scientific Writing Vault - S.1: Scientific Publication Structure}'","caused_by":{"type":"illegal_state_exception","reason":"Can't get text on a START_OBJECT at 1:355"}},"status":400}
+Procesul a fost încheiat având codul:  1             
+             
+             
+             
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">

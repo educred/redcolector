@@ -741,7 +741,7 @@ pubComm.on('elkstat', (data = {}) => {
 
 /**
  * Funcția `idxactions` are rol de listener pentru tab-ul identificat ca `system-elk`
- * Funcția listener va colecta si analiza evenimentele `click` pe elementele interne.
+ * Funcția listener va colecta si analiza evenimentele `click` pe elementele interne: REINDEX, BACKUP și DELETE.
  * În funcție de cine emite eveniment, o decizie se va lua care influiențează indexurile ES7
  * @param {Object} evt obiectul eveniment 
  */
@@ -779,6 +779,7 @@ function idxactions (evt) {
         AdmEvts.fire(evt);
     });
 
+    // Operațiunile pentru fiecare buton
     switch (id) {
         case "ridx":
             // verifică mai întâi dacă există un alias; dacă nu există, mai întâi creează-l

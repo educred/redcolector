@@ -1186,7 +1186,7 @@ a[class$="8"], label[class$="8"] {
     background-color: #28a745 !important;
 }
 
-/* GESTIONAREA rezultatelor de căutare fațetată */
+/* === GESTIONAREA rezultatelor de căutare fațetată === */
 #searchRes {
     padding: 1rem 0;
 }
@@ -1195,12 +1195,26 @@ a[class$="8"], label[class$="8"] {
     width: 100%;
 }
 
-.result {
-    background-color: antiquewhite;
+/* Rezultate aduse din Elasticsearch (template `searchresult`)*/
+
+#primare {
+    padding: .5rem;
 }
 
-.result * {
+.result {
+    max-width: 100%;
+    background-color: whitesmoke;
     padding: .4rem;
+    margin-bottom: .3rem;
+}
+
+.result .autori {
+    font-style: italic;
+    color: dodgerblue;
+}
+
+.result a {
+    text-decoration: none !important;
 }
 
 #form01adres {

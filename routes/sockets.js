@@ -1338,9 +1338,12 @@ function sockets (io) {
             });
         });
 
-        // === REINDEXARE ES7 ===
+        // === REINDEXARE ES7 - funcția din '../models/model-helpers/es7-helper' ===
         socket.on('es7reidx', function es7reidxHandle (data) {
-            return reidxincr(data, socket);
+            return reidxincr(data, socket).catch((error) => {
+                console.log(`[sockets.js::es7reidxr] `, error);
+                logger.error(error);
+            });
         });
 
         // === INDEX MONGODB RECs ===
@@ -1519,14 +1522,16 @@ function sockets (io) {
             });
         });
 
-        // === PAGEDRES === :: RESURSELE PAGINATE
+        // === PAGEDRES === :: RESURSELE PAGINATE din MONGODB
         socket.on('pagedRes', (data) => {
             //_ TODO: modelează acest eveniment pentru resursele paginate necesare clientului
             let dataPromise = pagination(data, Resursa);
             dataPromise.then( data => {
+                console.log(`Datele de paginare în urma căutării sunt `, data.pagination);
                 socket.emit('pagedRes', data);
             }).catch((err) => {
-                logger.error(`[sockets.js::'pagedRes'] Eroare la aducerea resurselor paginate cu următoarele detalii: ${err}`);
+                console.log(`[sockets.js::'pagedRes'] Eroare la aducerea resurselor paginate cu următoarele detalii: ${err}`);
+                logger.error(error);
             });
         });
 

@@ -1,12 +1,19 @@
-// Funcție de paginare
-
+/**
+ * Funcție de paginare a rezultatelor obținute din MongoDB
+ * @param {Object} req 
+ * @param {Object} model 
+ * @returns 
+ */
 exports.pagination = async function pagination (req, model) {
     try {
         // req trebuie să fie un obiect care să aibă următoarea semnătură
         /*
         {
             query: {
-                projection: {},
+                projection: {
+                    discipline: ['Biologie'],
+                    etichete: ['bio5']
+                },
                 select: <string>,
                 exclude: <array>,
                 sortby: <array>,    
@@ -18,60 +25,50 @@ exports.pagination = async function pagination (req, model) {
         }
         */
 
+        console.log(`Am primit următoarea cerere: `, JSON.stringify(req, null, 2));
+
         let query; // construiește obiectul de interogare pentru Mongoose
         // serializează obiectul cerere
+
         let queryStr = JSON.stringify(req.query.projection);
         // creează operatorii dacă aceștia apar în obiectul cerere -> `$gt`, `$gte`, etc.
-        queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)/g, match => `$${match}`);
+        // queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)/g, op => `$${op}`);
 
         // reatribuirea obiectului după prelucrare
         req.query.projection = JSON.parse(queryStr);
 
+        // https://stackoverflow.com/questions/18148166/find-document-with-array-that-contains-a-specific-value FRACK $all!!!
+        // https://docs.mongodb.com/manual/tutorial/query-arrays/
+        // https://stackoverflow.com/a/8145558/1271340 Cum se face căutare într-un singur array
+        // https://stackoverflow.com/questions/22998765/mongoose-query-to-find-matching-elements-in-multiple-arrays Căutare în array-uri multiple
+        // https://www.codegrepper.com/code-examples/whatever/mongoose+find+multiple
+
         // pentru fiecare cheie valoare din projection, adaugă într-un find
-        let k, v, obi = {};
-        for ([k, v] of Object.entries(req.query.projection)) {
-            if (Array.isArray(v)) {
-                obi[`${k}`] = {$in: v}; // https://stackoverflow.com/questions/18148166/find-document-with-array-that-contains-a-specific-value FRACK $all!!!
-            } else {
-                obi[`${k}`] = v; // dacă nu e array, ai o singură valoare string
-            }
-        }
-        // console.log('[pagination.ctrl] obiectul criteriilor de selectie ptr Mongoose ', obi);
+        let k, v, obi = req.query.projection ?? {};
+        // console.log('[pagination.ctrl] obiectul criteriilor de selectie ptr Mongoose ', JSON.stringify(obi, null, 2));
 
-        query = model.find(obi); // FIXME: Vezi cum se poate face căutare în cazul în care un câmp are drept valoare un array
-        // https://mongoosejs.com/docs/tutorials/query_casting.html -> Implicit $in
-        
-        let total; 
-        model.where(obi).countDocuments((err, nr) => {
-            if (err) {
-                console.error(err);
-            }
-            total = nr;
-        });
-        // console.log("Numarul datelor este: ", model.where(obi).countDocuments()); 
+        // CĂUTAREA datelor
+        query = model.find(obi);        // https://mongoosejs.com/docs/tutorials/query_casting.html -> Implicit $in
 
-        // Adu-mi doar următorul subset:
-        query.select(req.query.select);
+        let total = await model.where(obi).countDocuments();
+        console.log("[pagination.ctrl] Numarul datelor este: ", total); 
+
+        query.select(req.query.select); // Adu-mi doar următorul subset al câmpurilor care sunt necesare în client
 
         // Șterge câmpurile care nu vrei să aterizeze în obiectul `Query`
         if (req.query.exclude) {
             req.query.exclude.forEach(field => delete query[field]);
         }
         
-        // query.countDocuments(function clbkCount (err, count) {
-        //     if (err) {
-        //         console.error(err);
-        //         console.log("Numărul documentelor găsite este ", count);
-        //         total = count;
-        //     }
-        // }); // numărul total de documente găsite
-
         /* === PAGINAREA === */
-        const page     = parseInt(req.pageNr, 10) || 1;   // pagina 1 va fi din oficiu, dacă nu avem valoare precizată pentru pagină
-        const limit    = parseInt(req.limitNr, 10) || 10; // dacă nu este precizat numărul de rezultate afișat de pagină, trimite din oficiu 10
-        const startIdx = (page -1 ) * limit;              // calculează câte rezultate trebuie sărite pentru a ajunge la fereastra de date necesare
-        const endIdx   = page * limit;
-        const allDocs  = await model.countDocuments();
+        let pagination = {};  // rezultatul paginării
+        let page       = parseInt(req.pageNr, 10)  === 0 ? 1  : parseInt(req.pageNr, 10);     // pagina 1 va fi din oficiu, dacă nu avem valoare precizată pentru pagină
+        let limit      = parseInt(req.limitNr, 10) === 0 ? 10 : parseInt(req.limitNr, 10);    // dacă nu este precizat numărul de rezultate afișat de pagină, trimite din oficiu 10
+        let startIdx   = (page - 1) * limit;  // calculează câte rezultate trebuie sărite pentru a ajunge la fereastra de date necesare
+        let endIdx     = page * limit;
+
+        // let allDocs  = await model.countDocuments();
+        // console.log(`Numărul tuturor documentelor găsite este: `, allDocs);
         // console.log("[pagination] indexul de start este ", startIdx, " iar limita este ", limit);
 
         // Setează indexul de la care culegi setul de date și care este limita de înregistrări
@@ -79,30 +76,25 @@ exports.pagination = async function pagination (req, model) {
 
         // execută interogarea bazei și adu rezultatele (se creează și cursorul cu această ocazie)
         let date = await query.exec();
-        // console.log("[pagination.ctrl] datele aduse din Mongo sunt: ", date.length, " dintr-un total de ", total);
-    
-        // rezultatul paginării
-        const pagination = {};
     
         // dacă ești pe prima pagină, nu vrei să apară `previous`, iar dacă ești pe ultima, nu vrei să apară `next`.
         /* === NEXT page === */
         if (endIdx < total) {
-            pagination.next = {
+            pagination['next'] = {
                 page: page + 1,
                 limit
             };
         }
         /* === PREVIOUS page === */
         if (startIdx > 0) {
-            pagination.prev = {
+            pagination['prev'] = {
                 page: page - 1,
                 limit
             };
         }
-    
-        // console.log("Număr total documente găsite: ", total, " din ", allDocs);
-        // constituie pachetul de date necesar clientului
-        return {date, total, allDocs, pagination}; 
+
+        // datele necesare clientului
+        return {date, total, pagination}; 
     } catch (error) {
         console.log(error);
     }
