@@ -1,3 +1,11 @@
+        // https://stackoverflow.com/questions/18148166/find-document-with-array-that-contains-a-specific-value FRACK $all!!!
+        // https://docs.mongodb.com/manual/tutorial/query-arrays/
+        // https://stackoverflow.com/a/8145558/1271340 Cum se face căutare într-un singur array
+        // https://stackoverflow.com/questions/22998765/mongoose-query-to-find-matching-elements-in-multiple-arrays Căutare în array-uri multiple
+        // https://www.codegrepper.com/code-examples/whatever/mongoose+find+multiple
+        // https://stackoverflow.com/questions/5539955/how-to-paginate-with-mongoose-in-node-js
+
+
 Când nu introduci nimic în editorul de text, dă o mare eroare
 
 

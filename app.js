@@ -285,7 +285,7 @@ app.use('/administrator',  csurfProtection, UserPassport.ensureAuthenticated, ad
 app.use('/resurse',        csurfProtection, UserPassport.ensureAuthenticated, resurse);
 app.use('/log',            csurfProtection, UserPassport.ensureAuthenticated, log);
 app.use('/profile',        csurfProtection, profile);
-app.use('/tags',           csurfProtection, tags);
+app.use('/tag',            csurfProtection, tags);
 
 // CONSTANTE
 const LOGO_IMG = "img/" + process.env.LOGO;

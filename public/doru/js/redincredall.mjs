@@ -448,14 +448,14 @@ function clickPeDisciplina (evt) {
         claseleSelectate.push(dataset.clasa);
             
         // creează butonul disciplinei (TAGUL MARTOR) pe care a selectat-o user-ul
-        console.log(`tagid la momentul creării este `, `tag-${id}`);
+        // console.log(`tagid la momentul creării este `, `tag-${id}`);
         let aTag = new createElement('a', '', ['disctag', id, `tag-${id}`], {href: '#'}).creeazaElem(evt.target.textContent); // `id` este necesar în clase pentru a fi colorat specific clasei
         let bTag = new createElement('button', '', ['btn-close', 'btn-close-white'], {'type': 'button', 'aria-label': "Close", "data-disc": id, "data-clasa": dataset.clasa, "data-disciplina": evt.target.innerText}).creeazaElem();
         aTag.appendChild(bTag);
         bTag.addEventListener('click', delKeyword); // adaugă listener de ștergere keyword
         discSelected.appendChild(aTag);
     }
-    console.log(`Seturile actualizate arată astfel: claseSelectate`, claseleSelectate, ` disciplineNume `, disciplineNume , ` și discipline selectate `, disciplineSelectate );
+    // console.log(`Seturile actualizate arată astfel: claseSelectate`, claseleSelectate, ` disciplineNume `, disciplineNume , ` și discipline selectate `, disciplineSelectate );
 }
 
 /**
@@ -493,25 +493,36 @@ function delKeyword (evt) {
     }
 
     discSelected.removeChild(tgt);
-
-    console.log(`După ștergere datele actualizate arată astfel: claseSelectate`, claseleSelectate, ` disciplineNume `, disciplineNume , ` și discipline selectate `, disciplineSelectate );
+    // console.log(`După ștergere datele actualizate arată astfel: claseSelectate`, claseleSelectate, ` disciplineNume `, disciplineNume , ` și discipline selectate `, disciplineSelectate );
 }
 
+let tplRec = document.querySelector('#record').content;
+let tplNav = document.querySelector('#paginator').content;
+/* === SETAREA OBIECTULUI DE CĂUTARE PENTRU MONGODB === */
+let pageNr = 0, limitNr = 10, skipNr = 0;
+let selectObi = {
+    query: {
+        projection: {},
+        select: '',
+        exclude: [],
+        sortby: [],
+        sortDefaultField: 'date'
+    },
+    pageNr: pageNr,
+    limitNr: limitNr,
+    skipNr: skipNr
+};
 // Construiește un dicționar de seturi pentru că este posibil ca în viitor să fie adăugate și alte criterii de selecție cum ar fi metrici.
 // Numele proprietăților să fie cel al câmpurilor din modelul de date
 var searchSets = Object.create(null);
 // searchSets.etichete = disciplineSelectate;  // trimite în obiectul `searchSets` un atribut nou `etichete`
 searchSets.level = claseleSelectate;        // este setul claselor care va limita căutarea doar la clasele selectate
 searchSets.discipline = disciplineNume;     // este setul disciplinelor selectate chiar ca nume
-searchSets.expertCheck = true;  // SETAREA CARE SELECTEAZA DOAR CE ESTE AVIZAT DE EXPERT
-
-/* === SETAREA OBIECTULUI DE CĂUTARE PENTRU MONGODB === */
-let pageNr = 0, limitNr = 10, skipNr = 0;
-let selectObi = null;
 
 /**
  * Funcția are rolul de a adăuga obiectului `selectObi.query.projection` o proprietate nouă cu un array de valori după care se va face căutarea.
  * Numele proprietății este cel al unei proprietăți din dicționarul `searchSets`, iar valoarea este setul transformat în array
+ * De fiecare dată când se apasă butonul de căutare, această funcție este apelată pentru a construi obiectul de filtrare a rezultatelor
  * @param numeSet referință către un obiect `Set` care culege cuvinte cheie ce vor fi utilizate în căutare (valoarea din dicționarul `searchSets`)
  * @param numeCamp este un `String` cu numele unui câmp din modelul de date pentru care se face interogarea (cheia din dicționarul `searchSets`)
  */
@@ -520,9 +531,9 @@ function dataAggregator4Search (numeCamp, value) {
     // console.log('[redincredall] disciplinele selectate din set sunt ', [...numeSet]);
 
     // Asigură-te că există deja array-ul selecțiilor
-    if (!selectObi.query.projection['$and']) {
-        selectObi.query.projection['$and'] = [];
-    };
+    // if (!selectObi.query.projection['$and']) {
+    //     selectObi.query.projection['$and'] = [];
+    // };
 
     // Constituie aici un filtru în funcție de numele câmpului
     switch (numeCamp) {
@@ -532,8 +543,9 @@ function dataAggregator4Search (numeCamp, value) {
             }
             break;
         case 'level':
-            if (value.size > 0) {
-                selectObi.query.projection['$and'].push({[numeCamp]: {"$in": Array.from(value)}});
+            if (value.length > 0) {
+                let unqs = new Set(value); // redu la un set de clase unice
+                selectObi.query.projection[numeCamp] = {"$in": Array.from(unqs)};
                 // _FIXME: Aici trimite o sintaxă $or -> { $or:[ {'_id':objId}, {'name':param}, {'nickname':param} ]
                 // userModel.find({$or: [{email: req.body.email}, {username: req.body.username}]})
                 // https://stackoverflow.com/questions/7382207/mongooses-find-method-with-or-condition-does-not-work-properly
@@ -552,23 +564,14 @@ function dataAggregator4Search (numeCamp, value) {
  * === BUTONUL DE CĂUTARE FAȚETATĂ === *
  * Funcția are rol de callback pentru evenimentul `click` al butonului de căutare fațetată (id `searchF`)
  * Este apelată de `pgNavRequest` și lister pentru butonul `Caută`.
- * Apelează `dataAggregator4Search`
+ * Apelează `dataAggregator4Search()`
  * @param evt obiectul eveniment al butonului de căutare fațetată
  */
 function getPagedResults (evt) {
-    selectObi = {
-        query: {
-            projection: {},
-            select: '',
-            exclude: [],
-            sortby: [],
-            sortDefaultField: 'date'
-        },
-        pageNr: pageNr,
-        limitNr: limitNr,
-        skipNr: skipNr
+    // Adăugarea setărilor fixe
+    if (!selectObi.query.projection['expertCheck']) {
+        selectObi.query.projection['expertCheck'] = true;
     }
-
     // pentru fiecare proprietate din dicționarul `searchSets`, apelează `dataAggregator4Search` pentru a completa obiectul de căutare trimis serverului
     let prop, val;
     for ([prop, val] of Object.entries(searchSets)) {
@@ -578,8 +581,6 @@ function getPagedResults (evt) {
 
     // afișează un set de câmpuri pe care userul să le aleagă pentru a aduce un subset din întreaga înregistrare. Acum, hard codată
     selectObi.query.select = 'date level title autori description etichete';
-
-    // _TODO: instrodu și criterul de selecție care să limiteze la clasa pentru care se face căutarea
 
     // Evenimentul folosit va fi `pagedRes` pentru aducerea resurselor paginate
     pubComm.emit('pagedRes', selectObi);
@@ -608,9 +609,13 @@ var currentPg = 1; // este pagina curentă. Actualizat din `paginare()`
  */
 function pgNavRequest (evt) {
     removeAllChildren(searchRes); // #1 șterge rezultatele anterioare
-    // console.log("[redincredall.mjs] obiectul evt este ", evt.target.innerText);
-    selectObi.skipNr = parseInt(evt.target.innerText) * parseInt(limitNr);  // setează noua valoare a lui `skipNr`
-    selectObi.pageNr = parseInt(evt.target.innerText);            // va fi valoarea paginii pentru care s-a apăsat butoul navigatorului
+
+    // setează currentPg la pagina care a fost adusă conform butonului
+    currentPg = parseInt(evt.target.innerText, 10);
+
+    // console.log("[redincredall.mjs] Textul de pe buton este ", evt.target.innerText);
+    selectObi.skipNr = parseInt(evt.target.innerText, 10) * parseInt(limitNr, 10);  // setează noua valoare a lui `skipNr`
+    selectObi.pageNr = parseInt(evt.target.innerText, 10);                          // va fi valoarea paginii pentru care s-a apăsat butonul navigatorului
     // console.log("[redincredall.js] noile valori ale lui skipNr și pageNr sunt: ", skipNr, pageNr);
     // console.log("[redincredall.js] În server va pleca pentru o pagină nouă de date ", selectObi);
     getPagedResults();
@@ -644,9 +649,6 @@ function nextPgNavRequest (evt) {
     getPagedResults();
 }
 
-let tplRec = document.querySelector('#record').content;
-let tplNav = document.querySelector('#paginator').content;
-
 /**
  * === CĂUTAREA după CLASĂ-DISCIPLINĂ ===
  * Funcția are rolul de a crea zona de afișare a rezultatelor și 
@@ -669,7 +671,7 @@ function paginare (dataset) {
         titleLnk = new createElement('a', '', [], {href: `/resurse/${rec[1]._id}`}).creeazaElem(`${rec[1].title}`);
         title.appendChild(titleLnk);
         
-        result.querySelector(`.autori`).textContent = rec[1].autori;            // populează autorii
+        result.querySelector(`.autori`).textContent = rec[1].autori;    // populează autorii
         result.querySelector(`.description`).innerHTML = `<span class="srecdescr">Descriere: </span>${rec[1].description}`;  // populează descrierea
         
         // Tratează etichetele
@@ -701,34 +703,44 @@ function paginare (dataset) {
     // console.log("[redincredall.mjs] Setul de date primit de la server la momentul paginării este ", dataset);
 
     /* === LOGICA DE AVANS === */
-    // stabilește valoarea limitei ca număr de înregistrări per pagină. Datele le ia din datele venite cu primul set de la server
+    // întreaga logică se bazează pe datele venite din server odată cu primul calup de date (`dataset`)
+    console.log(`Din server am primit următoarele repere `, dataset.pagination);
+
+    // stabilește valoarea limitei ca număr de înregistrări per pagină. Datele le ia din cele venite cu primul set de la server
     let getLimit;
     if (dataset.pagination.hasOwnProperty('next')) {
-        getLimit = dataset.pagination.next.limit; // fii foarte tent că serverul setează numărul din oficiu, care este 10.
+        getLimit = dataset.pagination.next.limit || 10; // fii foarte atent că serverul setează numărul din oficiu, care este 10.
     }
 
     let totalPg = Math.ceil(dataset.total / getLimit); // află numărul total de pagini cu date pentru a ști câte butoane corespondente creezi;
+    
     // referință la pagina curentă. Actualizată la momentul apăsării butonului unei pagini
     let pag;
     if (dataset.pagination.hasOwnProperty('next')) {
-        pag = parseInt(dataset.pagination.next.page); 
-        currentPg = --pag;
+        pag = Math.max(1, dataset.pagination.next.page); 
+        if (pag !== NaN && pag > 1) {
+            currentPg = --pag;
+        }
     } else {
-        pag = parseInt(dataset.pagination.prev.page);
-        currentPg = ++pag;
+        pag = Math.max(1, dataset.pagination.prev.page);
+        if (pag !== NaN && pag > 1) {
+            currentPg = ++pag;
+        }
     }
+    // console.log(`Numărul de pagini de afișat este `, totalPg, ` numarul total de pagini este `, totalPg, ` pagina curentă calculată în funcție de ceea ce a venit de la server este `, currentPg);
 
-    /* === PREV === */
-    // Creează butonul PREVIOUS -> `Anterior` în UI
-    let prevBtn = new createElement('li', '', ["page-item"], {'data-pg': 'prev'}).creeazaElem(); // Creează `li` pentru butonul PREVIOUS (`Anterior`).
+    /* === PREV [ANTERIOR]=== */
+    let prevBtn = new createElement('li', '', ["page-item"], {'data-pg': 'prev'}).creeazaElem();                    // Creează `li` pentru butonul PREVIOUS (`Anterior`).    
+    let prevAelem = new createElement('a', '', ['page-link'], {href: "#", tabindex: -1}).creeazaElem('Anterior');   // creează elementul a
+
     // în cazul în care nu avem proprietatea `prev` în obiect, suntem chiar pe prima pagină, ceea ce înseamnă că primul `li` cu child `a` -> `Anterior`, va fi disabled
-    if (!dataset.pagination.hasOwnProperty('prev')) {
-        prevBtn.className = "page-item disabled"; // preferabil pentru a extinde suportul și pentru browsere mai vechi
+    if (currentPg === 1) {
+        prevBtn.className = "page-item disabled";
+        prevAelem.setAttribute('aria-disabled', true);
     } else {
         prevBtn.className = "page-item";
     }
-    // creează elementul a
-    let prevAelem = new createElement('a', '', ['page-link'], {href: "#", tabindex: -1}).creeazaElem('Anterior');
+
     // inserează în li a-ul
     prevBtn.appendChild(prevAelem);
     // adu-mi datele din pagina anterioară
@@ -736,18 +748,19 @@ function paginare (dataset) {
     // inserează li-ul în ul.
     insetPgElems.appendChild(prevBtn);
 
-    /* === PAGES === */
-    // Creează restul li-urilor care fiecare este comandă către a aduce o pagină nouă cu rezultate
+    /* === BUTOANELE CORESPONDENTE FIECĂREI PAGINI === */
+    // Creează restul li-urilor care fiecare este comandă pentru a aduce o pagină nouă cu rezultate
     let pgElem;
     for (pgElem = 1; pgElem <= totalPg; ++pgElem) {
         let liElem = new createElement('li', '', ['page-item'], {}).creeazaElem();
         let aElem = new createElement('a', '', ['page-link'], {href: "#"}).creeazaElem(pgElem);
 
-        // dacă `pgElem`este egal cu `currentPg` [elementul este egal cu pagina corespondentă]
+        // dacă `pgElem` este egal cu `currentPg`, elementul este egal cu pagina corespondentă
         if (pgElem == currentPg) {
-            let active = new createElement('span', '', ['sr-only'], {}).creeazaElem(`(current)`);
+            // let active = new createElement('span', '', ['sr-only'], {}).creeazaElem(`(current)`);
             liElem.className = 'page-item active';
-            aElem.appendChild(active);
+            liElem.setAttribute('aria-current', 'page'); // <li class="page-item active" aria-current="page">
+            // aElem.appendChild(active);
         } else {
             // pentru restul butoanelor corespondente celorlalte pagini cu date, atașăm eveniment de aducere a datelor corespondente
             liElem.addEventListener('click', pgNavRequest);
@@ -755,7 +768,6 @@ function paginare (dataset) {
 
         liElem.appendChild(aElem);
         insetPgElems.appendChild(liElem);
-        // paginator.appendChild(insetPgElems);
     }
     // adaugă la `ul` elementele de legătură ale paginilor
     searchRes.appendChild(paginator);
