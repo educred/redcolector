@@ -43,7 +43,9 @@ getStructure().then((val) => {
 // funcțiile de căutare
 const {findInIdx, aggFromIdx} = require('./controllers/elasticsearch.ctrl');
 // căutare resurse în Mongo prin Mongoose
-const {pagination} = require('./controllers/pagination.ctrl');
+// const {pagination} = require('./controllers/pagination.ctrl');
+const {pagination_cursor} = require('./controllers/pagination-cursor.ctrl');
+
 // funcții de indexare și reindexare în Elasticsearch 7
 const {deleteIndex, reidxincr, mgdb2es7} = require('../models/model-helpers/es7-helper');
 const { get, set } = require('../redis.config');
@@ -1524,10 +1526,12 @@ function sockets (io) {
 
         // === PAGEDRES === :: RESURSELE PAGINATE din MONGODB
         socket.on('pagedRes', (data) => {
+            // console.log(`Ce am primit din client este `, JSON.stringify(data, null, 2));
             //_ TODO: modelează acest eveniment pentru resursele paginate necesare clientului
-            let dataPromise = pagination(data, Resursa);
-            dataPromise.then( data => {
-                console.log(`Datele de paginare în urma căutării sunt `, data.pagination);
+            // let dataPromise = pagination(data, Resursa);
+            let dataPromise = pagination_cursor(data, Resursa);
+            dataPromise.then( (data) => {
+                // console.log(`Datele pe care le trimit `, data);
                 socket.emit('pagedRes', data);
             }).catch((err) => {
                 console.log(`[sockets.js::'pagedRes'] Eroare la aducerea resurselor paginate cu următoarele detalii: ${err}`);
@@ -1805,12 +1809,30 @@ function sockets (io) {
             // Array cu stringurile care pretind că sunt linkuri care trimit spre diferitele componente ale resursei (vezi și https://github.com/ogt/valid-url)
 
             let lfields = [data.re_linkonline, data.re_incarcarematerial, data.re_adresadescriptor];
-            let links4processing = lfields.filter((textstring) => validUrl.isUri(textstring)), lnk;
+            let links4processing = lfields.filter((textstring) => validUrl.isUri(textstring)), lnk; // Filtrează NULL-urile
 
+            /* === CONSTRUCȚIA PREVIEW-urilor PENTRU RESURSELE CARE OFERĂ POSIBILITATE DE EMBED === */
             for (lnk of links4processing) {
                 let urlobject  = new URL(lnk); // https://www.kindacode.com/article/node-js-get-domain-hostname-and-protocol-from-a-url/
                 let hostName   = urlobject.hostname;
-                let domainName = hostName.replace(/^[^.]+\./g, '');
+                let domainName = hostName.replace(/www\.?/g, '');
+                /*
+                    [SERVICII FOLOSITE]
+                    library.livresq.com
+                    youtube.com
+                    view.genial.ly
+                    animoto.com
+                    docs.google.com
+                    forms.gle
+                    view.livresq.com
+                    sway.office.com
+                    ro.padlet.com
+                    walter-fendt.de
+                    learningapps.org
+                    wordwall.net
+                    canva.com
+                    liveworksheets.com
+                */
 
                 switch (domainName) {
                     case "youtube.com":
@@ -1829,6 +1851,33 @@ function sockets (io) {
                             }
                         });
                         break;
+                    /* === NOTE: Deschis issue: https://github.com/editor-js/embed/issues/80#issue-1125280058 (deocamdată doar link!!!)*/
+                    // case "view.genial.ly":
+                    //     let segments = urlobject.pathname.split('/');
+                    //     let id = segments[1];
+
+                    //     let titlearr, title;
+                    //     if (segments[2]){
+                    //         titlearr = segments[2].split('-');
+                    //         if (titlearr[0] === 'presentation' || titlearr[0] === 'video'){
+                    //             titlearr.shift();
+                    //             title = titlearr.join(' ');
+                    //         }
+                    //     }
+
+                    //     if (id) {
+                    //         content.blocks.push({
+                    //             "id": nanoid(10),
+                    //             "type": "embed",
+                    //             "data": {
+                    //                 "service": "genially",
+                    //                 "source": `https://view.genial.ly/${id}`,
+                    //                 "embed": `https://view.genial.ly/${id}`,
+                    //                 "caption": title
+                    //             }
+                    //         });
+                    //     }
+                    //     break;
                     default:
                         // creează un block de link
                         content.blocks.push(
@@ -1845,17 +1894,22 @@ function sockets (io) {
 
             }
 
+            //_TODO: Prelucrează etichetele
+            let etichete = data.etichete.split(',');
+
             // OBIECTUL COLECTOR MARE completat cu datele inițiale
             let RED = {
                 title:         data.title,
-                description:   data.description,
-                emailContrib:  data.emailContrib,
+                description:   data.description === 'NULL' ? '' : data.description,
                 autori:        data.autori,
-                level:         [data.level],
+                emailContrib:  data.emailContrib,
+                date:          data.date,
                 discipline:    [data.discipline],
+                level:         [data.level],
                 competenteGen: [data.competenteGen],
                 competenteS:   [],
                 content:       content,
+                etichete,
                 licenta:       'CC-BY',
             }
 
@@ -1903,7 +1957,7 @@ function sockets (io) {
                 // Încarcă modelul cu date!!!
                 var resursaEducationala = new Resursa({
                     _id:             mongoose.Types.ObjectId(),
-                    date:            Date.now(),
+                    date:            RED.date,
                     uuid:            uuid,
                     title:           RED.title,
                     description:     RED.description,
@@ -1916,6 +1970,7 @@ function sockets (io) {
                     competenteGen:   RED.competenteGen,
                     competenteS:     RED.competenteS,
                     content:         RED.content,
+                    etichete:        RED.etichete,
                     licenta:         RED.licenta,
                     expertCheck:     true,
                     generalPublic:   true,
@@ -1965,7 +2020,7 @@ function sockets (io) {
             } 
         };
 
-        // === ÎNCARCA SETUL RED-urilor ===
+        // === ÎNCARCA SETUL RED-urilor din sursă externă ===
         socket.on('loadRedSet', (file) => {
             let fileBuffer = Buffer.from(file);
             const readF = Readable.from(fileBuffer); // Creează stream Read din fișierul CSV sursă.

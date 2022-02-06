@@ -128,6 +128,7 @@ function clbkDOMContentLoaded () {
                     services: {
                         youtube: true,
                         coub: true,
+                        twitter: true,
                         codepen: {
                             regex: /https?:\/\/codepen.io\/([^\/\?\&]*)\/pen\/([^\/\?\&]*)/,
                             embedUrl: 'https://codepen.io/<%= remote_id %>?height=300&theme-id=0&default-tab=css,result&embed-version=2',
@@ -135,6 +136,11 @@ function clbkDOMContentLoaded () {
                             height: 300,
                             width: 600,
                             id: (groups) => groups.join('/embed/')
+                        },
+                        genially: {
+                            regex: /https?:\/\/view.genial.ly\/(\w+)\/?(\w+(-[\w]+)+)?/,
+                            embedUrl: 'https://view.genial.ly/<%= remote_id %>',
+                            html: "<div style='position: relative; padding-bottom: 56.25%; padding-top: 0; height: 0;'><iframe frameborder='0' style='width: 100%; height: 100%;' type='text/html' allowscriptaccess='always' allowfullscreen='true' scrolling='yes' allownetworking='all'></iframe></div>"
                         }
                     }
                 }

@@ -60,7 +60,8 @@ exports.loadRootResources = async function loadRootResources (req, res, next) {
     // ===> MODULE
     let modules = [
         // LOCALE
-        {module: `${gensettings.template}/js/redincredall.mjs`}
+        // {module: `${gensettings.template}/js/redincredall.mjs`}
+        {module: `${gensettings.template}/js/redincredallcursor.mjs`}
     ];
     // console.log(`Valorile dorite sunt `, RES_IDX_ES7, RES_IDX_ALS);
     if (!RES_IDX_ALS) {

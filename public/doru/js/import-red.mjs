@@ -60,7 +60,7 @@ pubComm.on('allUnclaimedReds', (unclaimed) => {
                 title: 'ID',
                 data: '_id',
                 render: function clbkId (data, type, row) {
-                    data = `<a href="${window.location.origin}/administrator/${data}" class="btn btn-primary btn-sm active" role="button" aria-pressed="true">${data.slice(0,5)}...</a>`;
+                    data = `<a href="${window.location.origin}/administrator/reds/${data}" class="btn btn-primary btn-sm active" role="button" aria-pressed="true">${data.slice(0,5)}...</a>`;
                     return data;
                 }
             },

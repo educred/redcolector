@@ -1,3 +1,36 @@
+<div style="width: 100%;">
+	<div style='position: relative; padding-bottom: 56.25%; padding-top: 0; height: 0;'>
+		<iframe 
+			frameborder="0" 
+			width="1200" 
+			height="675" 
+			style="position: absolute; 
+			top: 0; 
+			left: 0; 
+			width: 100%; 
+			height: 100%;" 
+			src="https://view.genial.ly/619f7927f2d1d50e25f7f782" 
+			type="text/html" 
+			allowscriptaccess="always" 
+			allowfullscreen="true" 
+			scrolling="yes" 
+			allownetworking="all">
+		</iframe> 
+	</div> 
+</div>
+
+
+https://view.genial.ly/60c8e13fb16c270dc0e31d08/presentation-simple-presentation
+https://view.genial.ly/60c77528dd18b30db40f58c3/presentation-umbra-producerea-eclipselor
+https://view.genial.ly/60406bc2ead6200f87f37500
+https://view.genial.ly/601583b91bd3060d78c622f4/presentation-sunetul-caracteristici
+
+<iframe frameborder='0' style='position: absolute; top: 0; left: 0; width: 100%; height: 100%;' type='text/html' allowscriptaccess='always' allowfullscreen='true' scrolling='yes' allownetworking='all'></iframe> 
+
+
+
+
+
         // https://stackoverflow.com/questions/18148166/find-document-with-array-that-contains-a-specific-value FRACK $all!!!
         // https://docs.mongodb.com/manual/tutorial/query-arrays/
         // https://stackoverflow.com/a/8145558/1271340 Cum se face căutare într-un singur array
