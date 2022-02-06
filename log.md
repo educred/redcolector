@@ -1,3 +1,18 @@
+Configuration file '/etc/elasticsearch/jvm.options'
+ ==> Modified (by you or by a script) since installation.
+ ==> Package distributor has shipped an updated version.
+   What would you like to do about it ?  Your options are:
+    Y or I  : install the package maintainer's version
+    N or O  : keep your currently-installed version
+      D     : show the differences between the versions
+      Z     : start a shell to examine the situation
+ The default action is to keep your current version.
+*** jvm.options (Y/I/N/O/D/Z) [default=N] ? 
+Installing new version of config file /etc/elasticsearch/log4j2.properties ...
+warning: usage of JAVA_HOME is deprecated, use ES_JAVA_HOME
+Created elasticsearch keystore in /etc/elasticsearch/elasticsearch.keystore
+
+
 <div style="width: 100%;">
 	<div style='position: relative; padding-bottom: 56.25%; padding-top: 0; height: 0;'>
 		<iframe 

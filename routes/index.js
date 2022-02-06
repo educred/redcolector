@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express  = require('express');
 const router   = express.Router();
-const moment   = require('moment');
 
 const Resursa  = require('../models/resursa-red');              // Adu modelul resursei
 const Mgmtgeneral = require('../models/MANAGEMENT/general');    // Adu modelul management
@@ -52,7 +51,7 @@ router.get('/', (req, res, next) => {
             projection: {generalPublic: true},
             queryOpts: {
                 sort: {date: -1},
-                limit: 8
+                limit: 9
             }
         };
 
