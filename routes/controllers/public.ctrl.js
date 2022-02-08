@@ -52,10 +52,10 @@ async function renderPublic (req, res, next, gensettings, Model, modelOpts, resu
             // [DATA CALENDARISTICĂ]
             obi.dataRo = moment(obi.date).locale('ro').format('LLL');   // formatarea datei pentru limba română.
 
-            obi.template = `${gensettings.template}`;
-            obi.logo = `${gensettings.template}/${LOGO_IMG}`;
+            obi['template'] = `${gensettings.template}`;
+            obi['logo'] = `${gensettings.template}/${LOGO_IMG}`;
 
-            obi.ratingrepresentation = '';
+            obi['ratingrepresentation'] = '';
             let kontor = obi.contorRating ?? 0;
             let lastRating = obi.rating ?? 0;
             let ratingTotal = obi.ratingTotal ?? 0;
@@ -95,14 +95,11 @@ async function renderPublic (req, res, next, gensettings, Model, modelOpts, resu
             });
 
             // [COPERTA]
-            if (obi.coperta === undefined) {
-                // let {body} = await got(`https://api.unsplash.com/photos/random/?client_id=${process.env.UNSPLASH_KEY}&collections=education`);
-                // obi.coperta = bodyobi.urls.regular;
-                obi.coperta = `/${gensettings.template}/img/black-1072366_1920.jpg`;
-                // console.log(obi);
-                // newResultArr.push(Object.assign(obi))1;
-            }
-            
+            // if (obi.coperta === undefined) {
+            //     // let {body} = await got(`https://api.unsplash.com/photos/random/?client_id=${process.env.UNSPLASH_KEY}&collections=education`);
+            //     // obi.coperta = bodyobi.urls.regular;
+            //     obi.coperta = `/${gensettings.template}/img/black-1072366_1920.jpg`;
+            // }
             return obi;
         });
 

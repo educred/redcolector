@@ -2012,7 +2012,10 @@ function sockets (io) {
                         }
 
                         /* === ÎNCHIDE BAG-ul!!! === */
-                        existBag.finalize(() => {                    
+                        existBag.finalize(() => {
+                            // Scrie un log privind importul
+                            // https://stackoverflow.com/questions/3459476/how-to-append-to-a-file-in-node/43370201#43370201
+                            fs.appendFileSync(`${__basedir}/data/log.json`, JSON.stringify(res));
                             return;
                         });
                     });
@@ -2025,7 +2028,7 @@ function sockets (io) {
             let fileBuffer = Buffer.from(file);
             const readF = Readable.from(fileBuffer); // Creează stream Read din fișierul CSV sursă.
 
-            Papa.parse(readF, {
+            let results = Papa.parse(readF, {
                 worker: true,
                 header: true,
                 encoding: 'utf8',
@@ -2052,7 +2055,7 @@ function sockets (io) {
                     }
                 }
             });
-                
+            console.log(`Rezultate în urma prelucrării`, results);                
         });
 
         // === UPDATE PE CÂMPURI UNICE ===
