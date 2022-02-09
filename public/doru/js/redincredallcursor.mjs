@@ -574,7 +574,7 @@ function getPagedResults (evt) {
     if (!selectObi.query.projection['expertCheck']) {
         selectObi.query.projection['expertCheck'] = true;
     }
-    // pentru fiecare proprietate din dicționarul `searchSets`, apelează `dataAggregator4Search` pentru a completa obiectul de căutare trimis serverului
+    // pentru fiecare proprietate din dicționarul `searchSets`, apelează `dataAggregator4Search` pentru a completa obiectul de căutare `selectObi` trimis serverului
     let prop, val;
     for ([prop, val] of Object.entries(searchSets)) {
         dataAggregator4Search(prop, val);
@@ -583,6 +583,7 @@ function getPagedResults (evt) {
 
     // afișează un set de câmpuri pe care userul să le aleagă pentru a aduce un subset din întreaga înregistrare. Acum, hard codată
     selectObi.query.select = 'date level title autori description etichete';
+    console.log(`Datele care vor pleca în server după apasarea butoanelor de avans: `, selectObi);
     pubComm.emit('pagedRes', selectObi);
 }
 
@@ -600,7 +601,7 @@ pubComm.on('pagedRes', function clbkPagedRes (dataset) {
     paginare(dataset);
 });
 
-var currentPg = 1; // este pagina curentă. Actualizat din `paginare()`
+var currentPg = 0; // este pagina curentă. Actualizat din `paginare()`
 
 /**
  * Tratarea cazului PREVIOUS page
@@ -609,6 +610,7 @@ var currentPg = 1; // este pagina curentă. Actualizat din `paginare()`
 function prevPgNavRequest (evt) {
     removeAllChildren(searchRes); // #1 șterge rezultatele anterioare
     let dataset = evt.target.dataset;
+    // console.log(`Setul de date extras de pe butonul PREVIOUS este: `, dataset);
     let cursor2send = dataset.pg; // trebuie să fie timestamp-ul corespondent cursorului
     selectObi.pagination.cursor = cursor2send;
     getPagedResults();
@@ -621,13 +623,13 @@ function prevPgNavRequest (evt) {
 function nextPgNavRequest (evt) {
     removeAllChildren(searchRes); // #1 șterge rezultatele anterioare
     let dataset = evt.target.dataset;
+    // console.log(`Setul de date extras de pe butonul de NEXT este: `, dataset);
     let cursor2send = dataset.pg; // trebuie să fie timestamp-ul corespondent cursorului
     selectObi.pagination.cursor = cursor2send;
     getPagedResults();
 }
 
 let queryTracker = new WeakMap(); // Acesta este structura cu ajutorul căreia voi ține evidența query-urilor și implicit a paginației: obiectQuery: [timestampSegment1, timestampSegment2, ...]
-
 /**
  * === CĂUTAREA după CLASĂ-DISCIPLINĂ ===
  * Funcția are rolul de a crea zona de afișare a rezultatelor și 
@@ -680,88 +682,110 @@ function paginare (dataset) {
     let paginator    = tplNav.cloneNode(true);           // clonează template-ul navigatorului de pagini
     let insetPgElems = paginator.querySelector('#noPg'); // referință la elementul `ul`
 
+    // console.log(`queryTracker înainte de calcule `,queryTracker);
+
+    /* === CAZUL MAI MULTOR DATE DECÂT LIMIT === */
     let cursorAnterior, cursorNext; // acestea sunt cursoarele care trebui puse pe PREV și pe NEXT
     // doar dacă serverul a trimis un `nextCursor`, adică `moredata` true.
-    if (dataset.pagination.moredata) {
-        /* === LOGICA DE AVANS === */    
-        let totalPg = Math.ceil(dataset.total / limitNr); // află numărul total de pagini cu date pentru a ști câte butoane corespondente creezi;
+    
+    /* === LOGICA DE AVANS === */    
+    let totalPg = Math.ceil(dataset.total / limitNr); // află numărul total de pagini cu date;
 
-        /* === SEEDING `queryTracker` === */
-        queryTracker.set(selectObi, []);
-        
-        /* === INTRODU CURSORUL PRIMIT === */
-        let cursorArr = queryTracker.get(selectObi);    // Obține array-ul cursoarelor primite pentru obiectul de interogare
-        cursorArr.push(dataset.pagination.nextCursor);  // Introdu în array cursorul primit de la server
+    /* === SEEDING `queryTracker` === */
+    if (!queryTracker.has(selectObi.query)) {
+        queryTracker.set(selectObi.query, []);
+    };
+    
+    /* === INTRODU CURSORUL PRIMIT === */
+    let cursorArr = queryTracker.get(selectObi.query);  // Obține array-ul cursoarelor primite pentru obiectul de interogare
+    cursorArr.push(dataset.pagination.nextCursor);      // Introdu în array cursorul primit de la server
 
-        // în cazul în care array-ul cursoarelor este mai mare de 1, trebuie modificat `currentPg` pentru a reflecta numărul indexului lui `nextCursor` din array-ul de tracking
-        if (queryTracker.get(selectObi).length > 1) {
-            // Determinarea paginii curente
-            let idxInTracker = cursorArr.indexOf(dataset.pagination.nextCursor); // caută care este indexul cursorului care tocmai a fost primit de la server
-            if (idxInTracker !== -1) {
-                currentPg = idxInTracker; // dacă l-am găsit, înseamnă că este în array
-            }
-            cursorAnterior = cursorArr.slice(-2).shift(); // înseamnă valoarea de dinaintea ultimei. Uneori, când sunt doar două cursoare este chiar prima din array
-            // În cazul în care numărul total al cursoarelor este mai mare sau egal cu indexul cursorului curent incrementat
-            if (cursorArr.length >= ++idxInTracker) {
-                // în cazul în care ai un cursor și după cel curent, setează `cursorNext` la cel de după.
-                if (cursorArr.length > idxInTracker) {
-                    cursorNext = cursorArr[`${++idxInTracker}`];
-                } else {
-                    // dacă nu, `cursorNext` este chiar cel curent.
-                    cursorNext = cursorArr[`${idxInTracker}`];
-                }
-            }
-        }
-        // CAZUL ÎN CARE AVEM UN SINGUR CURSOR
-        if (queryTracker.get(selectObi).length == 1) {
-            cursorNext = queryTracker.get(selectObi)[0];
-            console.log(`Valoarea lui cursorNext ar trebui să fie `, cursorNext);
+    console.log(`queryTracker după calcule `,queryTracker);
+
+    /* === AI CEL PUȚIN DOUĂ CURSOARE === */
+    if (queryTracker.get(selectObi.query).length > 1) {
+
+        /* === PAGINA CURENTĂ ESTE VALOAREA INDEXULUI ÎN CARE SE AFLĂ CURSORUL ANTERIOR - pagina curentă este un cursor de dinaintea celui primit === */
+        let idxInTracker = cursorArr.indexOf(dataset.pagination.nextCursor); // caută care este indexul cursorului care tocmai a fost primit de la server. Indexul său este pagina pe care ești
+
+        /* === SETEAZĂ PAGINA CURENTĂ === */
+        if (idxInTracker !== -1) {
+            currentPg = idxInTracker; // dacă l-am găsit, setează numărul paginii curente cu valoarea indexului (va fi mai mică cu unu decât numărul tuturor cursoarelor)
         }
 
-        /* === PREV [ANTERIOR]=== */
-        let prevBtn = new createElement('li', '', ["page-item"], {'data-pg': cursorAnterior}).creeazaElem();            // Creează `li` pentru butonul PREVIOUS (`Anterior`).    
-        let prevAelem = new createElement('a', '', ['page-link'], {href: "#", tabindex: -1}).creeazaElem('Anterioare'); // creează elementul a
-
-        // în cazul în care nu avem proprietatea `prev` în obiect, suntem chiar în primul segment de date, ceea ce înseamnă că primul `li` cu child `a` -> `Anterior`, va fi disabled
-        if (currentPg === 1) {
-            prevBtn.className = "page-item disabled";
-            prevAelem.setAttribute('aria-disabled', true);
+        /* === ANTERIOR === */
+        if (queryTracker.get(selectObi.query).length === 2) {
+            cursorAnterior = cursorArr[0];
+            cursorNext = cursorArr[1];
         } else {
-            prevBtn.className = "page-item";
+            cursorAnterior = cursorArr[--idxInTracker]; // înseamnă cursorul de dinaintea celui pe care te afli
+            cursorNext = cursorArr[++idxInTracker];
         }
-        
-        prevBtn.appendChild(prevAelem);// inserează în li a-ul
-        prevBtn.addEventListener('click', prevPgNavRequest);// adu-mi datele din pagina anterioară
-        insetPgElems.appendChild(prevBtn);// inserează li-ul în ul.
 
-        /* === INFORMATIE DESPRE SEGMENTUL DE DATE AFISAT === */
-        // Creează restul li-urilor care afișează informație despre locul în care te afli/numarul calupului
-        let liElemNr = new createElement('li', '', ['page-item'], {}).creeazaElem();
-        let aElemNr = new createElement('span', '', ['pgcurent'], {}).creeazaElem(currentPg); // _TODO: aici trebuie afisata pagina/numarul calupului de date în care te afli
-        let aElemOf = new createElement('span', '', [], {}).creeazaElem(' / ');
-        let aElemPg = new createElement('span', '', ['allpages'], {}).creeazaElem(totalPg);
-        liElemNr.appendChild(aElemNr);
-        liElemNr.appendChild(aElemOf);
-        liElemNr.appendChild(aElemPg);
-        insetPgElems.appendChild(liElemNr);
-
-        /* === ADAUGĂ SEGMENTUL CU INFO === */
-        searchRes.appendChild(paginator);
-
-        /* === NEXT [Următoarele] === */
-        let nextBtn = new createElement('li', '', ["page-item"], {'data-pg': cursorNext}).creeazaElem(); // Creează `li` pentru butonul PREVIOUS (`Anterior`).
-        // în cazul în care nu avem proprietatea `next` în obiect, suntem chiar pe ultima pagină, ceea ce înseamnă că ultimul `li` cu child `a` -> `Următoarele`, va fi disabled
-        if (queryTracker.get(selectObi).length === totalPg) {
-            nextBtn.className = "page-item disabled"; // preferabil pentru a extinde suportul și pentru browsere mai vechi
-        } else {
-            nextBtn.className = "page-item";
+        /* === DATELE NU SUNT EPUIZATE ===*/
+        if (cursorArr.length >= ++idxInTracker && dataset.pagination.moredata) {
+            // Ai un cursor după cel pe care te afli - situație intermediară
+            if (cursorArr.length > ++idxInTracker) {
+                cursorNext = cursorArr[parseInt(++idxInTracker)];
+            } else {
+                // dacă nu, `cursorNext` este chiar cel curent și înseamnă că ești chiar pe ultimul cursor.
+                cursorNext = cursorArr[`${idxInTracker}`];
+            }
         }
-        let nextAelem = new createElement('a', '', ['page-link'], {href: "#"}).creeazaElem('Următoarele');
-        
-        nextBtn.appendChild(nextAelem); // inserează în li a-ul    
-        nextBtn.addEventListener('click', nextPgNavRequest); // adu-mi datele din pagina următoare    
-        insetPgElems.appendChild(nextBtn);  // inserează li-ul în ul.
+    } 
+    
+    /* === AI UN CURSOR === */
+    if (queryTracker.get(selectObi.query).length === 1 && dataset.pagination.moredata) {
+        currentPg = 1;
+        // CAZUL ÎN CARE SUNT MAI MULTE PAGINI
+        cursorAnterior = undefined;
+        cursorNext = queryTracker.get(selectObi.query)[0];
     }
+
+    /* === PREV [ANTERIOR]=== */
+    let prevBtn = new createElement('li', '', ["page-item"], {}).creeazaElem();
+    let prevAelem = new createElement('a', '', ['page-link'], {href: "#", tabindex: -1, 'data-pg': cursorAnterior}).creeazaElem('Anterioare');    
+    prevBtn.appendChild(prevAelem);// inserează în li a-ul
+    prevBtn.addEventListener('click', prevPgNavRequest);// adu-mi datele din pagina anterioară
+    insetPgElems.appendChild(prevBtn); /* == INSERT ÎN UL ==*/
+
+    /* === INFORMATIE DESPRE SEGMENTUL DE DATE AFISAT === */
+    let liElemNr = new createElement('li', '', ['page-item'], {}).creeazaElem();
+    let aElemMid = new createElement('a', '', ['page-link'], {href: "#"}).creeazaElem();
+    let aElemNr = new createElement('span', '', ['pgcurent'], {}).creeazaElem(' ' + currentPg);
+    let aElemOf = new createElement('span', '', [], {}).creeazaElem(' / ');
+    let aElemPg = new createElement('span', '', ['allpages'], {}).creeazaElem(totalPg + ' ');
+    aElemMid.appendChild(aElemNr);
+    aElemMid.appendChild(aElemOf);
+    aElemMid.appendChild(aElemPg);
+    liElemNr.appendChild(aElemMid);
+    insetPgElems.appendChild(liElemNr); /* == INSERT ÎN UL ==*/
+    searchRes.appendChild(paginator);
+
+    /* === NEXT [Următoarele] === */
+    let nextBtn = new createElement('li', '', ["page-item"], {}).creeazaElem(); // Creează `li` pentru butonul PREVIOUS (`Anterior`).
+    let nextAelem = new createElement('a', '', ['page-link'], {href: "#", 'data-pg': cursorNext}).creeazaElem('Următoarele');    
+    nextBtn.appendChild(nextAelem); // inserează în li a-ul    
+    nextBtn.addEventListener('click', nextPgNavRequest); // adu-mi datele din pagina următoare    
+    insetPgElems.appendChild(nextBtn); /* == INSERT ÎN UL ==*/
+
+    /* === CONDIȚIONAREA STARII AFIȘATE DE BUTOANE === */
+    // suntem chiar în primul segment de date, ceea ce înseamnă că primul `li` cu child `a` -> `Anterior`, va fi disabled
+    if (currentPg === 1 && dataset.pagination.moredata) {
+        prevBtn.className = "page-item";
+    } else {
+        prevBtn.className = "page-item disabled";
+        prevAelem.setAttribute('aria-disabled', true);
+    }
+
+    if (!dataset.pagination.moredata) {
+        nextBtn.className = "page-item disabled"; // preferabil pentru a extinde suportul și pentru browsere mai vechi
+    } else {
+        nextBtn.className = "page-item";
+    }
+
+
+
 }
 
 /**

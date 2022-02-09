@@ -1,3 +1,18 @@
+Aplicația a crăpat cu următoarele detalii:  InternalOAuthError: Failed to obtain access token
+    at Strategy.OAuth2Strategy._createOAuthError (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/passport-oauth2/lib/strategy.js:423:17)
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/passport-oauth2/lib/strategy.js:177:45
+    at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/oauth/lib/oauth2.js:191:18
+    at ClientRequest.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/oauth/lib/oauth2.js:162:5)
+    at ClientRequest.emit (node:events:520:28)
+    at TLSSocket.socketErrorListener (node:_http_client:442:9)
+    at TLSSocket.emit (node:events:520:28)
+    at emitErrorNT (node:internal/streams/destroy:164:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21)
+[09-02-2022 14:42:55] [error] [undefined]:      Failed to obtain access token
+[09-02-2022 14:42:55] [error] [undefined]:      Failed to obtain access token
+
+
 Configuration file '/etc/elasticsearch/jvm.options'
  ==> Modified (by you or by a script) since installation.
  ==> Package distributor has shipped an updated version.
