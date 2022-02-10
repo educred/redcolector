@@ -26,12 +26,13 @@
         
         /* === ACTUALIZEAZĂ OBIECTUL QUERY CU UN CURSOR DIN CLIENT === */
         let cursor = req.pagination.cursor;
-        if(cursor){
+        if(cursor !== undefined){
+            console.log(`Cursorul primit din client este: `, cursor);
             let sec2milisec = new Date(cursor * 1000);      // din secunde în milisecunde;
             obi['date'] = {'$lte': new Date(sec2milisec)};  // completezi obiectul query cu un criteriu nou legat de data înregistrărilor (în bază 2021-07-29T00:00:00.000+00:00)  
         }
 
-        console.log(`Obiectul care va sta la baza lui find arată astfel: `, obi);
+        // console.log(`Obiectul care va sta la baza lui find arată astfel: `, obi);
 
         /* === CÂMPURI PE CARE CLIENTUL LE VREA EXCLUSE === */
         if (req.query.exclude.length > 0) {

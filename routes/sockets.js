@@ -1531,7 +1531,7 @@ function sockets (io) {
             // let dataPromise = pagination(data, Resursa);
             let dataPromise = pagination_cursor(data, Resursa);
             dataPromise.then( (data) => {
-                // console.log(`Datele pe care le trimit în client sunt `, data);
+                console.log(`Datele pe care le trimit în client sunt `, data.pagination);
                 socket.emit('pagedRes', data);
             }).catch((err) => {
                 console.log(`[sockets.js::'pagedRes'] Eroare la aducerea resurselor paginate cu următoarele detalii: ${err}`);

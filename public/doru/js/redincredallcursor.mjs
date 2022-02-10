@@ -509,9 +509,7 @@ let selectObi = {
         sortby: [],
         sortDefaultField: 'date'
     },
-    pagination: {
-        nextCursor: ''
-    },
+    pagination: {},
     limitNr
 };
 // Construiește un dicționar de seturi pentru că este posibil ca în viitor să fie adăugate și alte criterii de selecție cum ar fi metrici.
@@ -583,7 +581,9 @@ function getPagedResults (evt) {
 
     // afișează un set de câmpuri pe care userul să le aleagă pentru a aduce un subset din întreaga înregistrare. Acum, hard codată
     selectObi.query.select = 'date level title autori description etichete';
-    console.log(`Datele care vor pleca în server după apasarea butoanelor de avans: `, selectObi);
+    // console.log(`Datele care vor pleca în server după apasarea butoanelor prev sau next: `, selectObi);
+
+    /* === EMIT CERERE DATE === */
     pubComm.emit('pagedRes', selectObi);
 }
 
@@ -595,7 +595,7 @@ function getPagedResultsES7 (evt) {
 
 }
 
-/* === TRATAREA DATELOR CU RESURSE PAGINATE === */
+/* === PRIMESC DATELE DIN SERVER === */
 pubComm.on('pagedRes', function clbkPagedRes (dataset) {
     removeAllChildren(primare);
     paginare(dataset);
@@ -638,12 +638,14 @@ let queryTracker = new WeakMap(); // Acesta este structura cu ajutorul căreia v
  * @param dataset {Object} datele primite de la MongoDB
  */
 function paginare (dataset) {
-    console.log(`de la server am primit `, dataset);
-    removeAllChildren(searchRes); // #1 șterge rezultatele anterioare
+    // console.log(`de la server am primit `, dataset);
+    removeAllChildren(searchRes); // șterge rezultatele anterioare
 
-    /* === AFIȘAREA REZULTATELOR DE CĂUTARE === */
-    // #2 Pentru fiecare înregistrare, introdu în div-ul `searchRes` template-ul `record` populat
-    let rec, result, title, titleLnk;
+    /* 
+        === AFIȘAREA REZULTATELOR DE CĂUTARE === 
+        Pentru fiecare înregistrare, introdu în div-ul `searchRes` template-ul `record` populat
+    */
+    let rec, result, title, titleLnk, leftlimit = Math.floor(new Date(dataset.segmentdata[0].date) / 1000);;
     for (rec of Object.entries(dataset.segmentdata)) {
         // console.log("[redincredall] am următorul set de date ce urmează a fi paginate ", rec);
         result = tplRec.cloneNode(true); // ref la template
@@ -677,76 +679,60 @@ function paginare (dataset) {
 
         searchRes.appendChild(result); // inserează rezultat de căutare
     }
-    
+
     /* === CREEAZĂ ELEMENTELE DE NAVIGARE - Bootstrap 5 === */
-    let paginator    = tplNav.cloneNode(true);           // clonează template-ul navigatorului de pagini
-    let insetPgElems = paginator.querySelector('#noPg'); // referință la elementul `ul`
+    let paginator    = tplNav.cloneNode(true);              // clonează template-ul navigatorului de pagini
+    let insetPgElems = paginator.querySelector('#noPg');    // referință la elementul `ul`
+    let cursorAnterior, cursorNext;                         // acestea sunt cursoarele care trebui puse pe PREV și pe NEXT
+    let totalPg = Math.ceil(dataset.total / limitNr);       // află numărul total de pagini cu date;
+    let cursorArr;
 
-    // console.log(`queryTracker înainte de calcule `,queryTracker);
+    if (dataset.pagination.moredata) {
+        /* === SEEDING `queryTracker` === */
+        if (!queryTracker.has(selectObi.query)) {
+            queryTracker.set(selectObi.query, [leftlimit]);
+            // console.log(`querytracker moment 0 `,queryTracker);
+        };
 
-    /* === CAZUL MAI MULTOR DATE DECÂT LIMIT === */
-    let cursorAnterior, cursorNext; // acestea sunt cursoarele care trebui puse pe PREV și pe NEXT
-    // doar dacă serverul a trimis un `nextCursor`, adică `moredata` true.
-    
-    /* === LOGICA DE AVANS === */    
-    let totalPg = Math.ceil(dataset.total / limitNr); // află numărul total de pagini cu date;
+        /* === REF LA ARRAY CURSOARE === */
+        cursorArr = queryTracker.get(selectObi.query);  // Obține array-ul cursoarelor primite pentru obiectul de interogare
 
-    /* === SEEDING `queryTracker` === */
-    if (!queryTracker.has(selectObi.query)) {
-        queryTracker.set(selectObi.query, []);
-    };
-    
-    /* === INTRODU CURSORUL PRIMIT === */
-    let cursorArr = queryTracker.get(selectObi.query);  // Obține array-ul cursoarelor primite pentru obiectul de interogare
-    cursorArr.push(dataset.pagination.nextCursor);      // Introdu în array cursorul primit de la server
+        // adaugă în array doar dacă nu există. este necesar pentru cazul în care butoanele anterior sunt apăsate -> noi cursoare false sunt adăugate în array
+        if (cursorArr.indexOf(dataset.pagination.nextCursor) == -1) {
+            cursorArr.push(dataset.pagination.nextCursor);      // Introdu în array cursorul primit de la server
+        }        
+        ++currentPg;                                            // Incrementează pagina
+
+        /* === AI CEL PUȚIN DOUĂ CURSOARE === */
+        if (queryTracker.get(selectObi.query).length >= 2) {
+            let idxInTracker = cursorArr.indexOf(dataset.pagination.nextCursor);
+            currentPg = idxInTracker;                   // dacă l-am găsit, setează numărul paginii curente cu valoarea indexului
+            cursorNext = dataset.pagination.nextCursor; // setează butonul next la valoarea primită `nextCursor` după ce a fost băgată în array
+
+            // cum determini faptul că ai luat-o înapoi?
+
+            cursorAnterior = cursorArr[idxInTracker-2]; // setează butonul prev la valoarea indexului elementului anterior introdus în array
+        }
+    } else {
+        cursorArr = queryTracker.get(selectObi.query);  // Obține array-ul cursoarelor primite pentru obiectul de interogare
+        currentPg = cursorArr.length;
+        cursorAnterior = cursorArr.slice(-2).shift();
+        // console.log(`La final, cursorul anterior este: `, cursorAnterior);
+        cursorNext = undefined;
+    }
 
     console.log(`queryTracker după calcule `,queryTracker);
 
-    /* === AI CEL PUȚIN DOUĂ CURSOARE === */
-    if (queryTracker.get(selectObi.query).length > 1) {
-
-        /* === PAGINA CURENTĂ ESTE VALOAREA INDEXULUI ÎN CARE SE AFLĂ CURSORUL ANTERIOR - pagina curentă este un cursor de dinaintea celui primit === */
-        let idxInTracker = cursorArr.indexOf(dataset.pagination.nextCursor); // caută care este indexul cursorului care tocmai a fost primit de la server. Indexul său este pagina pe care ești
-
-        /* === SETEAZĂ PAGINA CURENTĂ === */
-        if (idxInTracker !== -1) {
-            currentPg = idxInTracker; // dacă l-am găsit, setează numărul paginii curente cu valoarea indexului (va fi mai mică cu unu decât numărul tuturor cursoarelor)
-        }
-
-        /* === ANTERIOR === */
-        if (queryTracker.get(selectObi.query).length === 2) {
-            cursorAnterior = cursorArr[0];
-            cursorNext = cursorArr[1];
-        } else {
-            cursorAnterior = cursorArr[--idxInTracker]; // înseamnă cursorul de dinaintea celui pe care te afli
-            cursorNext = cursorArr[++idxInTracker];
-        }
-
-        /* === DATELE NU SUNT EPUIZATE ===*/
-        if (cursorArr.length >= ++idxInTracker && dataset.pagination.moredata) {
-            // Ai un cursor după cel pe care te afli - situație intermediară
-            if (cursorArr.length > ++idxInTracker) {
-                cursorNext = cursorArr[parseInt(++idxInTracker)];
-            } else {
-                // dacă nu, `cursorNext` este chiar cel curent și înseamnă că ești chiar pe ultimul cursor.
-                cursorNext = cursorArr[`${idxInTracker}`];
-            }
-        }
-    } 
-    
-    /* === AI UN CURSOR === */
-    if (queryTracker.get(selectObi.query).length === 1 && dataset.pagination.moredata) {
-        currentPg = 1;
-        // CAZUL ÎN CARE SUNT MAI MULTE PAGINI
-        cursorAnterior = undefined;
-        cursorNext = queryTracker.get(selectObi.query)[0];
-    }
-
     /* === PREV [ANTERIOR]=== */
-    let prevBtn = new createElement('li', '', ["page-item"], {}).creeazaElem();
+    let prevBtn = new createElement('li', '', ["page-item"], {'data-pg': cursorAnterior}).creeazaElem();
     let prevAelem = new createElement('a', '', ['page-link'], {href: "#", tabindex: -1, 'data-pg': cursorAnterior}).creeazaElem('Anterioare');    
     prevBtn.appendChild(prevAelem);// inserează în li a-ul
     prevBtn.addEventListener('click', prevPgNavRequest);// adu-mi datele din pagina anterioară
+    // suntem chiar în primul segment de date, ceea ce înseamnă că primul `li` cu child `a` -> `Anterior`, va fi disabled
+    if (currentPg == 1) {
+        prevBtn.classList.toggle("disabled");
+        prevAelem.setAttribute('aria-disabled', true);        
+    }
     insetPgElems.appendChild(prevBtn); /* == INSERT ÎN UL ==*/
 
     /* === INFORMATIE DESPRE SEGMENTUL DE DATE AFISAT === */
@@ -763,29 +749,15 @@ function paginare (dataset) {
     searchRes.appendChild(paginator);
 
     /* === NEXT [Următoarele] === */
-    let nextBtn = new createElement('li', '', ["page-item"], {}).creeazaElem(); // Creează `li` pentru butonul PREVIOUS (`Anterior`).
+    let nextBtn = new createElement('li', '', ["page-item"], {'data-pg': cursorNext}).creeazaElem(); // Creează `li` pentru butonul PREVIOUS (`Anterior`).
     let nextAelem = new createElement('a', '', ['page-link'], {href: "#", 'data-pg': cursorNext}).creeazaElem('Următoarele');    
     nextBtn.appendChild(nextAelem); // inserează în li a-ul    
-    nextBtn.addEventListener('click', nextPgNavRequest); // adu-mi datele din pagina următoare    
-    insetPgElems.appendChild(nextBtn); /* == INSERT ÎN UL ==*/
-
-    /* === CONDIȚIONAREA STARII AFIȘATE DE BUTOANE === */
-    // suntem chiar în primul segment de date, ceea ce înseamnă că primul `li` cu child `a` -> `Anterior`, va fi disabled
-    if (currentPg === 1 && dataset.pagination.moredata) {
-        prevBtn.className = "page-item";
-    } else {
-        prevBtn.className = "page-item disabled";
-        prevAelem.setAttribute('aria-disabled', true);
-    }
-
+    nextBtn.addEventListener('click', nextPgNavRequest); // adu-mi datele din pagina următoare
     if (!dataset.pagination.moredata) {
-        nextBtn.className = "page-item disabled"; // preferabil pentru a extinde suportul și pentru browsere mai vechi
-    } else {
-        nextBtn.className = "page-item";
+        nextBtn.classList.toggle("disabled"); // preferabil pentru a extinde suportul și pentru browsere mai vechi
+        nextAelem.setAttribute('aria-disabled', true);
     }
-
-
-
+    insetPgElems.appendChild(nextBtn); /* == INSERT ÎN UL ==*/
 }
 
 /**
