@@ -19,20 +19,23 @@ const schema     = require('../models/resursa-red-es7');
 const ES7Helper  = require('../models/model-helpers/es7-helper');
 let editorJs2TXT = require('./controllers/editorJs2TXT');
 let archiveRED   = require('./controllers/archiveRED');
-// LOGO
-let LOGO_IMG = "img/" + process.env.LOGO;
+let {getStructure} = require('../util/es7');
 
 // INDECȘII ES7
-let RES_IDX_ES7 = '', RES_IDX_ALS = '';
+let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
+getStructure().then((val) => {
+    // console.log(`Am obținut `, val);
+    USR_IDX_ALS = val.USR_IDX_ALS;
+    USR_IDX_ES7 = val.USR_IDX_ES7;
+    RES_IDX_ALS = val.RES_IDX_ALS;
+    RES_IDX_ES7 = val.RES_IDX_ES7;
+}).catch((error) => {
+    console.log(`[profile.js::getStructure] nu a adus datele`, error);
+    logger.error(error);
+});
 
-redisClient.get("RES_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ES7 = reply;
-});
-redisClient.get("RES_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ALS = reply;
-});
+// LOGO
+let LOGO_IMG = "img/" + process.env.LOGO;
 
 /* === PROFILUL PROPRIU === */
 async function clbkProfile (req, res) {
@@ -95,6 +98,10 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
             {module: `${gensettings.template}/js/res-visuals-user.mjs`}
         ];
 
+        let fullstar = `<i class="bi bi-star-fill"></i>`,
+            emptystart = `<i class="bi bi-star"></i>`,
+            halfempty = `<i class="bi bi-star-half"></i>`;
+
         /**
          * Funcție cu rol de callback
          * Transformă obiectul primit într-un POJO cu date formatate cu moment
@@ -104,13 +111,47 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
             const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
             // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
             newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
+            // introdu template-ul ca proprietare (necesar stabilirii de linkuri corecte in fiecare element afișat în client)
+            newObi.template = `${gensettings.template}`;
+            newObi.logo = `${gensettings.template}/${LOGO_IMG}`;
+
+            newObi.ratingrepresentation = '';
+            let kontor = newObi.contorRating ?? 0;
+            let lastRating = newObi.rating ?? 0;
+            let ratingTotal = newObi.ratingTotal ?? 0;
+            let presentRating = ratingTotal / kontor;
+
+            // 0 - 0.5 | 0.5 - 1 | 1 - 1.5 | 1.5 - 2 | 2 - 2.5 | 2.5 - 3 | 3 - 3.5 | 3.5 - 4 | 4 - 4.5 | 4.5 - 5
+            if (isNaN(presentRating)) {
+                newObi.ratingrepresentation = `${emptystart}${emptystart}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 0 && presentRating < 0.5) {
+                newObi.ratingrepresentation = `${halfempty}${emptystart}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 0.6 && presentRating <= 1) {
+                newObi.ratingrepresentation = `${fullstar}${emptystart}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 1 && presentRating <= 1.5) {
+                newObi.ratingrepresentation = `${fullstar}${halfempty}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 1.6 && presentRating <= 2) {
+                newObi.ratingrepresentation = `${fullstar}${fullstar}${emptystart}${emptystart}${emptystart}`;
+            } else if (presentRating > 2 && presentRating <= 2.5) {
+                newObi.ratingrepresentation = `${fullstar}${fullstar}${halfempty}${emptystart}${emptystart}`;
+            } else if (presentRating > 2.6 && presentRating <= 3) {
+                newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${emptystart}${emptystart}`;
+            } else if (presentRating > 3 && presentRating <= 3.5) {
+                newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${halfempty}${emptystart}`;
+            } else if (presentRating > 3.6 && presentRating <= 4) {
+                newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${emptystart}`;
+            } else if (presentRating > 4 && presentRating <= 4.5) {
+                newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${halfempty}`;
+            } else if (presentRating > 4.6 && presentRating <= 5) {
+                newObi.ratingrepresentation = `${fullstar}${fullstar}${fullstar}${fullstar}${fullstar}`;
+            }            
             // newResultArr.push(newObi);
             return newObi;
         }
     
         // Afișează doar ultimele 8 resurse introduse
-        Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(8).then((result) => {
-    
+        Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(9).then((result) => {
+
             // transformă documentele Mongoose în POJOs cu dată formatată
             let newResultArr = result.map(clbkMapResult);
     
@@ -122,6 +163,7 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
                 logoimg:   `${gensettings.template}/${LOGO_IMG}`,
                 csrfToken: req.csrfToken(),
                 resurse:   newResultArr,
+                resIdx:    RES_IDX_ES7,
                 scripts,
                 modules,
                 styles,
