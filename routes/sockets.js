@@ -1531,7 +1531,7 @@ function sockets (io) {
             // let dataPromise = pagination(data, Resursa);
             let dataPromise = pagination_cursor(data, Resursa);
             dataPromise.then( (data) => {
-                console.log(`Datele pe care le trimit în client sunt `, data.pagination);
+                // console.log(`Datele pe care le trimit în client sunt `, data.pagination);
                 socket.emit('pagedRes', data);
             }).catch((err) => {
                 console.log(`[sockets.js::'pagedRes'] Eroare la aducerea resurselor paginate cu următoarele detalii: ${err}`);
@@ -1836,8 +1836,9 @@ function sockets (io) {
 
                 switch (domainName) {
                     case "youtube.com":
-                        let startingIndexofId = lnk.search(/[^\/]\w+$/);
-                        let videoid = lnk.substring(startingIndexofId);
+                        // https://stackoverflow.com/a/51870158/1271340
+                        let rgx = /(https?:\/\/)?((www\.)?(youtube(-nocookie)?|youtube.googleapis)\.com.*(v\/|v=|vi=|vi\/|e\/|embed\/|user\/.*\/u\/\d+\/)|youtu\.be\/)([_0-9a-z-]+)/i;
+                        let videoid = lnk.match(rgx)[7];
                         content.blocks.push({
                             "id": nanoid(10),
                             "type": "embed",

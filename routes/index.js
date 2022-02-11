@@ -7,7 +7,7 @@ const Mgmtgeneral = require('../models/MANAGEMENT/general');    // Adu modelul m
 const logger   = require('../util/logger');
 
 /* === LANDING :: / === */
-let renderPublic = require('./controllers/public.ctrl');    // adu funcția `renderPublic` din `/controllers`.
+let index = require('./controllers/index.ctrl');    // adu funcția `renderPublic` din `/controllers`.
 router.get('/', (req, res, next) => {
     
     async function clbkRootRoute (req, res, next) {
@@ -36,7 +36,8 @@ router.get('/', (req, res, next) => {
             ],
             [
                 {module: `${gensettings.template}/lib/npm/popper.min.js`},
-                {module: `${gensettings.template}/js/main.mjs`}
+                {module: `${gensettings.template}/js/main.mjs`},
+                {module: `${gensettings.template}/js/index.mjs`}
             ],
             [
                 {style: `${gensettings.template}/lib/npm/all.min.css`}
@@ -56,7 +57,7 @@ router.get('/', (req, res, next) => {
         };
 
         // Afișează resursele găsite
-        renderPublic(req, res, next, gensettings, Resursa, modelOpts, resurse, 'Acasă');
+        index(req, res, next, gensettings, Resursa, modelOpts, resurse, 'Acasă');
     };
     clbkRootRoute(req, res, next).catch((error) => {
         console.log(error);

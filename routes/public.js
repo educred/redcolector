@@ -42,37 +42,12 @@ router.get('/', (req, res, next) => {
     
         const resurse = [
             [
-                //JQUERY
-                {script: `${gensettings.template}/lib/npm/jquery.min.js`},
-                {script: `${gensettings.template}/lib/npm/jquery.waypoints.min.js`}, 
-                // MOMENT.JS
-                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`}, 
-                // FONTAWESOME
-                {script: `${gensettings.template}/lib/npm/all.min.js`},
-                // HOLDERJS
-                {script: `${gensettings.template}/lib/npm/holder.min.js`},
-                // BOOTSTRAP         
-                {script: `${gensettings.template}/lib/npm/bootstrap.bundle.min.js`},
-                {script: `${gensettings.template}/js/custom.js`},
-                {script: `${gensettings.template}/js/resursepublice.js`}
+                {script: `${gensettings.template}/js/custom.js`}
             ],
             [
-                // EDITOR.JS
-                {module: `${gensettings.template}/lib/editorjs/editor.js`},
-                {module: `${gensettings.template}/lib/editorjs/header.js`},
-                {module: `${gensettings.template}/lib/editorjs/paragraph.js`},
-                {module: `${gensettings.template}/lib/editorjs/checklist.js`},
-                {module: `${gensettings.template}/lib/editorjs/list.js`},
-                {module: `${gensettings.template}/lib/editorjs/image.js`},
-                {module: `${gensettings.template}/lib/editorjs/embed.js`},
-                {module: `${gensettings.template}/lib/editorjs/code.js`},
-                {module: `${gensettings.template}/lib/editorjs/quote.js`},
-                {module: `${gensettings.template}/lib/editorjs/inlinecode.js`},
-                {module: `${gensettings.template}/lib/editorjs/table.js`},
-                {module: `${gensettings.template}/lib/editorjs/attaches.js`},
-                {module: `${gensettings.template}/lib/editorjs/ajax.js`},
                 {module: `${gensettings.template}/lib/npm/popper.min.js`},
-                {module: `${gensettings.template}/js/main.mjs`}
+                {module: `${gensettings.template}/js/main.mjs`},
+                {module: `${gensettings.template}/js/resursepublice.mjs`}
             ],
             [
                 {style: `${gensettings.template}/lib/npm/all.min.css`}
@@ -87,7 +62,7 @@ router.get('/', (req, res, next) => {
             projection: {generalPublic: true},
             queryOpts: {
                 sort: {date: -1},
-                limit: 8
+                limit: 9
             }
         };
 

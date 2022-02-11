@@ -569,8 +569,8 @@ function dataAggregator4Search (numeCamp, value) {
  */
 function getPagedResults (evt) {
     // Adăugarea setărilor fixe
-    if (!selectObi.query.projection['expertCheck']) {
-        selectObi.query.projection['expertCheck'] = true;
+    if (!selectObi.query.projection['generalPublic']) {
+        selectObi.query.projection['generalPublic'] = true; // generalPublic
     }
     // pentru fiecare proprietate din dicționarul `searchSets`, apelează `dataAggregator4Search` pentru a completa obiectul de căutare `selectObi` trimis serverului
     let prop, val;
@@ -652,7 +652,7 @@ function paginare (dataset) {
 
         // Generează titlul
         title = result.querySelector(`.title`);
-        titleLnk = new createElement('a', '', [], {href: `/resurse/${rec[1]._id}`}).creeazaElem(`${rec[1].title}`);
+        titleLnk = new createElement('a', '', [], {href: `/resursepublice/${rec[1]._id}`}).creeazaElem(`${rec[1].title}`);
         title.appendChild(titleLnk);
         
         result.querySelector(`.autori`).textContent = rec[1].autori;    // populează autorii
@@ -774,7 +774,7 @@ let searchCriteria = {
     index, 
     fragSearch: '', 
     fields: [
-        ["expertCheck", true]
+        ["generalPublic", true]
     ]
 };
 
@@ -789,7 +789,7 @@ let es7query = {
                 {terms: {etichete: []}},
             ],
             filter: [
-                {term: {expertCheck: true}},
+                {term: {generalPublic: true}},
                 {range: {date: {gte: '', lt: ''}}}
             ]
         }
@@ -931,7 +931,7 @@ pubComm.on('pit', clbkOnPitEvt);
 let tmplfound = document.querySelector('#searchresults');
 
 pubComm.on('searchres', (documents) => {
-    console.log(`De la serverul MongoDB am primit următoarele `, documents);
+    // console.log(`De la serverul MongoDB am primit următoarele `, documents);
     removeAllChildren(searchRes); // șterge rezultatele anterioare
 
     // pentru fiecare element din array-ul rezultatelor generează câte un rezultat de căutare afișat
@@ -942,7 +942,7 @@ pubComm.on('searchres', (documents) => {
 
         // Generează titlul
         title = result.querySelector(`.title`);
-        titleLnk = new createElement('a', '', [], {href: `/resurse/${rec._id}`}).creeazaElem(`${rec._source.title}`);
+        titleLnk = new createElement('a', '', [], {href: `/resursepublice/${rec._id}`}).creeazaElem(`${rec._source.title}`);
         title.appendChild(titleLnk);
         
         result.querySelector(`.autori`).textContent = rec._source.autori;    // populează autorii

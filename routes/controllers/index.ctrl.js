@@ -108,7 +108,7 @@ async function renderPublic (req, res, next, gensettings, Model, modelOpts, resu
             return obi;
         });
 
-        res.render(`resursepublice_${gensettings.template}`, {
+        res.render(`index_${gensettings.template}`, {
             template:  `${gensettings.template}`,
             activeResLnk: true,
             title:     `${tabtitle}`,

@@ -35,23 +35,23 @@
 <section class="py-5 border-bottom" id="features">
     <div class="container px-5 my-5">
         <div class="row gx-5">
-        <div class="col-lg-4 mb-5 mb-lg-0">
-            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3">
-                <i class="bi bi-collection"></i>
+            <div class="col-lg-4 mb-5 mb-lg-0">
+                <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3">
+                    <i class="bi bi-collection"></i>
+                </div>
+                <h2 class="h4 fw-bolder">Materiale pentru predare - învățare</h2>
+                <p>Proiecte deschise (open courseware și open content), cursuri free, directoare de obiecte de învățare (learning objects), jurnale educaționale</p>
             </div>
-            <h2 class="h4 fw-bolder">Materiale pentru predare - învățare</h2>
-            <p>Proiecte deschise (open courseware și open content), cursuri free, directoare de obiecte de învățare (learning objects), jurnale educaționale</p>
-        </div>
-        <div class="col-lg-4 mb-5 mb-lg-0">
-            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-terminal"></i></div>
-            <h2 class="h4 fw-bolder">Platforme și aplicații care generează conținut deschis</h2>
-            <p>Pentru dezvoltarea, utilizarea, reutilizarea, căutarea, organizarea și accesul la resurse; includ si medii virtuale de învățare (LMS), comunități de învățare</p>
-        </div>
-        <div class="col-lg-4">
-            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-toggles2"></i></div>
-            <h2 class="h4 fw-bolder">Licențe de proprietate intelectuală</h2>
-            <p>Care promovează publicarea deschisă a materialelor, principii de design și bune practici, localizarea conținutului</p>
-        </div>
+            <div class="col-lg-4 mb-5 mb-lg-0">
+                <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-terminal"></i></div>
+                <h2 class="h4 fw-bolder">Platforme și aplicații care generează conținut deschis</h2>
+                <p>Pentru dezvoltarea, utilizarea, reutilizarea, căutarea, organizarea și accesul la resurse; includ si medii virtuale de învățare (LMS), comunități de învățare</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="feature bg-primary bg-gradient text-white rounded-3 mb-3"><i class="bi bi-toggles2"></i></div>
+                <h2 class="h4 fw-bolder">Licențe de proprietate intelectuală</h2>
+                <p>Care promovează publicarea deschisă a materialelor, principii de design și bune practici, localizarea conținutului</p>
+            </div>
         </div>
     </div>
 </section>
@@ -151,55 +151,58 @@
         </div> --}}
 <!--    </div>-->
 
-
     <div class="container">
         <div class="text-center mb-5">
-        <h3>Ultimele resurse deschise adăugate</h3>
-    </div>
+            <a class="btn btn-outline-info btn-lg" href="/resursepublice">Zona resurselor deschise public</a>
+        </div>
 
-    <div id="resurse" class="row gx-5 justify-content-center">
-        <div class="units container">
+        <div class="text-center mb-5">
+            <h3>Ultimele resurse deschise adăugate</h3>
+        </div>
 
-            {{!-- Randează resursele în landing --}}
-            {{#each resurse}}
-                <div class="unit">
-                    <div class="unit-header">
-                        <h3 class="unit-title">
-                            <a href="/resursepublice/{{this._id}}" maxlength="4">{{this.title}}</a>
-                        </h3>
-                        <div class="row mb-2 text-muted">
-                            <p class="card-subtitle col-sm-6 text-muted">{{this.autori}}</p>
-                            <p class="card-subtitle col-sm-6 text-muted">{{this.dataRo}}</p>
+        <div id="resurse" class="row gx-5 justify-content-center">
+            <div class="units container">
+                {{!-- Randează resursele în landing --}}
+                {{#each resurse}}
+                    <div class="unit">
+                        <div class="unit-header">
+                            <h3 class="unit-title">
+                                <a href="/resursepublice/{{this._id}}" maxlength="4">{{this.title}}</a>
+                            </h3>
+                            <div class="row mb-2 text-muted">
+                                <p class="card-subtitle col-sm-6 text-muted">{{this.autori}}</p>
+                                <p class="card-subtitle col-sm-6 text-muted">{{this.dataRo}}</p>
+                            </div>
+                        </div>
+                        {{!-- <img class="card-img-top" src="{{this.coperta}}" alt="{{this.title}}"> --}}
+                        <div class="unit-body">
+                            <main class="unit-description">
+                                <aside>
+                                    {{!-- Dacă există copertă, afișeaz-o --}}
+                                    {{#if this.coperta}}
+                                        <div><img src="{{this.coperta}}" class="unit-img-top" alt="{{this.title}}"></div>
+                                    {{else}}
+                                        <div class="unit-default-visual">
+                                            <img class="unit-default-visual-logo" src="/{{logo}}" alt="logo">
+                                            <img src="/{{template}}/img/black-1072366_1920.jpg" class="" alt="{{this.title}}">
+                                        </div>
+                                        <div class="unit-grading">{{{this.ratingrepresentation}}}</div>
+                                        {{!-- <div class="unit-grading"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i><i class="bi bi-star"></i></div> --}}
+                                    {{/if}}
+                                </aside>
+                                <p>{{this.description}}</p>
+                            </main>  
+                        </div>
+                        <div class="unit-footer">
+                            {{#each this.etichete}}
+                                <a href="/tag/{{this}}">
+                                    <span class="badge badge-info">{{this}}</span>
+                                </a>
+                            {{/each}}
                         </div>
                     </div>
-                    {{!-- <img class="card-img-top" src="{{this.coperta}}" alt="{{this.title}}"> --}}
-                    <div class="unit-body">
-                        <main class="unit-description">
-                            <aside>
-                                {{!-- Dacă există copertă, afișeaz-o --}}
-                                {{#if this.coperta}}
-                                    <div><img src="{{this.coperta}}" class="unit-img-top" alt="{{this.title}}"></div>
-                                {{else}}
-                                    <div class="unit-default-visual">
-                                        <img class="unit-default-visual-logo" src="/{{logo}}" alt="logo">
-                                        <img src="/{{template}}/img/black-1072366_1920.jpg" class="" alt="{{this.title}}">
-                                    </div>
-                                    <div class="unit-grading">{{{this.ratingrepresentation}}}</div>
-                                    {{!-- <div class="unit-grading"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i><i class="bi bi-star"></i></div> --}}
-                                {{/if}}
-                            </aside>
-                            <p>{{this.description}}</p>
-                        </main>  
-                    </div>
-                    <div class="unit-footer">
-                        {{#each this.etichete}}
-                            <a href="/tag/{{this}}">
-                                <span class="badge badge-info">{{this}}</span>
-                            </a>
-                        {{/each}}
-                    </div>
-                </div>
-            {{/each}}
+                {{/each}}
+            </div>
         </div>
     </div>
 </section>

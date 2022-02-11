@@ -8,15 +8,12 @@
  exports.pagination_cursor = async function pagination_cursor (req, model) {
     try {
         // https://cloudnweb.dev/2021/04/pagination-nodejs-mongoose/
-        // req trebuie să fie un obiect care să aibă următoarea semnătură
-
         // console.log(`Am primit următoarea cerere: `, JSON.stringify(req, null, 2));
 
         let query;                                              // construiește obiectul de interogare pentru Mongoose
         let queryStr = JSON.stringify(req.query.projection);    // serializează obiectul cerere
         req.query.projection = JSON.parse(queryStr);            // reatribuirea obiectului după prelucrare
         let obi = req.query.projection ?? {};                   // pentru fiecare cheie valoare din projection, adaugă într-un `.find()`
-        // console.log('[pagination.ctrl] obiectul criteriilor de selectie ptr Mongoose ', JSON.stringify(obi, null, 2));
         
         /* === NUMARUL TOTAL DE ÎNREGISTRĂRI GĂSITE === */
         let total = await model.where(obi).countDocuments();
@@ -27,12 +24,9 @@
         /* === ACTUALIZEAZĂ OBIECTUL QUERY CU UN CURSOR DIN CLIENT === */
         let cursor = req.pagination.cursor;
         if(cursor !== undefined){
-            console.log(`Cursorul primit din client este: `, cursor);
             let sec2milisec = new Date(cursor * 1000);      // din secunde în milisecunde;
             obi['date'] = {'$lte': new Date(sec2milisec)};  // completezi obiectul query cu un criteriu nou legat de data înregistrărilor (în bază 2021-07-29T00:00:00.000+00:00)  
         }
-
-        // console.log(`Obiectul care va sta la baza lui find arată astfel: `, obi);
 
         /* === CÂMPURI PE CARE CLIENTUL LE VREA EXCLUSE === */
         if (req.query.exclude.length > 0) {
@@ -41,7 +35,6 @@
 
         /* === ADUCEREA SEGMENTULUI DE DATE + ÎNREGISTRARE CU ROL DE CURSOR === */
         let newlimit = ++limit;
-        // console.log(`Execut următorul query: `, obi);
         let segmentdata = await model.find(obi).select(req.query.select).sort({date: -1}).limit(newlimit).exec(); // execută și obține datele din segmentul de 10 + 1 (`segmentdata` va avea o lungime de 11)
 
         /* === VERIFICĂ SĂ AI UN SET DE ÎNREGISTRĂRI EGAL CU LIMITA + 1 === */

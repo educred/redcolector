@@ -14,6 +14,9 @@
             <li class="nav-item">
                 <a class="nav-link" href="/">Acasă<span class="sr-only">(current)</span></a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/resursepublice">Resurse publice<span class="sr-only">(current)</span></a>
+            </li>
             {{#if user}}
                 <li class="nav-item">
                     <a class="nav-link" href="/profile">Profil</a>
@@ -30,12 +33,16 @@
                     <a class="nav-link" href="/log/new">Eveniment nou</a>
                 </li>                
             {{/if}}
-            <li class="nav-item">
-                <a class="nav-link" href="/resurse/adauga">Adaugă</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{#if activeResLnk}}active{{/if}}" href="/resurse">Resurse</a>
-            </li>
+            {{#if user}}
+                <li class="nav-item">
+                    <a class="nav-link" href="/resurse/adauga">Adaugă</a>
+                </li>
+            {{/if}}
+            {{#if user}}
+                <li class="nav-item">
+                    <a class="nav-link {{#if activeResLnk}}active{{/if}}" href="/resurse">Resurse</a>
+                </li>
+            {{/if}}
             {{#if user}}
                 <li class="nav-item">
                     <a class="nav-link" href="/help">Asistență</a>
