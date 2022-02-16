@@ -778,6 +778,9 @@ let searchCriteria = {
     ]
 };
 
+
+/* === Căutarea în ELASTICSEARCH === */
+
 // Obiectul de interogare necesar lui ES7
 let es7query = {
     query: {
@@ -874,17 +877,18 @@ function searchES7 (delPIT) {
 function clbkSeachBtnResInterne (evt) {
     evt.preventDefault();
 
+    // limitează stringul de căutare la 50
     let frag = fragSearchDocs.value;
-    if (frag.length > 250) {
-        frag = frag.slice(0, 250);
+    if (frag.length > 50) {
+        frag = frag.slice(0, 50);
     }
     searchCriteria.fragSearch = frag;
-    // primul pas, curăță de conținut id-ul `primare`
-    removeAllChildren(primare); // old stuff: `primare.innerHTML = '';
-    removeAllChildren(searchRes); // șterge rezultatele anterioare de căutare din `searchRes`.
+
+    removeAllChildren(primare);     // old stuff: `primare.innerHTML = '';
+    removeAllChildren(searchRes);   // șterge rezultatele anterioare de căutare din `searchRes`.
 
     // crearea și primirea unui PIT
-    // searchES7(); // Apel la funcția care creează PIT și trimite obiectul de interogare.    
+    searchES7(); // Apel la funcția care creează PIT și trimite obiectul de interogare.    
     //pubComm.emit('pit', {keep_alive: "3m"}); //_ TODO: Activează când rezolvi treaba cu selecție indexului pentru a fi trimis să obții PIT.
 
     pubComm.emit('searchres', searchCriteria); // emite eveniment în backend
@@ -906,8 +910,8 @@ function clbkSeachBtnResInterneEnter (evt) {
 }
 // cazul în care se dă Enter
 fragSearchDocs.addEventListener('keypress', clbkSeachBtnResInterneEnter);
-// Adaugă handler pe butonul de căutare
-searchResIntBtn.addEventListener('click', clbkSeachBtnResInterne);
+
+searchResIntBtn.addEventListener('click', clbkSeachBtnResInterne);  // Adaugă handler pe butonul de căutare
 
 /**
  * Funcția are rol de callback pentru evenimentul `pit` la primire

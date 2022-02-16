@@ -1,15 +1,5 @@
 import {pubComm, EventedElementsMgmt, createElement, frm2obj, cleanEmptyPropsInObj} from './main.mjs';
 
-// var csrfToken = '';
-
-// if(document.getElementsByName('_csrf')[0].value) {
-//     csrfToken = document.getElementsByName('_csrf')[0].value;
-// }
-
-// var pubComm = io('/redcol', {
-//     query: {['_csrf']: csrfToken}
-// });
-
 // TESTAREA CONEXIUNII
 // setInterval(() => {
 //     console.log("Conectat: ", pubComm.connected, " cu id-ul: ", pubComm.id);
@@ -19,9 +9,8 @@ import {pubComm, EventedElementsMgmt, createElement, frm2obj, cleanEmptyPropsInO
 // instanțiere manager evenimente
 const AdmEvts = new EventedElementsMgmt();
 
-
 /* === CĂUTAREA UNUI UTILIZATOR === */
-var findUser = document.getElementById('findUser');
+var findUser    = document.getElementById('findUser');
 var findUserBtn = document.querySelector("#findUserBtn");
 
 /* === CERE PROFILUL USERULUI === */
@@ -36,8 +25,7 @@ findUserBtn.addEventListener('click', (evt) => {
     AdmEvts.fire(evt);
 });
 
-
-// Tratează cazul browserelor mai vechi
+/* ==== Căutare cu ENTER ==== */
 findUser.addEventListener('keypress', (evt) => {
     let charCodeNr = typeof evt.charCode == "number" ? evt.charCode : evt.keyCode;
     // console.log('Caracter ', charCodeNr);

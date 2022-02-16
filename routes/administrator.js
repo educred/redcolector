@@ -14,7 +14,7 @@ const ES7Helper   = require('../models/model-helpers/es7-helper');
 const schema      = require('../models/resursa-red-es7');
 // let content2html = require('./controllers/editorJs2HTML');
 let editorJs2TXT  = require('./controllers/editorJs2TXT');
-let archiveRED   = require('./controllers/archiveRED');
+let archiveRED    = require('./controllers/archiveRED');
 
 // INDECȘII ES7
 let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';

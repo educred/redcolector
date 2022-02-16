@@ -369,6 +369,11 @@ const cleanEmptyPropsInObj = function(obj, defaults = [undefined, null, NaN, '']
 // check4url(real01);     //?
 // check4url(real02);     //?
 
+/**
+ * Clasa permite managementul elementelor care primesc receptori pe diferite evenimente
+ * Este utilă ținerii evidenței și mai mult, declanșării execuției receptorilor.
+ * Avantajul ar fi evitarea unor identificatori care să țină obiectele „în viață” inutil.
+ */
 class EventedElementsMgmt {
     constructor () {
         this.elements = new WeakMap();
