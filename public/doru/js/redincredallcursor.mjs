@@ -827,8 +827,8 @@ let es7query = {
         keep_alive: '1m'
     },
     sort: [
-        {"@timestamp": {order: 'asc', format: 'strict_date_optional_time_nanos'}},
-        {_shard_doc: 'desc'}
+        {"@timestamp": {order: "asc", "format": "strict_date_optional_time_nanos"}},
+        {"_shard_doc": "desc"}
     ],
     search_after: [],
     track_total_hits: false
@@ -888,8 +888,7 @@ function clbkSeachBtnResInterne (evt) {
     removeAllChildren(searchRes);   // șterge rezultatele anterioare de căutare din `searchRes`.
 
     // crearea și primirea unui PIT
-    searchES7(); // Apel la funcția care creează PIT și trimite obiectul de interogare.    
-    //pubComm.emit('pit', {keep_alive: "3m"}); //_ TODO: Activează când rezolvi treaba cu selecție indexului pentru a fi trimis să obții PIT.
+    searchES7(); // Apel la funcția care creează PIT și trimite obiectul de interogare.
 
     pubComm.emit('searchres', searchCriteria); // emite eveniment în backend
 }
