@@ -64,9 +64,9 @@ router.get('/:tag', async (req, res) => {
     };
 
     let total = await Resursa.where(searchObi).countDocuments();
-    console.log(`numărul total de resurse cu eticheta ${req.params.tag} este `, total);
+    // console.log(`numărul total de resurse cu eticheta ${req.params.tag} este `, total);
     
-    let rescueticheta = Resursa.find(searchObi).sort({"date": -1});
+    let rescueticheta = Resursa.find(searchObi).sort({"date": -1}); // Caută resursele care au eticheta menționată.
 
     rescueticheta.then((result) => {
 
@@ -80,7 +80,7 @@ router.get('/:tag', async (req, res) => {
             newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
             // introdu template-ul ca proprietare (necesar stabilirii de linkuri corecte in fiecare element afișat în client)
             newObi.template = `${gensettings.template}`;
-            newObi.logo = `${gensettings.template}/${LOGO_IMG}`;
+            newObi.logo = `${LOGO_IMG}`; // _FIXME: http://localhost:8080/tag/img/repoloxgo.png DE NEGĂSIT
 
             newObi.ratingrepresentation = '';
             let kontor = newObi.contorRating ?? 0;
@@ -129,7 +129,13 @@ router.get('/:tag', async (req, res) => {
             activeResLnk: true,
             resIdx:       RES_IDX_ES7,
             scripts,
-            modules
+            modules,
+            creator: gensettings.creator,
+            publisher: gensettings.publisher,
+            brandname: gensettings.brand,
+            description: gensettings.description,
+            publisher: gensettings.publisher,
+            author: gensettings.contact
         });
     }).catch((err) => {
         if (err) {
