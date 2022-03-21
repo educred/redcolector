@@ -9,7 +9,7 @@ const monographWork = new Schema({
     },
     creator: [], // http://id.loc.gov/ontologies/bibframe/contribution {mandatory: false, repetable: true}
     genreForm: [], // http://id.loc.gov/ontologies/bibframe/genreForm {mandatory: false, repetable: true}
-    originDate: "", // http://id.loc.gov/ontologies/bibframe/originDate {mandatory: false, repetable: true}
+    originDate: [], // http://id.loc.gov/ontologies/bibframe/originDate {mandatory: false, repetable: true}
     originPlace: {
         place: ""
     },  // http://id.loc.gov/ontologies/bibframe/originPlace {mandatory: false, repetable: true}

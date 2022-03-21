@@ -229,7 +229,9 @@ exports.loadOneResource = async function loadOneResource (req, res, next) {
         // HELPER DETECT URLS or PATHS
         {script: `${gensettings.template}/js/check4url.js`},
         // DOWNLOADFILE
-        {script: `${gensettings.template}/lib/downloadFile.js`}
+        {script: `${gensettings.template}/lib/downloadFile.js`},
+        // STAR RATING
+        {script: `${gensettings.template}/lib/jquery.star-rating-svg.js`}
     ];
 
     let modules = [

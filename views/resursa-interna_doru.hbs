@@ -75,8 +75,21 @@
                                 </a> <span>{{resursa.autori}}</span>
                             </p>
 
-                            {{!-- EVALUARE --}}
+                            {{!-- APRECIERE --}}
                             <div class="apreciere">
+                                <div class="star-rating" style="width: 200px;height: 100px"></div>
+                                <script>
+
+                                     $(".star-rating").starRating({
+                                        starSize: 25,
+                                        activeColor: '#FDCB0B',
+                                        callback: function(currentRating, $el){
+                                            // Creează event în server
+                                            console.log(currentRating);
+                                        }
+                                    });
+                                </script>
+                                <!-- 
                                 <div>
                                     <p>{{{resursa.ratingrepresentation}}}</p>
                                 </div>
@@ -94,6 +107,7 @@
                                         <option value="5" label="5">5</option>
                                     </datalist>
                                 </div>
+                                -->
                             </div>
                             
                         </div>

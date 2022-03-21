@@ -257,39 +257,6 @@ footer.bg-light {
     color:#888;
 }
 
-/* Aprecierea unei resurse */
-
-#evalstars {
-
-}
-
-#evalstars::-webkit-slider-runnable-track { 
-    min-width: 0px;
-    align-self: center;
-    box-sizing: border-box;
-    display: block;
-    background: #FDCB0B;
-    background-color: rgba(0, 0, 0, 0);
-    background-image: none;
-    width: 100%;
-    height: 100%;
-}
-#evalstars::-moz-range-track {
-    background: #FDCB0B;
-    width: 100%;
-    height: 100%;
-}
-#evalstars::-ms-track {
-    background: #FDCB0B;
-    width: 100%;
-    height: 100%;
-}
-
-.apreciere {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-}
 
 /* ==== BADGE ==== */
 .badge-info{
@@ -1510,4 +1477,54 @@ fieldset #nivel .form-check{
 
 .salut {
     color: white;
+}
+
+
+
+
+/* Aprecierea unei resurse */
+.apreciere {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+}
+
+/* SPECIFIC MODULULUI SVG STARS */
+.jq-stars {
+    display: inline-block;
+  }
+
+.jq-rating-label {
+    font-size: 22px;
+    display: inline-block;
+    position: relative;
+    vertical-align: top;
+    font-family: helvetica, arial, verdana;
+}
+
+.jq-star {
+    width: 100px;
+    height: 100px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.jq-star-svg {
+    padding-left: 3px;
+    width: 100%;
+    height: 100% ;
+}
+
+.jq-star:hover .fs-star-svg path {
+}
+
+.jq-star-svg path {
+    /* stroke: #000; */
+    stroke-linejoin: round;
+}
+
+/* un-used */
+.jq-shadow {
+    -webkit-filter: drop-shadow( -2px -2px 2px #888 );
+    filter: drop-shadow( -2px -2px 2px #888 );
 }

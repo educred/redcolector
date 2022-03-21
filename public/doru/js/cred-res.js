@@ -55,16 +55,18 @@ const editorX = new EditorJS({
     onReady: () => {
         console.log('Editor.js e gata de treabă!');
         //_ TODO: Construiește logica pentru a popula `imagini` și `fisiere` de îndată ce s-au încărcat datele
-        resObi.content.blocks.map(obj => {
-            switch (obj.type) {
-                case 'image':
-                    imagini.add(obj.data.file.url);
-                    break;
-                case 'attaches':
-                    fisiere.add(obj.data.file.url);
-                    break;
-            }
-        });
+        if(resObi?.content?.blocks) {
+            resObi.content.blocks.map(obj => {
+                switch (obj.type) {
+                    case 'image':
+                        imagini.add(obj.data.file.url);
+                        break;
+                    case 'attaches':
+                        fisiere.add(obj.data.file.url);
+                        break;
+                }
+            });
+        }
     },
     holder: 'codex-editor',    
     /* Obiectul tuturor instrumentelor pe care le oferă editorul */ 
