@@ -3414,8 +3414,7 @@ import {AttachesToolPlus} from './uploader.mjs';
             }
         });
 
-        // === RED.etichete ===
-        // document.querySelectorAll("#discipline input[type='checkbox']:checked").forEach(({value, dataset}) => {
+        // === RED.etichete colectează disciplinele ===
         document.querySelectorAll("#v-pills-tabContent input[type='checkbox']:checked").forEach(({value, dataset}) => {
             if (RED.discipline.indexOf(dataset.nume) === -1) {
                 // Verifică să nu se dubleze etichetele pentru cazul în care se întoarce userul și apasă din nou pe pas2()

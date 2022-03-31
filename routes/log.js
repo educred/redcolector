@@ -13,6 +13,7 @@ const LOGO_IMG = "img/" + process.env.LOGO;
 // === VERIFICAREA ROLURILOR ===
 let checkRole = require('./controllers/checkRole.helper');
 
+// Jurnalier - toate intrările
 async function logRoot (req, res, next) {
     // Setări în funcție de template
     let filterMgmt = {focus: 'general'};
@@ -65,7 +66,7 @@ async function logRoot (req, res, next) {
                 {style: `${gensettings.template}/lib/npm/bootstrap.min.css`},
             ];
             
-            res.render(`logentry_${gensettings.template}`, {
+            res.render(`log_${gensettings.template}`, {
                 template: `${gensettings.template}`,
                 title:      "Noutăți",
                 user:       req.user,
@@ -164,6 +165,84 @@ async function addLog (req, res, next) {
 };
 router.get('/new', (req, res, next) => {
     addLog(req, res, next).catch((error) => {
+        console.log(error);
+        logger.error(error);
+    })
+});
+
+// Jurnalier - accesare înregistrare individuală
+async function logEntry (req, res, next) {
+    // Setări în funcție de template
+    let filterMgmt = {focus: 'general'};
+    let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+    let entry = await Log.findOne({alias: req.params.alias});
+
+    let scripts = [
+        // FA
+        {script: `${gensettings.template}/lib/npm/all.min.js`},
+        // MOMENT.JS
+        {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+        // JQUERY
+        {script: `${gensettings.template}/lib/npm/jquery.slim.min.js`},                
+        // BOOTSTRAP
+        {script: `${gensettings.template}/lib/npm/bootstrap.bundle.min.js`},
+        // HOLDERJS
+        {script: `${gensettings.template}/lib/npm/holder.min.js`}   
+    ];
+
+    let modules = [
+        // EDITOR.JS
+        {module: `${gensettings.template}/lib/editorjs/editor.js`},
+        {module: `${gensettings.template}/lib/editorjs/header.js`},
+        {module: `${gensettings.template}/lib/editorjs/paragraph.js`},
+        {module: `${gensettings.template}/lib/editorjs/checklist.js`},
+        {module: `${gensettings.template}/lib/editorjs/list.js`},
+        {module: `${gensettings.template}/lib/editorjs/image.js`},
+        {module: `${gensettings.template}/lib/editorjs/embed.js`},
+        {module: `${gensettings.template}/lib/editorjs/code.js`},
+        {module: `${gensettings.template}/lib/editorjs/quote.js`},
+        {module: `${gensettings.template}/lib/editorjs/inlinecode.js`},
+        {module: `${gensettings.template}/lib/editorjs/table.js`},
+        {module: `${gensettings.template}/lib/editorjs/attaches.js`},
+        {module: `${gensettings.template}/lib/editorjs/ajax.js`},
+        // JQuery
+        {module: `${gensettings.template}/lib/npm/jquery.min.js`},
+        // Toast
+        {module: `${gensettings.template}/lib/npm/jquery.toast.min.js`},
+        // LOCAL
+        {module: `${gensettings.template}/js/uploader.mjs`},
+        {module: `${gensettings.template}/js/form02log.mjs`} 
+    ];
+
+    let styles = [
+        // FONTAWESOME
+        {style: `${gensettings.template}/lib/npm/all.min.css`},
+        // JQUERY TOAST
+        {style: `${gensettings.template}/lib/npm/jquery.toast.min.css`},
+        // BOOTSTRAP
+        {style: `${gensettings.template}/lib/npm/bootstrap.min.css`},
+    ];
+
+    /* === VERIFICAREA CREDENȚIALELOR === */
+    if(req.session.passport.user.roles.admin){
+        // Dacă avem un admin, atunci oferă acces neîngrădit
+        res.render(`logentry_${gensettings.template}`, {
+            template: `${gensettings.template}`,
+            title:     req.user,
+            user:      req.user,
+            logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+            csrfToken: req.csrfToken(),
+            scripts,
+            modules,
+            styles,
+            entry
+        });
+    } else {
+        res.redirect('/401');
+    }
+};
+router.get('/:alias', (req, res, next) => {
+    logEntry(req, res, next).catch((error) => {
         console.log(error);
         logger.error(error);
     })

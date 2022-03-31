@@ -1,19 +1,23 @@
-{{!< doru/layout}}
+{{!< doru/log}}
 {{> nav-resurse}}
-{{!-- {{> messages}} --}}
+{{> messages}}
 
     <input type="hidden" name="_csrf" value="{{csrfToken}}">
+    
+    <div id="container">
+        <h1>{{entry.title}}</h1>
+        <div id="editorcrate" class="container p-2">
+            <form>
+                <div class="justify-content-center mt-4">
+                    <div id="codex"></div>
+                </div>
+            </form>
+        </div>
+        <div>
 
-    <div id="container" class="container">
-        {{#each logentries}}
-            <article class="logentry p-1 mt-1">
-                <div class="logtitle">
-                    <h3>{{this.title}}</h3>
-                    <p>Autor: {{this.idContributor}}, din {{this.dataRo}}</p>
-                </div>
-                <div class="logcontent">
-                    {{{this.content}}}
-                </div>
-            </article>
-        {{/each}}
+        </div>
     </div>
+
+    {{#each scripts}}
+        <script defer type="application/javascript" src="{{script}}"></script>
+    {{/each}}

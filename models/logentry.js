@@ -13,7 +13,12 @@ var LogentrySchema = new mongoose.Schema({
         trim: true,
         es_indexed: true
     },
+    alias: {
+        type: String,
+        trim: true
+    },
     content: {},
+    tags: [],
     contorAcces: Number
 }, {
     toJSON: {

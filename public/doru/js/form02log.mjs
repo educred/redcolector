@@ -11,11 +11,11 @@ if(document.getElementsByName('_csrf')[0].value) {
 //     query: {['_csrf']: csrfToken}
 // });
 
-var log = {
+let log = {
     contorAcces: 0
 };
 
-var title = document.querySelector('#titlelog');
+let title = document.querySelector('#titlelog');
 title.addEventListener('change', (evt) => {
     evt.preventDefault();
     log.title = evt.target.value;
@@ -28,8 +28,6 @@ autor.addEventListener('change', (evt) => {
 });
 
 var userId = document.querySelector('#userId').value;
-
-console.log(userId);
 
 /* === Integrarea lui EditorJS === https://editorjs.io */
 const editorX = new EditorJS({
@@ -306,4 +304,57 @@ submitBtn.addEventListener('click', (evt) => {
 // aștept răspunsul de la server și redirecționez utilizatorul către resursa tocmai creată.
 pubComm.on('log', (entry) => {
     window.location.href = '/log';
+});
+
+/* === ETICHETE === */
+var tagsUnq = new Set(); // construiește un set cu care să gestionezi etichetele
+var newTags = document.getElementById('eticheteLog'); // ref la textarea de introducere a etichetelor
+var tagsElems = document.getElementById('tags');
+/**
+ * Funcția are rolul de a crea un element vizual de tip etichetă
+ */
+function createTag (tag) {
+    // https://stackoverflow.com/questions/22390272/how-to-create-a-label-with-close-icon-in-bootstrap
+    var spanWrapper = new createElement('h5', `${tag}`, ['tag'], null).creeazaElem();
+    var tagIcon = new createElement('span', '', ['fa', 'fa-tag', 'text-warning', 'mr-2'], null).creeazaElem();
+    var spanText = new createElement('span', '', ['text-secondary'], null).creeazaElem(`${tag}`);
+    var aClose = new createElement('a', '', null, null).creeazaElem();
+    var aGlyph = new createElement('i', '', ['remove', 'fa', 'fa-times', 'ml-1'], null).creeazaElem();
+
+    aClose.appendChild(aGlyph);
+    spanWrapper.appendChild(tagIcon);
+    spanWrapper.appendChild(spanText);
+    spanWrapper.appendChild(aClose);
+    tagsElems.appendChild(spanWrapper);
+
+    aClose.addEventListener('click', removeTag);
+};
+
+/* Rolul funcției este să permită ștergerea de etichete care nu sunt considerate utile sau care au fost introduse greșit */
+function removeTag (evt) {
+    evt.preventDefault();
+    // console.log(`Obiectul eveniment`, evt, `target este`, evt.target, `iar current este`, evt.currentTarget);
+    let targetElem = document.getElementById(evt.currentTarget.parentNode.id);
+    // console.log(`Id-ul căutat este`, evt.currentTarget.parentNode.id);
+    tagsUnq.delete(evt.currentTarget.parentNode.id);
+    tagsElems.removeChild(targetElem);
+    // console.log(`După ștergere setul este `, tagsUnq);
+};
+
+// Adaugă event pentru a detecta Enter in inputul de introducere
+newTags.addEventListener('keypress', (evt) => {
+    let charCodeNr = typeof evt.charCode == "number" ? evt.charCode : evt.keyCode;
+    let identifier = evt.key || evt.keyIdentifier; // compatibilitate cu Safari
+    if (identifier === "Enter" || charCodeNr === 13) {
+        let existingValues = newTags.value.split(','), i; // sparge stringul în elemente
+        if (existingValues.length > 0) {
+            for(i = 0; i < existingValues.length; i++) {
+                let newtag = existingValues[i].trim();
+                tagsUnq.add(newtag); // curăță elementul și introdu-l în Set.
+                createTag(newtag);
+            }
+        }
+        newTags.value = '';
+    };
+    // console.log(`Setul acum este `, tagsUnq);
 });
