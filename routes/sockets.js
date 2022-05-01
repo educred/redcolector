@@ -676,7 +676,9 @@ function sockets (io) {
                 idContributor: entry.idContributor,
                 autor:         entry.autor,
                 content:       entry.content,
-                contorAcces:   entry.contorAcces
+                contorAcces:   entry.contorAcces,
+                tags:          entry.tags,
+                alias:         entry.alias
             });
             // salvează documentul
             log.save().then((result) => {

@@ -1,3 +1,131 @@
+CastError: Cast to ObjectId failed for value "articole" (type string) at path "_id" for model "resursedu"
+    at model.Query.exec (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:4715:21)
+    at model.Query.newExec [as exec] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/cache.helper.js:23:25)
+    at model.Query.Query.then (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:4814:15)
+    at clbkProfResID (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/profile.js:227:69)
+    at runMicrotasks (<anonymous>)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5) {
+  messageFormat: undefined,
+  stringValue: '"articole"',
+  kind: 'ObjectId',
+  value: 'articole',
+  path: '_id',
+  reason: BSONTypeError: Argument passed in must be a string of 12 bytes or a string of 24 hex characters or an integer
+      at new BSONTypeError (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/bson/lib/error.js:41:28)
+      at new ObjectId (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/bson/lib/objectid.js:66:23)
+      at castObjectId (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/cast/objectid.js:24:12)
+      at ObjectId.cast (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/schema/objectid.js:247:12)
+      at ObjectId.SchemaType.applySetters (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/schematype.js:1189:12)
+      at ObjectId.SchemaType._castForQuery (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/schematype.js:1623:15)
+      at ObjectId.SchemaType.castForQuery (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/schematype.js:1613:15)
+      at ObjectId.SchemaType.castForQueryWrapper (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/schematype.js:1590:20)
+      at cast (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/cast.js:344:32)
+      at model.Query.Query.cast (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:5137:12)
+      at model.Query.Query._castConditions (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:2168:10)
+      at model.Query.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:2462:8)
+      at model.Query._wrappedThunk [as _findOne] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/helpers/query/wrapThunk.js:27:8)
+      at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/kareem/index.js:367:25
+      at processTicksAndRejections (node:internal/process/task_queues:78:11),
+  valueType: 'string'
+}
+
+
+
+
+node:internal/validators:238
+    throw new ERR_INVALID_ARG_TYPE(name, 'Function', value);
+    ^
+
+TypeError [ERR_INVALID_ARG_TYPE]: The "original" argument must be of type function. Received undefined
+    at promisify (node:internal/util:329:3)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/util/es7.js:8:22)
+    at Module._compile (node:internal/modules/cjs/loader:1105:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1159:10)
+    at Module.load (node:internal/modules/cjs/loader:981:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+    at Module.require (node:internal/modules/cjs/loader:1005:19)
+    at require (node:internal/modules/cjs/helpers:102:18)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/model-helpers/es7-helper.js:29:23)
+    at Module._compile (node:internal/modules/cjs/loader:1105:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1159:10)
+    at Module.load (node:internal/modules/cjs/loader:981:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:822:12)
+    at Module.require (node:internal/modules/cjs/loader:1005:19)
+    at require (node:internal/modules/cjs/helpers:102:18)
+    at Object.<anonymous> (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/models/resursa-red.js:8:23) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+[nodemon] app crashed - waiting for file changes before starting...
+
+
+
+Am renunțat la GOT care era într-o combinație cu Unsplash, etc.
+
+
+De investigat pachetele:
+❯◯ @elastic/elasticsearch         7.16.0  ❯  8.1.0   http://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
+ ◯ express-rate-limit             5.5.1   ❯  6.4.0   https://github.com/nfriedly/express-rate-limit
+ ◯ globby                         11.0.4  ❯  13.1.1  https://github.com/sindresorhus/globby#readme
+ ◯ got                            11.8.3  ❯  12.0.4  https://github.com/sindresorhus/got#readme
+ ◯ helmet                         4.6.0   ❯  5.0.2   https://helmetjs.github.io/
+ ◯ passport-local-mongoose        6.1.0   ❯  7.0.0   https://github.com/saintedlama/passport-local-mongoose#readme
+ ◯ redis                          3.1.2   ❯  4.0.6   https://github.com/redis/node-redis 
+ 
+ 
+ Patch Update Backwards-compatible bug fixes.
+❯◯ archiver                            5.3.0   ❯  5.3.1   https://github.com/archiverjs/node-archiver
+ ◯ datatables.net                      1.11.3  ❯  1.11.5  https://datatables.net
+ ◯ datatables.net-dt                   1.11.3  ❯  1.11.5  https://datatables.net
+ ◯ git-parse                           2.1.0   ❯  2.1.1   https://github.com/wayfair/git-parse#readme
+ ◯ moment                              2.29.1  ❯  2.29.3  https://momentjs.com
+ ◯ papaparse                           5.3.1   ❯  5.3.2   http://papaparse.com
+ ◯ autoprefixer devDep                 10.4.2  ❯  10.4.5  https://github.com/postcss/autoprefixer#readme
+ ◯ copy-webpack-plugin devDep          10.2.0  ❯  10.2.4  https://github.com/webpack-contrib/copy-webpack-plugin
+ ◯ eslint-plugin-security-node devDep  1.1.0   ❯  1.1.1   https://github.com/gkouziik/eslint-plugin-security-node
+ ◯ jsdoc devDep                        3.6.7   ❯  3.6.10  https://github.com/jsdoc/jsdoc#readme
+ ◯ webpack-cli devDep                  4.9.1   ❯  4.9.2   https://github.com/webpack/webpack-cli/tree/master/packages/webpack-cli
+
+ Minor Update New backwards-compatible features.
+ ◯ @editorjs/editorjs         2.22.2  ❯  2.24.0  https://github.com/codex-team/editor.js
+ ◯ bootstrap-icons            1.7.2   ❯  1.8.1   https://icons.getbootstrap.com/
+ ◯ connect-redis              6.0.0   ❯  6.1.3   https://github.com/visionmedia/connect-redis#readme
+ ◯ datatables.net-buttons     2.1.1   ❯  2.2.2   https://datatables.net
+ ◯ datatables.net-buttons-dt  2.1.1   ❯  2.2.2   https://datatables.net
+ ◯ elasticdump                6.79.0  ❯  6.84.0  https://github.com/elasticsearch-dump/elasticsearch-dump#readme
+ ◯ express                    4.17.2  ❯  4.18.0  http://expressjs.com/
+ ◯ fs-extra                   10.0.0  ❯  10.1.0  https://github.com/jprichardson/node-fs-extra
+ ◯ isomorphic-git             1.10.3  ❯  1.17.1  https://isomorphic-git.org/
+ ◯ mocha                      9.1.3   ❯  9.2.2   https://mochajs.org/
+ ◯ mongoose                   6.1.5   ❯  6.3.1   https://mongoosejs.com
+ ◯ nanoid                     3.2.0   ❯  3.3.3   https://github.com/ai/nanoid#readme
+ ◯ pm2                        5.1.2   ❯  5.2.0   http://pm2.keymetrics.io/
+ ◯ socket.io                  4.4.1   ❯  4.5.0   https://github.com/socketio/socket.io#readme
+ ◯ socket.io-client           4.4.1   ❯  4.5.0   https://github.com/socketio/socket.io-client#readme
+ ◯ supertest                  6.1.6   ❯  6.2.3   https://github.com/visionmedia/supertest
+ ◯ winston                    3.3.4   ❯  3.7.2   https://github.com/winstonjs/winston#readme
+ ◯ winston-daily-rotate-file  4.5.5   ❯  4.6.1   https://github.com/winstonjs/winston-daily-rotate-file#readme
+ ◯ autocannon devDep          7.5.1   ❯  7.8.1   https://github.com/mcollina/autocannon#readme
+ ◯ eslint devDep              8.6.0   ❯  8.14.0  https://eslint.org
+
+ Major Update Potentially breaking API changes. Use caution.
+❯◯ @elastic/elasticsearch         7.16.0  ❯  8.1.0   http://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
+ ◯ @fortawesome/fontawesome-free  5.15.4  ❯  6.1.1   https://fontawesome.com
+ ◯ dotenv                         10.0.0  ❯  16.0.0  https://github.com/motdotla/dotenv#readme
+ ◯ express-rate-limit             5.5.1   ❯  6.4.0   https://github.com/nfriedly/express-rate-limit
+ ◯ globby                         11.0.4  ❯  13.1.1  https://github.com/sindresorhus/globby#readme
+ ◯ got                            11.8.3  ❯  12.0.4  https://github.com/sindresorhus/got#readme
+ ◯ helmet                         4.6.0   ❯  5.0.2   https://helmetjs.github.io/
+ ◯ passport-local-mongoose        6.1.0   ❯  7.0.0   https://github.com/saintedlama/passport-local-mongoose#readme
+ ◯ redis                          3.1.2   ❯  4.0.6   https://github.com/redis/node-redis
+  
+ Non-Semver Versions less than 1.0.0, caution.
+ ◯ passport  0.5.0  ❯  0.5.2  https://www.passportjs.org/
+
+
+
+
+Moare aici: https://accounts.google.ro/accounts/SetSID
+
 Aplicația a crăpat cu următoarele detalii:  InternalOAuthError: Failed to obtain access token
     at Strategy.OAuth2Strategy._createOAuthError (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/passport-oauth2/lib/strategy.js:423:17)
     at /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/passport-oauth2/lib/strategy.js:177:45

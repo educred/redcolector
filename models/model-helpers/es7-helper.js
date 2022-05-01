@@ -26,7 +26,7 @@ const editorJs2TXT = require('../../routes/controllers/editorJs2TXT');
 const resursaRedES7 = require('../resursa-red-es7'); // '-es7' indică faptul că sunt setările și mappingul noului index
 const userES7       = require('../user-es7');
 // utilități pentru Elasticsearch
-let {getStructure}  = require('../../util/es7'); // `getStructure()` este o promisiune a cărui rezultat sunt setările indecșilor și ale alias-urilor (vezi `elasticsearch.config.js`, unde sunt setați)
+// let {getStructure}  = require('../../util/es7'); // `getStructure()` este o promisiune a cărui rezultat sunt setările indecșilor și ale alias-urilor (vezi `elasticsearch.config.js`, unde sunt setați)
 
 if (Resursa instanceof mongoose.Model) {
     console.log(`Resursa este un obiect de tip Model`);

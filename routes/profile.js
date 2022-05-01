@@ -10,15 +10,17 @@ const redisClient = require('../redis.config');
 let makeSureLoggedIn = require('connect-ensure-login');
 let checkRole        = require('./controllers/checkRole.helper');
 // MODELE
-const Resursa    = require('../models/resursa-red'); // Adu modelul resursei
+const Resursa     = require('../models/resursa-red'); // Adu modelul resursei
 const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
+const Log = require('../models/logentry');
 // CONFIGURARI ACCES SERVICII
-const esClient   = require('../elasticsearch.config');
+const esClient    = require('../elasticsearch.config');
 // HELPERI
-const schema     = require('../models/resursa-red-es7');
-const ES7Helper  = require('../models/model-helpers/es7-helper');
-let editorJs2TXT = require('./controllers/editorJs2TXT');
-let archiveRED   = require('./controllers/archiveRED');
+const schema      = require('../models/resursa-red-es7');
+const ES7Helper   = require('../models/model-helpers/es7-helper');
+let editorJs2para  = require('./controllers/editorJs2para');
+let editorJs2imgs = require('./controllers/editorJs2imgs');
+let archiveRED    = require('./controllers/archiveRED');
 let {getStructure} = require('../util/es7');
 
 // INDECȘII ES7
@@ -147,11 +149,10 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
             }            
             // newResultArr.push(newObi);
             return newObi;
-        }
+        };
     
         // Afișează doar ultimele 8 resurse introduse
         Resursa.find({idContributor: req.user._id}).sort({"date": -1}).limit(9).then((result) => {
-
             // transformă documentele Mongoose în POJOs cu dată formatată
             let newResultArr = result.map(clbkMapResult);
     
@@ -176,6 +177,102 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
     };
 
     clbkProfRes(req, res, next).catch((error) => {
+        console.log(error);
+        logger(error);
+        next(error); 
+    })
+});
+
+router.get('/logs', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
+    async function clbkLogs (req, res) {
+        // Setări în funcție de template
+        let filterMgmt = {focus: 'general'};
+        let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+    
+        /* === RESURSELE NECESARE LA RANDARE === */
+        let scripts = [       
+            // MOMENT.JS
+            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+            // HOLDERJS
+            {script: `${gensettings.template}/lib/npm/holder.min.js`},
+            // LOCAL
+            //{script: '/js/form02log.js`},
+            // DATATABLES
+            {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+            {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+            {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+            {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+            {script: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+            // TIMELINE 3
+            {script: `${gensettings.template}/lib/timeline3/js/timeline.js`}            
+        ];
+    
+        let styles = [
+            {style: `${gensettings.template}/lib/npm/jquery.dataTables.min.css`},
+            {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+            {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`}
+        ];
+    
+        let modules = [
+            // MAIN
+            {module: `${gensettings.template}/js/main.mjs`},
+            {module: `${gensettings.template}/js/res-visuals-user.mjs`}
+        ];
+
+        /**
+         * Funcție cu rol de callback
+         * Transformă obiectul primit într-un POJO cu date formatate cu moment
+         * @param {Object} obi 
+         */
+        function clbkMapResult (obi) {
+            const newObi = Object.assign({}, obi._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
+            // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
+            newObi.dataRo = moment(obi.date).locale('ro').format('LLL');
+            // introdu template-ul ca proprietare (necesar stabilirii de linkuri corecte in fiecare element afișat în client)
+            newObi.template = `${gensettings.template}`;
+            // newResultArr.push(newObi);
+
+            //_ TODO: Extrage prima propoziție și afișeaz-o la conținut
+            let paras = editorJs2para(obi.content.blocks);
+            let para = paras[0];
+            if (para && para.length > 240) {
+                newObi.content = para.slice(0,238) + '...';
+            } else {
+                newObi.content = para;
+            }
+            let imgsarr = editorJs2imgs(obi.content.blocks);
+            newObi.firstImg= imgsarr[0];
+
+            return newObi;
+        };
+
+        // Afișează doar ultimele 8 resurse introduse
+        Log.find({idContributor: req.user.email}).sort({"date": -1}).limit(12).then((result) => {
+
+            // transformă documentele Mongoose în POJOs cu dată formatată
+            let newResultArr = result.map(clbkMapResult);
+    
+            /* === RANDEAZĂ RESURSELE ÎN PROFIL === */
+            res.render(`logs-profil_${gensettings.template}`, {
+                template: `${gensettings.template}`,               
+                title:     "Logs",
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                resurse:   newResultArr,
+                resIdx:    RES_IDX_ES7,
+                scripts,
+                modules,
+                styles,
+                activeAdmLnk: true
+            });
+        }).catch((error) => {
+            console.error('[routes::profile::/profile/logs] Eroare care apare la afișarea logurilor personale: ', error);
+            logger.error(error);
+        });
+    };
+
+    clbkLogs(req, res, next).catch((error) => {
         console.log(error);
         logger(error);
         next(error); 

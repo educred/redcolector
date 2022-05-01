@@ -3,29 +3,28 @@ const mongoose              = require('mongoose');
 const passportLocalMongoose = require('passport-local-mongoose');
 const bcrypt                = require('bcrypt');
 const jwt                   = require('jsonwebtoken');
-const redisClient           = require('../redis.config');
 const esClient              = require('../elasticsearch.config');
 const schema                = require('./user-es7');
 // const ES7Helper             = require('./model-helpers/es7-helper');
 const logger                = require('../util/logger');
 
-// INDECȘII ES7
-let RES_IDX_ES7 = '', RES_IDX_ALS = '', USR_IDX_ES7 = '', USR_IDX_ALS = '';
-redisClient.get("RES_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ES7 = reply;
-});
-redisClient.get("RES_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    RES_IDX_ALS = reply;
-});
-redisClient.get("USR_IDX_ES7", (err, reply) => {
-    if (err) console.error;
-    USR_IDX_ES7 = reply;
-});
-redisClient.get("USR_IDX_ALS", (err, reply) => {
-    if (err) console.error;
-    USR_IDX_ALS = reply;
+/* INDECȘII ES7 */
+let {getStructure} = require('../util/es7');
+let RES_IDX_ES7 = '';
+let RES_IDX_ALS = '';
+let USR_IDX_ES7 = ''; 
+let USR_IDX_ALS = '';
+
+// console.log("AVEM", getStructure());
+getStructure().then((val) => {
+    // creează valori default pentru nume   le indecșilor ES7 necesari în cazul în care indexul și alias-ul său nu au fost create încă
+    USR_IDX_ALS = val.USR_IDX_ALS ?? 'users';
+    USR_IDX_ES7 = val.USR_IDX_ES7 ?? 'users0';
+    RES_IDX_ALS = val.RES_IDX_ALS ?? 'resursedus';
+    RES_IDX_ES7 = val.RES_IDX_ES7 ?? 'resursedus0';
+}).catch((error) => {
+    console.log(`Schema mongoose pentru resurse`, error);
+    logger.error(error);
 });
 
 // Definirea unei scheme necesare verificării existenței utilizatorului.

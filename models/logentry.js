@@ -29,6 +29,4 @@ var LogentrySchema = new mongoose.Schema({
     }
 });
 
-// LogentrySchema.plugin(mexp);
-
 module.exports = mongoose.model('logentry', LogentrySchema);

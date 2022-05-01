@@ -24,10 +24,6 @@ exports.getStructure = async function getStructure () {
         // let val = await redisClient.hgetall(process.env.APP_NAME + ":es"); // redcolector:es
         let val = await hgetallAsync(process.env.APP_NAME + ":es"); // redcolector:es
 
-        // redisClient.hgetall(`redcolector:es`, (err, ob) => {
-        //     console.log(ob);
-        // })
-
         // console.log(`Valorile obținute de la Redis`, val);
         let k = Object.keys(val), i;
         for (i = 0; i < k.length; i++) {

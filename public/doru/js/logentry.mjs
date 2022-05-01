@@ -7,50 +7,18 @@ if(document.getElementsByName('_csrf')[0].value) {
     csrfToken = document.getElementsByName('_csrf')[0].value;
 }
 
-// var pubComm = io('/redcol', {
-//     query: {['_csrf']: csrfToken}
-// });
+/* === OBIECTUL RESURSA din `data-content` === */
+let data    = document.querySelector('#codex').dataset;
+let dataRes = JSON.parse(JSON.stringify(data)) || null;
 
 // Obiectul record
-let log = {};
-
-/**
- * Funcția creează alias-uri din textele titlurilor are au diaritice.
- * https://stackoverflow.com/questions/990904/remove-accents-diacritics-in-a-string-in-javascript 
- * @param {String} txt 
- * @returns {String} Fără diacritice cu toate cuvintele despărțite prin minusuri
- */
-function toLatinSnake(txt) {
-    return txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(' ').join('-');
+let log = {
+    id: dataRes._id,
+    content: JSON.parse(dataRes.content)
 };
 
-// TITLE <log.title>
-let title = document.querySelector('#titlelog');
-let alias = document.querySelector('#aliaslog');
-title.addEventListener('change', (evt) => {
-    evt.preventDefault();
-    log['title'] = evt.target.value;
-    log['alias'] = toLatinSnake(log.title);
-    alias.value = log.alias;
-    console.log('Acum log.alias are valoarea ', log.alias);
-});
-
-// ALIAS
-alias.addEventListener('change', (evt) => {
-    evt.preventDefault();
-    log['alias'] = evt.target.value;
-    console.log('După modificare directă log.alias are valoarea ', log.alias);
-});
-
-// AUTOR <log.autor>
-let autor = document.querySelector('#autor');
-autor.addEventListener('change', (evt) => {
-    evt.preventDefault();
-    log.autor = evt.target.value;
-});
-
 // USER ID (necesar upload-ului imaginilor, vezi metodele editorului)
-let userId = document.querySelector('#userId').value;
+// let userId = document.querySelector('#userId').value;
 
 /* === Integrarea lui EditorJS === https://editorjs.io */
 const editorX = new EditorJS({
@@ -65,11 +33,38 @@ const editorX = new EditorJS({
     */
     onReady: () => {
         console.log('Editor.js is ready to work!');
+
+        if (dataRes.content.blocks) {
+            dataRes.content.blocks.map(element => {
+                if(element.data.file) {
+                    let fileUrl = check4url(element.data.file.url);
+                    let pathF = fileUrl.path2file;
+                    switch (element.type) {
+                        case 'image':
+                            // dacă există o cale și este și în setul `imagini`
+                            if (pathF !== undefined) {
+                                return pathF;
+                            }
+                            break;
+                        case 'attaches':
+                            if (pathF !== undefined) {
+                                fileRes.add(pathF);
+                                return pathF;
+                            }
+                            break;
+                        default:
+                            return;
+                    }
+                }
+            });
+        }
+
     },
     /**
      * Id of Element that should contain Editor instance
      */
     holder: 'codex',
+    data: log.content,
     /**
      * Enable autofocus
      */ 
@@ -309,88 +304,4 @@ const editorX = new EditorJS({
             }      
         }
     }
-});
-
-/* === ETICHETE === */
-var tagsUnq = new Set(); // construiește un set cu care să gestionezi etichetele
-var newTags = document.getElementById('eticheteLog'); // ref la textarea de introducere a etichetelor
-var tagsElems = document.getElementById('tags');
-
-/**
- * Funcția are rolul de a crea un element vizual de tip etichetă
- * @param {String} tag 
- */
-function createTag (tag) {
-    // https://stackoverflow.com/questions/22390272/how-to-create-a-label-with-close-icon-in-bootstrap
-    var spanWrapper = new createElement('h5', `${tag}`, ['tag'], null).creeazaElem();
-    var tagIcon = new createElement('span', '', ['fa', 'fa-tag', 'text-warning', 'mr-2'], null).creeazaElem();
-    var spanText = new createElement('span', '', ['text-secondary'], null).creeazaElem(`${tag}`);
-    var aClose = new createElement('a', '', null, null).creeazaElem();
-    var aGlyph = new createElement('i', '', ['remove', 'fa', 'fa-times', 'ml-1'], null).creeazaElem();
-
-    aClose.appendChild(aGlyph);
-    spanWrapper.appendChild(tagIcon);
-    spanWrapper.appendChild(spanText);
-    spanWrapper.appendChild(aClose);
-    tagsElems.appendChild(spanWrapper);
-
-    aClose.addEventListener('click', removeTag);
-};
-
-/**
- * Rolul funcției este să permită ștergerea de etichete care nu sunt considerate utile sau care au fost introduse greșit
- * @param {Object} evt 
- */
-function removeTag (evt) {
-    // console.log(`Obiectul eveniment`, evt, `target este`, evt.target, `iar current este`, evt.currentTarget);
-    let targetElem = document.getElementById(evt.currentTarget.parentNode.id);
-    // console.log(`Id-ul căutat este`, evt.currentTarget.parentNode.id);
-    tagsUnq.delete(evt.currentTarget.parentNode.id);
-    tagsElems.removeChild(targetElem);
-    // console.log(`După ștergere setul este `, tagsUnq);
-};
-
-// Adaugă event pentru a detecta Enter in input-ul de introducere
-newTags.addEventListener('keypress', (evt) => {
-    let charCodeNr = typeof evt.charCode == "number" ? evt.charCode : evt.keyCode;
-    let identifier = evt.key || evt.keyIdentifier; // compatibilitate cu Safari
-    if (identifier === "Enter" || charCodeNr === 13) {
-        evt.preventDefault();
-        let existingValues = newTags.value.split(','), i; // sparge stringul în elemente
-        if (existingValues.length > 0) {
-            for(i = 0; i < existingValues.length; i++) {
-                let newtag = existingValues[i].trim();
-                tagsUnq.add(newtag); // curăță elementul și introdu-l în Set.
-                createTag(newtag);
-            }
-        }
-        newTags.value = '';
-    };
-    // console.log(`Setul acum este `, tagsUnq);
-});
-
-// SALVEAZĂ ÎNREGISTRAREA
-let submitBtn = document.querySelector('#enterlog');
-let idContributor = document.querySelector('#idContributor');
-submitBtn.addEventListener('click', (evt) => {
-    evt.preventDefault();
-
-    // colectează etichetele <log.tags>
-    log['tags'] = [...tagsUnq];
-    
-    // ID CONTRIBUTOR <log.content>
-    log['idContributor'] = idContributor.value;
-    editorX.save().then((content) => {
-        log['content'] = content;
-
-        // EMITE EVENT `log`
-        pubComm.emit('log', log);
-    }).catch((e) => {
-        console.log('[form02log.js] submitBtn', e);
-    });
-});
-
-// aștept răspunsul de la server și redirecționez utilizatorul către articolul creat.
-pubComm.on('log', (entry) => {
-    window.location.href = '/log';
 });

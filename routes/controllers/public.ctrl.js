@@ -1,5 +1,4 @@
 const moment = require('moment');
-const got    = require('got');
 const logger = require('../../util/logger');
 const mongoose = require('mongoose');
 
@@ -99,12 +98,6 @@ async function renderPublic (req, res, next, gensettings, Model, modelOpts, resu
                 return composed;
             });
 
-            // [COPERTA]
-            // if (obi.coperta === undefined) {
-            //     // let {body} = await got(`https://api.unsplash.com/photos/random/?client_id=${process.env.UNSPLASH_KEY}&collections=education`);
-            //     // obi.coperta = bodyobi.urls.regular;
-            //     obi.coperta = `/${gensettings.template}/img/black-1072366_1920.jpg`;
-            // }
             return obi;
         });
 

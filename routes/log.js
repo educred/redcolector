@@ -38,6 +38,8 @@ async function logRoot (req, res, next) {
                 newResultArr.push(newObi);
             });
 
+            // console.log(newResultArr[0]);
+
             let scripts = [
                 // FA
                 {script: `${gensettings.template}/lib/npm/all.min.js`},
@@ -86,7 +88,6 @@ async function logRoot (req, res, next) {
         res.redirect('/401');
     }
 }
-
 router.get('/', (req, res, next) => {
     logRoot(req, res, next).catch((error) => {
         console.log(error);
@@ -151,13 +152,13 @@ async function addLog (req, res, next) {
         // Dacă avem un admin, atunci oferă acces neîngrădit
         res.render(`logentry-form_${gensettings.template}`, {
             template: `${gensettings.template}`,
-            title:     "Adaugă în log",
+            title:     "Noutate",
             user:      req.user,
             logoimg:   `${gensettings.template}/${LOGO_IMG}`,
             csrfToken: req.csrfToken(),
             scripts,
             modules,
-            styles
+            // styles
         });
     } else {
         res.redirect('/401');
@@ -175,7 +176,17 @@ async function logEntry (req, res, next) {
     // Setări în funcție de template
     let filterMgmt = {focus: 'general'};
     let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+
+    // Adu obiectul întregistrării în funcție de alias. Dacă la câmpul alias există valoarea căutată, înseamnă că e o intrare modernă.
     let entry = await Log.findOne({alias: req.params.alias});
+    // În cazul în care înregistrarea nu are alias, o vom căuta după id.
+    if (entry === null) {
+        entry = await Log.findById(req.params.alias);
+    }
+
+    // Setare hardcodată de ACL
+    let roles = ["user", "cred"];
+    let confirmedRoles = checkRole(req.session.passport.user.roles.rolInCRED, roles);
 
     let scripts = [
         // FA
@@ -211,7 +222,7 @@ async function logEntry (req, res, next) {
         {module: `${gensettings.template}/lib/npm/jquery.toast.min.js`},
         // LOCAL
         {module: `${gensettings.template}/js/uploader.mjs`},
-        {module: `${gensettings.template}/js/form02log.mjs`} 
+        {module: `${gensettings.template}/js/logentry.mjs`} 
     ];
 
     let styles = [
@@ -223,22 +234,31 @@ async function logEntry (req, res, next) {
         {style: `${gensettings.template}/lib/npm/bootstrap.min.css`},
     ];
 
-    /* === VERIFICAREA CREDENȚIALELOR === */
-    if(req.session.passport.user.roles.admin){
-        // Dacă avem un admin, atunci oferă acces neîngrădit
-        res.render(`logentry_${gensettings.template}`, {
-            template: `${gensettings.template}`,
-            title:     req.user,
-            user:      req.user,
-            logoimg:   `${gensettings.template}/${LOGO_IMG}`,
-            csrfToken: req.csrfToken(),
-            scripts,
-            modules,
-            styles,
-            entry
-        });
-    } else {
-        res.redirect('/401');
+    if (confirmedRoles.length > 0) {
+        const newObi = Object.assign({}, entry._doc); // Necesar pentru că: https://stackoverflow.com/questions/59690923/handlebars-access-has-been-denied-to-resolve-the-property-from-because-it-is
+        // https://github.com/wycats/handlebars.js/blob/master/release-notes.md#v460---january-8th-2020
+        newObi.dataRo = moment(newObi.date).locale('ro').format('LLL');
+        // newObi.content = content2html(entry.content);
+
+        // console.log('Obiectul care pleacă ', newObi);
+
+        /* === VERIFICAREA CREDENȚIALELOR === */
+        if(req.session.passport.user.roles.admin){
+            // Dacă avem un admin, atunci oferă acces neîngrădit
+            res.render(`logentry_${gensettings.template}`, {
+                template: `${gensettings.template}`,
+                title:     entry.title,
+                user:      req.user,
+                logoimg:   `${gensettings.template}/${LOGO_IMG}`,
+                csrfToken: req.csrfToken(),
+                scripts,
+                modules,
+                styles,
+                newObi
+            });
+        } else {
+            res.redirect('/401');
+        }
     }
 };
 router.get('/:alias', (req, res, next) => {
