@@ -374,25 +374,7 @@ footer.bg-light {
     user-select: none;
 }
 
-/* Tratarea background-ului cu video [COMPONENTA] */
-
-.bg-video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    /* opacity: .80; */
-    overflow: hidden;
-    z-index: -10;
-}
-
-.bg-video__content {
-    height: 100%;
-    width: 100%;
-    object-fit: cover;
-}
-
+/* MODAL */
 /* The Modal (background) */
 .modal {
     display: none;
@@ -434,8 +416,7 @@ footer.bg-light {
     cursor: pointer;
 }
 
-/* MODELAREA TABELULUI */
-
+/* MODELAREA TABELULUI de afișare a resurselor*/
 .helperIcon {
     background: url('../img/details_open.png') no-repeat center center;
 }
@@ -449,15 +430,37 @@ tr.shown td.details-control {
     background: url('../img/details_close.png') no-repeat center center;
 }
 
+/* PAGINA TIPOLOGIILOR DE RESURSE */
+.rtypes {
+    min-height: 300px;
+    align-items: center;
+    justify-content: center;
+}
+
+.restype {
+    width: 10rem; 
+    height: 8rem;
+}
+
 /* === INTRODU RESURSĂ - FRM01 === */
 
 #doi, #trei, #patru {
     display: none;
 }
 
-/* PASUL 1 */
+/* PASUL 1 formular adăugare resursă */
 .frm01-lang-opt {
     background-color:rgba(226, 222, 222, 0.6);
+}
+
+/* Modelarea limbilor suplimentare */
+#langAlternative {
+    margin-left: .4rem;
+    margin-right: .4rem;
+}
+
+.langalt {
+    margin-bottom: .4rem;
 }
 
 /* FORMAREA BUTOANELOR DISCIPLINELOR */

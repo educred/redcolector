@@ -427,8 +427,7 @@ async function clbkProfResID (req, res, next) {
         }
     }).then((resursa) => {
         /* === ADMIN === */
-        if(resursa !== null && req.session.passport.user.roles.admin) {
-            
+        if(req.session.passport.user.roles.admin) {
             // Adaugă mecanismul de validare al resursei
             if (resursa.expertCheck) {
                 resursa.validate = `<input type="checkbox" id="valid" class="expertCheck" checked>`;

@@ -62,8 +62,11 @@ function clbkDOMContentLoaded () {
      */
     function changed () {
         // console.log("E ceva modificat în editor");
-        var saveBtn = new createElement('button', 'saveBtn', ['btn-sm'], {onclick: "createVersion(this)"}).creeazaElem('Actualizează');
+        var saveBtn = new createElement('button', 'saveversion', ['btn-sm', 'btn-primary'], {onclick: "createVersion(this)"}).creeazaElem('Actualizează');
         document.querySelector('.resursa').appendChild(saveBtn);
+        let btnsave = document.getElementById('saveversion');
+        btnsave.classList.remove('btn-primary');
+        btnsave.classList.add('btn-warning');
     }
 
     /* === Integrarea lui EditorJS === https://editorjs.io */
@@ -421,8 +424,109 @@ function clbkDOMContentLoaded () {
                     }
                 }      
             }
-        }
+        },
+        onChange: changeContent
     });
+
+    /**
+     * Funcția este listener pentru modificările aduse conținutului din editor -> proprietatea `onChange` a obiectului `editorX`.
+     * De fiecare dată când se modifică conținutul, actualizează `resObi.content`.
+     * Apelează `check4url()` pentru a verifica dacă este url
+     * Apelează `pickCover()` pentru a genera galeria imaginilor care trebuie selectate.
+     */
+     function changeContent () {
+        if (resObi.versioned === false) {
+            resObi.versioned = true;
+            // console.log('Era false, acum este ', RED.versioned);
+            changed(); // activează butonul *Actualizează*
+        }
+
+        editorX.save().then((content) => {  
+            // console.log(`la salvare am urmatorul continut `, content);
+            
+            /* === ACTUALIZEAZĂ `resObi.content` cu noua valoare === */
+            resObi.content = null;    // Dacă există deja, mai întâi setează `content` la `null` 
+            resObi.content = content; // actualizează obiectul `content` la noua stare.
+
+            /* === Logică de ștergere din server a imaginilor și fișierelor care au fost șterse din editor === */
+            // PAS 1: constituie array-ul celor rămase
+            let contentResArr = resObi.content.blocks.map((element) => {
+                // imagini.clear(); // curăță setul imaginilor de cele anterioare pentru că altfel poluezi galeria
+
+                /* 
+                * trebuie făcută verificare pentru că la files, se consideră eveniment apariția selecției de pe disc
+                * și astfel, se introduc elemente vide în `Set`-uri 
+                * */
+                if(element.data.file) {
+                    if (element.data.file.url !== undefined) {
+                        let fileUrl = check4url(element.data.file.url);
+                        let pathF = fileUrl.path2file;
+                        switch (element.type) {
+                            case 'image':
+                                // dacă există o cale și este și în setul `imagini`
+                                if (pathF !== undefined) {
+                                    fileRes.add(pathF); // și încarcă-le în Set-ul `fileRes`
+                                    return pathF;
+                                }                           
+                                break;
+                            case 'attaches':
+                                if (pathF !== undefined) {
+                                    fileRes.add(pathF);
+                                    return pathF;
+                                }
+                                break;
+                            default:
+                                return;
+                        }
+                    }
+                }
+
+                switch (element.type) {
+                    case 'paragraph':
+                        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'content', content: content});
+                        break;
+                    case 'embed':
+                        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'content', content: content});
+                        break;                
+                    default:
+                        break;
+                }
+            });  
+
+            let fileResArr = Array.from(fileRes);
+            let differenceArr = fileResArr.filter((elem) => {
+                if (!contentResArr.includes(elem)) return elem;
+            });
+
+            // PAS 2: compară fiecare înregistrare din `Set` cu cele ale array-ului `contentResArr`
+            differenceArr.forEach((fpath) => {
+                // dacă ai șters cu succes din `fileRes`, șterge imediat și din `imagini`
+                if (fileRes.delete(fpath)) {
+                    imagini.delete(fpath);
+                    // extrage numele fișierului din `fileUrl`
+                    let fileName = fpath.split('/').pop();
+                    // emite un eveniment de ștergere a fișierului din subdirectorul resursei.
+
+                    let obi = {
+                        uuid: resObi.uuid,
+                        idContributor: resObi.contribuitor,
+                        content: resObi.content,
+                        id: resObi.id,
+                        fileName
+                    };
+
+                    console.log(`Obiectul trimis pe delfile este `, obi);
+
+                    pubComm.emit('delfile', obi);
+                }
+            });
+
+            // console.log("Rămâne câte un rest în imagini? ", imagini);
+            pickCover(); // formează galeria pentru ca utilizatorul să poată selecta o imagine
+        }).catch((e) => {
+            console.log(e);
+        });
+    };    
 
     // #2
     /**

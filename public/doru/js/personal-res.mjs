@@ -31,7 +31,8 @@ function clbkDOMContentLoaded () {
         contribuitor: dataRes.contribuitor,
         uuid:         content.uuid,
         content:      content.content,
-        etichete:     content.etichete
+        etichete:     content.etichete,
+        user:         content.idContributor
     };
 
     // acoperă cazul resurselor care au fost create până la începutul anului 2021
@@ -419,7 +420,7 @@ function clbkDOMContentLoaded () {
         }
 
         editorX.save().then((content) => {  
-            console.log(`la salvare am urmatorul continut `, content);
+            // console.log(`la salvare am urmatorul continut `, content);
             
             /* === ACTUALIZEAZĂ `resObi.content` cu noua valoare === */
             resObi.content = null;    // Dacă există deja, mai întâi setează `content` la `null` 
@@ -431,7 +432,7 @@ function clbkDOMContentLoaded () {
                 // imagini.clear(); // curăță setul imaginilor de cele anterioare pentru că altfel poluezi galeria
 
                 /* 
-                * trebuie făcută verificare pentru că la files, se consideră eveniment apariția selecției de pe disc
+                * trebuie făcută verificare pentru că la files se consideră eveniment apariția selecției de pe disc
                 * și astfel, se introduc elemente vide în `Set`-uri 
                 * */
                 if(element.data.file) {
@@ -458,17 +459,24 @@ function clbkDOMContentLoaded () {
                     }
                 }
 
+                console.log(`Userul care face modificarea este:`, resObi.user);
+
                 switch (element.type) {
                     case 'paragraph':
-                        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'content', content: content});
+                        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'content', content: content, 'user': resObi.user});
                         break;
                     case 'embed':
-                        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'content', content: content});
+                        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'content', content: content, 'user': resObi.user});
                         break;                
                     default:
                         break;
                 }
-            });  
+            });
+
+            // Ce se petrece când am un răspuns
+            pubComm.on('redfieldup', function clbkShowResponse (data) {
+                console.log(data);
+            });
 
             let fileResArr = Array.from(fileRes);
             let differenceArr = fileResArr.filter((elem) => {
@@ -505,7 +513,7 @@ function clbkDOMContentLoaded () {
         });
     };
 
-    // _FIXME: Wrapper pentru listenerele de pe contenteditable
+    // Wrapper pentru listenerele de pe contenteditable
     function setChangeListener (div, listener) {
         div.addEventListener("blur", listener);
         div.addEventListener("keyup", listener);
@@ -519,13 +527,13 @@ function clbkDOMContentLoaded () {
     // Actualizează informația din titlu
     let titlered = document.getElementById('title');
     setChangeListener(titlered, (evt) => {
-        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'title', content: titlered.innerText});
+        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'title', content: titlered.innerText, 'user': resObi.user});
     });
     
     // Actualizează informația din descriere
     let descriptionred = document.getElementById('description');
     setChangeListener(descriptionred, (evt) => {
-        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'description', content: descriptionred.innerText});
+        pubComm.emit('redfieldup', {id: resObi.id, fieldname: 'description', content: descriptionred.innerText, 'user': resObi.user});
     });
 
     /**
@@ -629,13 +637,17 @@ function clbkDOMContentLoaded () {
     var resursa          = document.getElementById(resObi.id);
     var validateCheckbox = document.getElementById('valid');
     var publicCheckbox   = document.getElementById('public');
-    validateCheckbox.addEventListener('click', validateResource);
+
+    // verifică dacă există un element cu id-ul `valid`. E posibil să fie cazul unui simplu user
+    if (validateCheckbox) {
+        validateCheckbox.addEventListener('click', validateResource);
+    }
 
     // tratează cazul în care este doar validator
     if (publicCheckbox) publicCheckbox.addEventListener('click', setGeneralPublic);
 
     // setează clasele în funcție de starea resursei
-    if (validateCheckbox.checked) {
+    if (validateCheckbox && validateCheckbox.checked) {
         resursa.classList.add('validred');
     } else {
         resursa.classList.add('invalidred');
@@ -781,7 +793,6 @@ function clbkDOMContentLoaded () {
         }
     });
 
-
     pubComm.on('delfile', (data) => {
         console.log(data);
     });
@@ -813,77 +824,7 @@ function clbkDOMContentLoaded () {
         // Verifică mai întâi dacă nu cumva aria deja există între elementele grafice.
     };
 
-    // Afișează selectorul de imagini - https://codepen.io/kskhr/pen/pRwKjg
-    /**
-     * Funcția este receptor pentru containerele imaginilor timbru
-     * Funcția are rolul de a bifa și debifa imaginile din galeria celor expuse selecției.
-     */
-    function clickImgGal () {
-        // selectează toate elementele care au clasa `.image-checkbox`
-        let elementContainer = document.querySelectorAll('.image-checkbox'); // e o HTMLColection de div-uri care conțin fiecare următorii copii: img, input, svg
-        // caută între cei trei copii elementul <input>
-        elementContainer.forEach( liveNode => {
-            // caută primul element <input type="checkbox">, care este în mod normal și primul care are atributul `checked`
-            let inputCollection = liveNode.querySelectorAll('input[type=checkbox]');
-            inputCollection.forEach(element => {
-                // adaugă-i acestui element clasa `image-checkbox-checked`
-                if (element.checked) {
-                    element.classList.add('image-checkbox-checked');
-                } else {
-                    // altfel, sterge-i clasa `image-checkbox-checked`
-                    element.classList.remove('image-checkbox-checked');
-                }
-            });
-        });
-
-        this.classList.toggle('image-checkbox-checked');
-        var checkbox = this.querySelector('input[type=checkbox]');
-
-        if(checkbox.checked === false) {
-            checkbox.checked = true;
-        } else {
-            checkbox.checked = false;
-        }
-
-        if (checkbox.checked === true) {
-            this.querySelector('svg').classList.add('d-block');
-        } else {
-            this.querySelector('svg').classList.add('d-none');
-        }
-
-        if(checkbox.checked === true){
-            this.querySelector('svg').classList.remove('d-none');
-            this.querySelector('svg').classList.toggle('d-block');
-        }
-    };
-
     var insertGal = document.getElementById('imgSelector');
-    /**
-     * Funcția generează toate elementele ce poartă imagini pentru a putea fi bifată cea care devine coperta resursei.
-     */
-    function pickCover () {
-        insertGal.innerHTML = '';
-        for (let img of imagini) {
-            // console.log('imaginea selectată pentru copertă este: ', img);
-            
-            let container = new createElement('div', '', [`col-xs-4`, `col-sm-3`, `col-md-2`, `nopad`, `text-center`], null).creeazaElem();
-            container.addEventListener('click', clickImgGal);
-            let imgCheck = new createElement('div', '', [`image-checkbox`], null).creeazaElem();
-            //FIXME: trebuie doar căi relative!!!! Repară stringurile care sunt culese în `imagini`.
-            
-            let imgElem = new createElement('img', '', [`img-responsive`], {src: `${img}`}).creeazaElem();
-            let inputElem = new createElement('input', '', [`inputCheckGal`], {type: 'checkbox', value: `${img}`}).creeazaElem();
-            let inputI = new createElement('i', '', [`fa`, 'fa-check', 'd-none'], null).creeazaElem();
-
-            imgCheck.appendChild(imgElem);
-            imgCheck.appendChild(inputElem);
-            imgCheck.appendChild(inputI);
-            container.appendChild(imgCheck);
-            insertGal.appendChild(container);
-        }
-        return insertGal;
-    };
-
     
     /* === ETICHETE === */
     let tagsUnq;
@@ -896,7 +837,7 @@ function clbkDOMContentLoaded () {
         tagsUnq = new Set();
     }
 
-    console.log(`Înainte de a porni am următoarele etichete: `, resObi.etichete, `iar setul are `, tagsUnq);
+    // console.log(`Înainte de a porni am următoarele etichete: `, resObi.etichete, `iar setul are `, tagsUnq);
 
     var newTags = document.getElementById('eticheteRed'); // ref la textarea de introducere a etichetelor
     var tagsElems = document.getElementById('tags');
@@ -963,5 +904,3 @@ function clbkDOMContentLoaded () {
 }
 
 document.addEventListener("DOMContentLoaded", clbkDOMContentLoaded);
-
-

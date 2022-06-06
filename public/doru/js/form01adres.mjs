@@ -514,7 +514,7 @@ import {AttachesToolPlus} from './uploader.mjs';
      * @param {Object} insertie Este elementul la care se va atașa întreaga structură `<option>` generată
      */
     function creeazaTitluAlternativHelper (id, insertie) {
-        const divInputGroup        = new createElement('div', `${id}`,        ['input-group'],         {}).creeazaElem();
+        const divInputGroup        = new createElement('div', `${id}`,        ['input-group', 'langalt'],         {}).creeazaElem();
         const divInputGroupPrepend = new createElement('div', '',             ['input-group-prepend'], {}).creeazaElem();
         const spanInputgroupText   = new createElement('span', `${id}-descr`, ['input-group-text'],    {}).creeazaElem('Titlul resursei');
         divInputGroupPrepend.appendChild(spanInputgroupText);

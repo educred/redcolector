@@ -500,6 +500,7 @@ router.get('/users/:id', (req, res, next) => {
         // Setări în funcție de template
         let filterMgmt = {focus: 'general'};
         let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+
         // ACL
         let roles = ["admin", "validator"];
         
@@ -537,13 +538,16 @@ router.get('/users/:id', (req, res, next) => {
                 {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
                 {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
             ];
-                    
+            
+            let csrfToken = req.csrfToken();
+            console.log(`CSRF-ul trimis este: `, csrfToken);
+
             res.render(`user-admin_${gensettings.template}`, {
                 template: `${gensettings.template}`,
                 title:    "User",
                 user:     req.user,
                 logoimg:  `${gensettings.template}/${LOGO_IMG}`,
-                csrfToken: req.csrfToken(),
+                csrfToken,
                 scripts,
                 styles,
                 activeAdmLnk: true

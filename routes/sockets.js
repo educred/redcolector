@@ -537,14 +537,6 @@ function sockets (io) {
             });
         });
 
-        function updategit() {
-
-        }
-
-        function updateBAG() {
-
-        }
-
         // === RED UPDATE :: Actualizarea unei înregistrări existente
         socket.on('updatered', function clbkUpdateRED (obi) {
             if (obi.contribuitor && obi.uuid) {
@@ -2061,13 +2053,26 @@ function sockets (io) {
             console.log(`Rezultate în urma prelucrării`, results);                
         });
 
-        // === UPDATE PE CÂMPURI UNICE ===
+        // === UPDATE PE CÂMPURI UNICE ALE UNUI RED ===
         socket.on('redfieldup', (data) => {
-            // console.log(`Pe redfielduo am primit`, data);
-            // _NOTE: Trebuie actualizată înregistrarea din MongoDB și cea din Elasticsearch
-            Resursa.findByIdAndUpdate(data.id, {[data.fieldname]: data.content}, (doc) => {
-                socket.emit('redfieldup', doc);
-            }); // https://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate
+            console.log(`Pe redfieldup am primit`, data);
+            // _NOTE: Trebuie actualizată înregistrarea din MongoDB dar și cea din Elasticsearch
+
+            // TODO: Verifică ca userul să aibă drepturile să facă modificarea (câmpul `idContributor`)
+            Resursa.findById(data.id, function clbkFindByIdRedfieldupResursa (err, record) {
+
+                // Verifică cazul în care `record.idContributor` are credențiale `admin` sau `validator`. constituie un array cu rolurile. Validatorul nu are drept de modificare, doar adminul
+                User.findById(data.user, function clbkFindByIdRedfieldupUser (err, user) {
+                    // cazul când se face verificarea strictă, fie userul este același cu cel al resursei, fie este administrator
+                    if (record.idContributor === data.user || user.roles.admin) {
+                        Resursa.findByIdAndUpdate(data.id, {[data.fieldname]: data.content}, (doc) => {
+                            socket.emit('redfieldup', doc);
+                        }); // https://mongoosejs.com/docs/api.html#model_Model.findByIdAndUpdate
+                    } else {
+                        socket.emit('redfieldup', {message: "Înregistrarea nu-ți aparține. Prerogativă a administratorului", code: 401});
+                    }
+                });
+            });
         });
 
         // === UPDATE PE APRECIERE

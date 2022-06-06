@@ -1,7 +1,7 @@
 {{!< doru/layout}}
 {{> nav-administrator}}
 
-<input type="hidden" name="_csrf" value="{{this.csrfToken}}">
+<input type="hidden" name="_csrf" id="csrf" value="{{csrfToken}}">
 
 <input id="tmpl" type="hidden" name="template" value="{{template}}">
 
@@ -9,15 +9,6 @@
     <section class="" id="userres">
         {{!-- Va încărca resursele compilate cu ajutorul template-ului --}}
         <div id="contributii" class="">
-            {{!-- Background video --}}
-            <div class="bg-video">
-                <video class="bg-video__content" autoplay muted loop>
-                    {{!-- https://coverr.co/videos/modem-lights-u4MPlcF4EE --}}
-                    <source src="/img/coverr-typing-in-laptop-1578678668153.mp4" type="video/mp4">
-                    Browserul tău nu are support pentru caracteristicile web moderne. Actualizează-l!
-                </video>
-            </div>
-
             {{!-- DETALIILE PENTRU UN UTILIZATOR SELECTAT --}}
             <div id="showusrdetails" class="">
                 {{!-- Va fi inserat rezultatul compilării aici! --}}
@@ -119,8 +110,4 @@
     <template id="userResTbl" data-sort='[[ 0, "asc" ]]'>
         <div id="resurseTab" class=""></div>
     </template>
-
-    {{#each scripts}}
-        <script defer type="application/javascript" src="/{{template}}{{script}}"></script>
-    {{/each}}
 </div>

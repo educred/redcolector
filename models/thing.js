@@ -8,9 +8,12 @@ const { Schema } = mongoose;
 // https://github.com/structureddynamics/Bibliographic-Ontology-BIBO
 
 let Thing = new mongoose.Schema({
-    title: {
-        type: String // http://purl.org/dc/elements/1.1/title
-    }
+    res: {
+        type: String // http://purl.org/dc/elements/1.1/title Numele elementului așa cum apare în ontologie sau în vocabular
+    },
+    arca: [], // toți identificatorii pentru această entitate specifică, pot fi termenii unei ontologii sau id-urile și CID-urile altor lucruri (cuvinte alte altui vocabulat...)
+    nota: String, // descrierea entității
+    cid: [] // pot exista mai multe CID-uri în funcție de codec
 });
 
 module.exports = Thing;
