@@ -35,6 +35,9 @@ const httpserver = require('./util/httpserver');
 const app        = httpserver.app();
 const http       = httpserver.http(app);
 
+// dezactivează identificarea
+app.disable('x-powered-by');
+
 /* === TIMP RĂSPUNS ÎN HEADER === */
 app.use(responseTime());
 
@@ -56,7 +59,7 @@ const esClient = require('./elasticsearch.config');
 
 // process.report.writeReport('./report.json');
 
-/* === FIȘIERELE statice === */
+/* === FIȘIERE și DIRECTOARE statice === */
 app.use(express.static(path.join(__dirname, '/public'), {
     index: false, 
     immutable: true, 
@@ -273,6 +276,34 @@ let profile        = require('./routes/profile');
 let tags           = require('./routes/tags');
 let help           = require('./routes/help');
 
+const deps = {
+    '/logs': ['datatables.net', 'datatables.net-dt']
+}
+/**
+ * Loader pentru dependințe specifice fiecărei rute
+ */
+function depsLoader (req, res, next) {
+    console.log(`calea cererii este `, req.path);
+    let arry = deps[`${req.path}`];
+    console.log(`Array-ul dependințelor este `, arry, `din`, deps);
+    if (Array.isArray(arry)) {
+        arry.forEach(dep => {
+            console.log(`Am așa: `, path.join(__dirname, `/node_modules/${dep}`));
+            express.static(path.join(__dirname, `/node_modules/${dep}`), {
+                index: false, 
+                immutable: true, 
+                cacheControl: true,
+                maxAge: "30d",
+                setHeaders: function (res, path, stat) {
+                    res.set('x-timestamp', Date.now());
+                }
+            });
+        });
+    }
+    next();
+}
+
+
 // === MIDDLEWARE-ul RUTELOR ===
 app.use('/auth',           authG);
 app.use('/callback',       callbackG);
@@ -284,7 +315,8 @@ app.use('/help',           csurfProtection, help);
 app.use('/administrator',  csurfProtection, UserPassport.ensureAuthenticated, administrator);
 app.use('/resurse',        csurfProtection, UserPassport.ensureAuthenticated, resurse);
 app.use('/log',            csurfProtection, UserPassport.ensureAuthenticated, log);
-app.use('/profile',        csurfProtection, profile);
+// app.use('/profile',        csurfProtection, profile);
+app.use('/profile',        depsLoader, csurfProtection,  profile);
 app.use('/tag',            csurfProtection, tags);
 
 // CONSTANTE

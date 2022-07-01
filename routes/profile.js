@@ -3,6 +3,7 @@ require('dotenv').config();
 const express     = require('express');
 const router      = express.Router();
 const moment      = require('moment');
+const path        = require('path');
 const logger      = require('../util/logger');
 const redisClient = require('../redis.config');
 
@@ -12,13 +13,13 @@ let checkRole        = require('./controllers/checkRole.helper');
 // MODELE
 const Resursa     = require('../models/resursa-red'); // Adu modelul resursei
 const Mgmtgeneral = require('../models/MANAGEMENT/general'); // Adu modelul management
-const Log = require('../models/logentry');
+const Log         = require('../models/logentry');
 // CONFIGURARI ACCES SERVICII
 const esClient    = require('../elasticsearch.config');
 // HELPERI
 const schema      = require('../models/resursa-red-es7');
 const ES7Helper   = require('../models/model-helpers/es7-helper');
-let editorJs2para  = require('./controllers/editorJs2para');
+let editorJs2para = require('./controllers/editorJs2para');
 let editorJs2imgs = require('./controllers/editorJs2imgs');
 let archiveRED    = require('./controllers/archiveRED');
 let {getStructure} = require('../util/es7');
@@ -38,6 +39,15 @@ getStructure().then((val) => {
 
 // LOGO
 let LOGO_IMG = "img/" + process.env.LOGO;
+
+// console.log(`calea formată este `, path.join(__dirname, `../node_modules/datatables.net`)); 
+// /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/datatables.net
+
+// router.use(depsLoader);
+// let serveIndex = require('serve-index');
+// router.use(path.join(__dirname, `../node_modules/datatables.net`), serveIndex('files', {icons: true}));
+// router.use(express.static(path.join(__dirname, `../node_modules/datatables.net`)));
+
 
 /* === PROFILUL PROPRIU === */
 async function clbkProfile (req, res) {
@@ -183,11 +193,23 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
     })
 });
 
+/*
+* Template: `logs-profil_${gensettings.template}`
+*/
 router.get('/logs', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
     async function clbkLogs (req, res) {
         // Setări în funcție de template
         let filterMgmt = {focus: 'general'};
         let gensettings = await Mgmtgeneral.findOne(filterMgmt);
+
+        // let arry = deps[`${req.path}`];
+        // console.log(`Array-ul dependințelor este `, arry);
+        // if (Array.isArray(arry)) {
+        //     arry.forEach(dep => {
+        //         // console.log(`Am format `, req.url, req.baseUrl,  path.join(__dirname, `../node_modules/${dep}`), `/${gensettings.template}/node_modules/${dep}`);
+        //         router.use(express.static(path.join(__dirname, `../node_modules/${dep}`)));
+        //     });
+        // }
     
         /* === RESURSELE NECESARE LA RANDARE === */
         let scripts = [       
@@ -198,7 +220,8 @@ router.get('/logs', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
             // LOCAL
             //{script: '/js/form02log.js`},
             // DATATABLES
-            {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+            // {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+            {script: `js/jquery.dataTables.min.js`},
             {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
             {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
             {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
@@ -216,7 +239,7 @@ router.get('/logs', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
         let modules = [
             // MAIN
             {module: `${gensettings.template}/js/main.mjs`},
-            {module: `${gensettings.template}/js/res-visuals-user.mjs`}
+            {module: `${gensettings.template}/js/logs-visuals-user.mjs`}
         ];
 
         /**

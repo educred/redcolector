@@ -12,7 +12,8 @@
         <div>
             <h3>Contribuții</h3>
         </div>
-        <div id="resurseincred" class="units">        
+        <div id="resurseincred" class="units">
+            <img src="/Danube_Delta.jpg" alt="ceva deltă" height="300">  
             {{!-- Randează ultimele 9 resurse create --}}
             {{#each resurse}}        
                 <div class="unit4log">
@@ -23,7 +24,7 @@
                             {{else}}
                                 <a href="/log/{{this._id}}" maxlength="4">{{this.title}}</a>
                             {{/if}}
-                            <button type="button" class="btn btn-link">
+                            <button type="button" class="btn btn-link log-trash-btn">
                                 <span class="unit4log-trash"><i class="bi bi-trash"></i></span>
                             </button>
                         </h3>

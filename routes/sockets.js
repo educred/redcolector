@@ -1533,14 +1533,33 @@ function sockets (io) {
             });
         });
 
-        // === PERSONALRES === ::TOATE RESURSELE UNUI UTILIZATOR
+        // === PERSONAL RES === ::TOATE RESURSELE UNUI UTILIZATOR
         socket.on('usrRes', (id) => {
             // console.log("Identificatorul pentru user pe care l-am primit este", id);
             Resursa.find({idContributor: id}).exec().then(pRes => {
                 socket.emit('usrRes', pRes);
-            }).catch((err) => {
-                logger.error(`[sockets.js::'usrRes'] Eroare la aducerea utilizatorului cu următoarele detalii: ${err}`);
+            }).catch((error) => {
+                logger.error(error);
             });
+        });
+
+        /**
+         * Funcția `getUser` returnează un user din bază
+         * @param {String} id este identificatorul alfanumeric al utilizatorului în sistem
+         * @returns Promise
+         */
+        function getUser (id) {
+            return User.findById(id).exec();
+        }
+
+        // === PERSONAL LOGS === ::TOATE CONRIBUTIILE LOG
+        socket.on('usrLog', async (id) => {
+            try {
+                let user = await getUser(id);
+                socket.emit('usrLog', await Log.find({idContributor: user.email}).exec());
+            } catch (error) {
+                logger.error(`[sockets.js::'usrRes'] Eroare la aducerea utilizatorului cu următoarele detalii: ${error}`);
+            }
         });
 
         // === ALLUSERS === ::TOȚI UTILIZATORII
@@ -1574,6 +1593,7 @@ function sockets (io) {
             });
         });
 
+        // TEST!!!
         socket.on('tryme', (data) => {
             console.log(data);
         })

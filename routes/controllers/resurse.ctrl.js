@@ -508,9 +508,8 @@ exports.describeRED = async function describeRED (req, res, next) {
     /* === VERIFICAREA CREDENȚIALELOR === */
     if(req.session.passport.user.roles.admin){
         let user = req.session.passport.user;
-        //- FIXME: Renunță la acest artificiu pentru conturile locale de îndată ce unifici localele cu profilurile Google.
-        let given_name =  "Jane" || user.googleProfile.given_name;
-        let family_name = "Doe"  || user.googleProfile.family_name;
+        let given_name =  '' || user.googleProfile.given_name;
+        let family_name = ''  || user.googleProfile.family_name;
         
         /* === LIVRESQ CONNECTOR === */
         let url = new LivresqConnect().prepareProjectRequest(user.email, given_name, family_name);
@@ -534,9 +533,8 @@ exports.describeRED = async function describeRED (req, res, next) {
     } else if (confirmedRoles.length > 0) { // când ai cel puțin unul din rolurile menționate în roles, ai acces la formularul de trimitere a resursei.
         
         let user = req.session.passport.user;
-        // -FIXME: Introdu în formularul de creare cont câmpurile name și surname pentru a elimina artificiul făcut pentru integrarea cu Livresq
-        let given_name = 'Jane' || user.googleProfile.given_name;
-        let family_name = 'Doe' || user.googleProfile.family_name;
+        let given_name = '' || user.googleProfile.given_name;
+        let family_name = '' || user.googleProfile.family_name;
         
         /* === LIVRESQ CONNECTOR === */
         let url = new LivresqConnect().prepareProjectRequest(user.email, given_name, family_name);
