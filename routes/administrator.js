@@ -73,14 +73,14 @@ router.get('/', (req, res, next) => {
                 // MAIN
                 {module: `${gensettings.template}/js/main.mjs`},
                 // DATATABLES
-                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+                // {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
+                // {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
+                // {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
+                // {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
+                // {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
+                // {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
+                // {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
+                // {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
                 // LOCALE
                 {module: `${gensettings.template}/js/admin.mjs`}
             ];
@@ -164,40 +164,43 @@ router.get('/reds', (req, res, next) => {
         let gensettings = await Mgmtgeneral.findOne(filterMgmt);
         // DOAR ADMINISTRATORII VAD TOATE RESURSELE ODATĂ FIXME: Creează aceeași posibilitate și validatorilor!!!
         if(req.session.passport.user.roles.admin){
+
+            let scripts = [       
+                // MOMENT.JS
+                {script: `moment/min/moment-with-locales.min.js`},
+                // DATATABLES
+                {script: `datatables.net/js/jquery.dataTables.min.js`},
+                {script: `datatables.net-dt/js/dataTables.dataTables.min.js`},
+                {script: `datatables.net-select-dt/js/select.dataTables.min.js`},
+                {script: `datatables.net-buttons-dt/js/buttons.dataTables.min.js`},
+                {script: `datatables.net-buttons/js/buttons.print.min.js`},
+                {script: `datatables.net-responsive-dt/js/responsive.dataTables.min.js`},
+                // ZIP
+                {script: `${gensettings.template}/lib/jszip.min.js`},
+                // PDF
+                {script: `${gensettings.template}/lib/pdfmake.min.js`},
+                {script: `${gensettings.template}/lib/vfs_fonts.js`},
+                // TIMELINE.JS
+                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`}
+            ];
+
             let modules = [
                 // MAIN
                 {module: `${gensettings.template}/js/main.mjs`},
-                // DATATABLES
-                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
                 // LOCALE
                 {module: `${gensettings.template}/js/res-visuals.mjs`}
             ];
             let styles = [
                 // DATATABLES    
-                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
-                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
+                {style: `datatables.net-responsive-dt/css/responsive.dataTables.min.css`},
+                {style: `datatables.net-dt/css/jquery.dataTables.min.css`},
+                {style: `datatables.net-select-dt/css/select.dataTables.min.css`},
+                {style: `datatables.net-buttons-dt/css/buttons.dataTables.min.css`},
                 // TIMELINE
                 {style: `${gensettings.template}/lib/timeline3/css/fonts/font.roboto-megrim.css`},
                 {style: `${gensettings.template}/lib/timeline3/css/timeline.css`}
             ];
-            let scripts = [       
-                // MOMENT.JS
-                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
-                // TIMELINE.JS
-                {script: `${gensettings.template}/lib/timeline3/js/timeline.js`},
-                // ZIP
-                {script: `${gensettings.template}/lib/jszip.min.js`},
-                // PDF
-                {script: `${gensettings.template}/lib/pdfmake.min.js`},
-                {script: `${gensettings.template}/lib/vfs_fonts.js`}
-            ];
+
             res.render(`res-data-visuals_${gensettings.template}`, {
                 template: `${gensettings.template}`,
                 title:     "Resurse",
@@ -613,7 +616,14 @@ router.get('/compets', (req, res, next) => {
         if(req.session.passport.user.roles.admin){
             let scripts = [       
                 // MOMENT.JS
-                {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+                {script: `moment/min/moment-with-locales.min.js`},
+                // DATATABLES
+                {script: `datatables.net/js/jquery.dataTables.min.js`},
+                {script: `datatables.net-dt/js/dataTables.dataTables.min.js`},
+                {script: `datatables.net-select-dt/js/select.dataTables.min.js`},
+                {script: `datatables.net-buttons-dt/js/buttons.dataTables.min.js`},
+                {script: `datatables.net-buttons/js/buttons.print.min.js`},
+                {script: `datatables.net-responsive-dt/js/responsive.dataTables.min.js`},
                 // ZIP
                 {script: `${gensettings.template}/lib/jszip.min.js`},
                 // PDF
@@ -624,23 +634,16 @@ router.get('/compets', (req, res, next) => {
             let modules = [
                 // MAIN
                 {module: `${gensettings.template}/js/main.mjs`},
-                // DATATABLES
-                {module: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.print.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.html5.min.js`},
-                {module: `${gensettings.template}/lib/npm/buttons.bootstrap4.min.js`},
-                {module: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
                 // LOCALE
                 {module: `${gensettings.template}/js/comps-visuals.mjs`}
             ];
     
             let styles = [
                 // DATATABLES    
-                {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`},
-                {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`}
+                {style: `datatables.net-responsive-dt/css/responsive.dataTables.min.css`},
+                {style: `datatables.net-dt/css/jquery.dataTables.min.css`},
+                {style: `datatables.net-select-dt/css/select.dataTables.min.css`},
+                {style: `datatables.net-buttons-dt/css/buttons.dataTables.min.css`}
             ];
     
             res.render(`comps-data-visuals_${gensettings.template}`, {

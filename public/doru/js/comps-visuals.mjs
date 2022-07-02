@@ -63,7 +63,19 @@ pubComm.on('allComps', (compets) => {
         lengthChange: true,
         dom: 'Bfrtip',
         buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print'
+            'colvis',
+            'copy',
+            'excel',
+            'print',
+            {
+                extend: 'csv',
+                text: 'toate datele',
+                exportOptions: {
+                    modifier: {
+                        search: 'none'
+                    }
+                }
+            }
         ],
         columns: [
             {

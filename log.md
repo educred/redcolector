@@ -1,3 +1,79 @@
+https://stackoverflow.com/questions/27464168/how-to-include-scripts-located-inside-the-node-modules-folder
+
+in app.js
+
+// const deps = {
+//     '/logs': ['datatables.net', 'datatables.net-dt']
+// }
+
+
+/**
+ * Loader pentru dependințe specifice fiecărei rute
+ */
+// function depsLoader (req, res, next) {
+//     console.log(`Calea cererii este `, req.path, `iar parametii sunt `, req.params);
+//     let arry = deps[`${req.path}`] || null;
+//     console.log(`Array-ul dependințelor (calea /profile${req.path}) este `, arry, `din`, deps);
+//     if (Array.isArray(arry)) {
+//         arry.forEach(dep => {
+//             console.log(`Am așa: `, `${dep}`); 
+//             app.use(`/vendor`, express.static(path.join(process.cwd(), `/node_modules/${dep}`)));
+//         });
+//     }
+//     next();
+// }
+
+
+
+// Route auth check/catchall middleware
+app.use(function(req, res, next) {
+ if (req.originalUrl.split('/')[1] !== 'api'){
+  res.sendfile(__dirname+'/public/index.html');
+ } else {
+  next();
+ }
+});
+
+
+
+
+https://newbedev.com/serve-static-files-on-a-dynamic-route-using-express
+
+
+
+
+
+
+https://gist.github.com/send-2-mywork/2bf39fb2be88f9fc44e8745e202b3e52
+
+app.get('/user/:uid/files/*', function(req, res){
+    var uid = req.params.uid,
+        path = req.params[0] ? req.params[0] : 'index.html';
+    res.sendfile(path, {root: './public'});
+});
+
+
+/*  The following example illustrates how `res.sendfile()` may
+ *  be used as an alternative for the `static()` middleware for
+ *  dynamic situations. The code backing `res.sendfile()` is actually
+ *  the same code, so HTTP cache support etc is identical.
+ */
+ app.get('/user/:uid/photos/:file', function(req, res){
+    var uid = req.params.uid
+      , file = req.params.file;
+
+    req.user.mayViewFilesFrom(uid, function(yes){
+      if (yes) {
+        res.sendfile('/uploads/' + uid + '/' + file);
+      } else {
+        res.send(403, 'Sorry! you cant see that.');
+      }
+    });
+  });
+
+
+
+
 CastError: Cast to ObjectId failed for value "articole" (type string) at path "_id" for model "resursedu"
     at model.Query.exec (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/node_modules/mongoose/lib/query.js:4715:21)
     at model.Query.newExec [as exec] (/home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector/routes/controllers/cache.helper.js:23:25)

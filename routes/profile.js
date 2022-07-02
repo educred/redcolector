@@ -83,25 +83,25 @@ router.get('/resurse', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
         /* === RESURSELE NECESARE LA RANDARE === */
         let scripts = [       
             // MOMENT.JS
-            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+            {script: `moment/min/moment-with-locales.min.js`},
             // HOLDERJS
-            {script: `${gensettings.template}/lib/npm/holder.min.js`},
+            {script: `holderjs/holder.min.js`},
             // LOCAL
             //{script: '/js/form02log.js`},
             // DATATABLES
-            {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
-            {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
-            {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
-            {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
-            {script: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+            {script: `datatables.net/js/jquery.dataTables.min.js`},
+            {script: `datatables.net-dt/js/dataTables.dataTables.min.js`},
+            {script: `datatables.net-select-dt/js/select.dataTables.min.js`},
+            {script: `datatables.net-buttons-dt/js/buttons.dataTables.min.js`},
+            {script: `datatables.net-responsive-dt/js/responsive.dataTables.min.js`},
             // TIMELINE 3
             {script: `${gensettings.template}/lib/timeline3/js/timeline.js`}            
         ];
     
         let styles = [
-            {style: `${gensettings.template}/lib/npm/jquery.dataTables.min.css`},
-            {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
-            {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`}
+            {style: `datatables.net-responsive-dt/css/responsive.dataTables.min.css`},
+            {style: `datatables.net-dt/css/jquery.dataTables.min.css`},
+            {style: `datatables.net-select-dt/css/select.dataTables.min.css`}
         ];
     
         let modules = [
@@ -201,39 +201,29 @@ router.get('/logs', makeSureLoggedIn.ensureLoggedIn(), (req, res, next) => {
         // Setări în funcție de template
         let filterMgmt = {focus: 'general'};
         let gensettings = await Mgmtgeneral.findOne(filterMgmt);
-
-        // let arry = deps[`${req.path}`];
-        // console.log(`Array-ul dependințelor este `, arry);
-        // if (Array.isArray(arry)) {
-        //     arry.forEach(dep => {
-        //         // console.log(`Am format `, req.url, req.baseUrl,  path.join(__dirname, `../node_modules/${dep}`), `/${gensettings.template}/node_modules/${dep}`);
-        //         router.use(express.static(path.join(__dirname, `../node_modules/${dep}`)));
-        //     });
-        // }
     
         /* === RESURSELE NECESARE LA RANDARE === */
         let scripts = [       
             // MOMENT.JS
-            {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+            {script: `moment/min/moment-with-locales.min.js`},
             // HOLDERJS
-            {script: `${gensettings.template}/lib/npm/holder.min.js`},
+            {script: `holderjs/holder.min.js`},
             // LOCAL
             //{script: '/js/form02log.js`},
             // DATATABLES
-            // {script: `${gensettings.template}/lib/npm/jquery.dataTables.min.js`},
-            {script: `js/jquery.dataTables.min.js`},
-            {script: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.js`},
-            {script: `${gensettings.template}/lib/npm/dataTables.select.min.js`},
-            {script: `${gensettings.template}/lib/npm/dataTables.buttons.min.js`},
-            {script: `${gensettings.template}/lib/npm/dataTables.responsive.min.js`},
+            {script: `datatables.net/js/jquery.dataTables.min.js`},
+            {script: `datatables.net-dt/js/dataTables.dataTables.min.js`},
+            {script: `datatables.net-select-dt/js/select.dataTables.min.js`},
+            {script: `datatables.net-buttons-dt/js/buttons.dataTables.min.js`},
+            {script: `datatables.net-responsive-dt/js/responsive.dataTables.min.js`},
             // TIMELINE 3
             {script: `${gensettings.template}/lib/timeline3/js/timeline.js`}            
         ];
     
         let styles = [
-            {style: `${gensettings.template}/lib/npm/jquery.dataTables.min.css`},
-            {style: `${gensettings.template}/lib/npm/responsive.dataTables.min.css`},
-            {style: `${gensettings.template}/lib/npm/dataTables.bootstrap4.min.css`}
+            {style: `datatables.net-responsive-dt/css/responsive.dataTables.min.css`},
+            {style: `datatables.net-dt/css/jquery.dataTables.min.css`},
+            {style: `datatables.net-select-dt/css/select.dataTables.min.css`}
         ];
     
         let modules = [
@@ -311,7 +301,7 @@ async function clbkProfResID (req, res, next) {
     // const editorJs2html = require('./controllers/editorJs2HTML');
     let scripts = [
         // MOMENT.JS
-        {script: `${gensettings.template}/lib/npm/moment-with-locales.min.js`},
+        {script: `moment/min/moment-with-locales.min.js`},
         // DOWNLOADFILE
         {script: `${gensettings.template}/lib/downloadFile.js`}
     ];
