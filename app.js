@@ -264,7 +264,7 @@ app.use(compression({ filter: shouldCompress }));
 
 // ÎNCĂRCAREA DEPENDINȚELOR FĂRĂ A MAI DUBLA ÎN PUBLIC
 const deps = [
-    'bootstrap',
+    'jquery', 'bootstrap', 'bootstrap-icons',
     'datatables.net', 'datatables.net-dt', 'datatables.net-buttons', 'datatables.net-buttons-dt', 'datatables.net-responsive', 'datatables.net-responsive-dt', 'datatables.net-select-dt',
     'holderjs', 'moment'];
 deps.forEach(dep => {
