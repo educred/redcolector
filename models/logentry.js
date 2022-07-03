@@ -7,6 +7,7 @@ var LogentrySchema = new mongoose.Schema({
     date: Date,
     idContributor: {type: String, es_indexed: true},
     autor: {type: String, es_indexed: true},
+    creator: [],
     title: {        
         type: String,
         index: true,

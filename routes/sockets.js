@@ -666,6 +666,7 @@ function sockets (io) {
                 date:          Date.now(),
                 title:         entry.title,
                 idContributor: entry.idContributor,
+                creator:       entry.creator,
                 autor:         entry.autor,
                 content:       entry.content,
                 contorAcces:   entry.contorAcces,
