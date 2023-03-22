@@ -1,3 +1,51 @@
+ Patch Update Backwards-compatible bug fixes.
+❯◯ datatables.net-buttons     2.2.2   ❯  2.2.3   https://datatables.net
+ ◯ datatables.net-buttons-dt  2.2.2   ❯  2.2.3   https://datatables.net
+ ◯ dotenv                     16.0.0  ❯  16.0.2  https://github.com/motdotla/dotenv#readme
+ ◯ express-session            1.17.2  ❯  1.17.3  https://github.com/expressjs/session#readme
+ ◯ jquery                     3.6.0   ❯  3.6.1   https://jquery.com
+ ◯ socket.io                  4.5.0   ❯  4.5.1   https://github.com/socketio/socket.io#readme
+ ◯ socket.io-client           4.5.0   ❯  4.5.1   https://github.com/socketio/socket.io-client#readme
+ ◯ supertest                  6.2.3   ❯  6.2.4   https://github.com/visionmedia/supertest#readme
+ ◯ autoprefixer devDep        10.4.5  ❯  10.4.8  https://github.com/postcss/autoprefixer#readme
+ ◯ jsdoc devDep               3.6.10  ❯  3.6.11  https://github.com/jsdoc/jsdoc#readme
+  
+ Minor Update New backwards-compatible features.
+ ◯ @editorjs/editorjs             2.24.0  ❯  2.25.0  https://github.com/codex-team/editor.js
+ ◯ @fortawesome/fontawesome-free  6.1.1   ❯  6.2.0   https://fontawesome.com
+ ◯ bootstrap                      5.1.3   ❯  5.2.0   https://getbootstrap.com/
+ ◯ bootstrap-icons                1.8.1   ❯  1.9.1   https://icons.getbootstrap.com/
+ ◯ datatables.net                 1.11.5  ❯  1.12.1  https://datatables.net
+ ◯ datatables.net-dt              1.11.5  ❯  1.12.1  https://datatables.net
+ ◯ datatables.net-responsive      2.2.9   ❯  2.3.0   https://datatables.net
+ ◯ datatables.net-responsive-dt   2.2.9   ❯  2.3.0   https://datatables.net
+ ◯ datatables.net-select          1.3.4   ❯  1.4.0   https://datatables.net
+ ◯ datatables.net-select-dt       1.3.4   ❯  1.4.0   https://datatables.net
+ ◯ elasticdump                    6.84.0  ❯  6.88.0  https://github.com/elasticsearch-dump/elasticsearch-dump#readme
+ ◯ express-rate-limit             6.4.0   ❯  6.5.2   https://github.com/nfriedly/express-rate-limit
+ ◯ isomorphic-git                 1.17.1  ❯  1.20.0  https://isomorphic-git.org/
+ ◯ passport-local-mongoose        7.0.0   ❯  7.1.2   https://github.com/saintedlama/passport-local-mongoose#readme
+ ◯ winston                        3.7.2   ❯  3.8.1   https://github.com/winstonjs/winston#readme
+ ◯ winston-daily-rotate-file      4.6.1   ❯  4.7.1   https://github.com/winstonjs/winston-daily-rotate-file#readme
+ ◯ autocannon devDep              7.8.1   ❯  7.9.0   https://github.com/mcollina/autocannon#readme
+ ◯ eslint devDep                  8.14.0  ❯  8.23.0  https://eslint.org
+ ◯ webpack-cli devDep             4.9.2   ❯  4.10.0  https://github.com/webpack/webpack-cli/tree/master/packages/webpack-cli
+  
+ Major Update Potentially breaking API changes. Use caution.
+❯◯ @elastic/elasticsearch      7.17.0  ❯  8.4.0   http://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/index.html
+ ◯ cron                        1.8.2   ❯  2.1.0   https://github.com/kelektiv/node-cron#readme
+ ◯ git-parse                   2.1.1   ❯  3.0.0   https://github.com/wayfair/git-parse#readme
+ ◯ globby                      11.1.0  ❯  13.1.2  https://github.com/sindresorhus/globby#readme
+ ◯ helmet                      5.0.2   ❯  6.0.0   https://helmetjs.github.io/
+ ◯ mocha                       9.2.2   ❯  10.0.0  https://mochajs.org/
+ ◯ nanoid                      3.3.3   ❯  4.0.0   https://github.com/ai/nanoid#readme
+ ◯ redis                       3.1.2   ❯  4.3.0   https://github.com/redis/node-redis
+ ◯ copy-webpack-plugin devDep  10.2.4  ❯  11.0.0  https://github.com/webpack-contrib/copy-webpack-plugin
+ ◯ postcss-cli devDep          9.1.0   ❯  10.0.0  https://github.com/postcss/postcss-cli#readme
+
+
+
+
 https://stackoverflow.com/questions/27464168/how-to-include-scripts-located-inside-the-node-modules-folder
 
 in app.js
